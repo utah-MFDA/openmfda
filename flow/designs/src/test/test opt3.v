@@ -27,6 +27,6 @@ module test (
         .out_fluid(connect0)
     );
     valve_20px_1 valve0 (.in_air(in_air), .in_fluid(connect0), .out_air(out_air), .out_fluid(connect1));
-    serpentine_150px_0 serpentine0 (.in_fluid(connect1), .out_fluid(out_fluid));
+    serpentine_125px_0 serpentine0 (.in_fluid(connect1), .out_fluid(out_fluid));
 
 endmodule
