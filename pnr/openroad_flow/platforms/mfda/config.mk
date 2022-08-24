@@ -31,7 +31,7 @@ export IO_PLACER_V = met2
 # Place
 # --------------------------------------------------------
 
-export PLACE_PINS_ARGS = -min_distance 13 -min_distance_in_tracks
+export PLACE_PINS_ARGS = -min_distance 6 -min_distance_in_tracks
 
 # Cell padding in SITE widths to ease rout-ability.  Applied to both sides
 export CELL_PAD_IN_SITES_GLOBAL_PLACEMENT ?= 0
@@ -45,7 +45,7 @@ export PLACE_DENSITY ?= 1
 
 # FastRoute options
 export MIN_ROUTING_LAYER = met1
-export MAX_ROUTING_LAYER = met5
+export MAX_ROUTING_LAYER = met8
 
 # Define fastRoute tcl
 export FASTROUTE_TCL = $(PLATFORM_DIR)/fastroute.tcl
