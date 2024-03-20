@@ -120,10 +120,10 @@ class DefFile:
     def parse_place(self):
         with open(self.def_file) as f:
             index, flag = 0, 0
-            list = []
+            lines = []
             index_found = []
             for line in f:
-                list.append(line.strip())
+                lines.append(line.strip())
                 index += 1
                 if flag < 2:
                     if 'COMPONENTS' in line:
@@ -134,15 +134,15 @@ class DefFile:
 
 
         if flag == 2:
-            list = list[index_found[0]:index_found[1]-1]
+            lines = lines[index_found[0]:index_found[1]-1]
             replace_list = ['- ', '+ ', 'PLACED ', '( ', ') ', ';']
-            for i in range(0, len(list)):
+            for i in range(0, len(lines)):
                 for char in replace_list:
-                    list[i] = list[i].replace(char, '')
-                list[i] = list[i].strip().split(' ')
-            return(list)
+                    lines[i] = lines[i].replace(char, '')
+                lines[i] = lines[i].strip().split(' ')
+            return(lines)
         else:
-            return(list) # return the same for now but can add error later
+            return(lines) # return the same for now but can add error later
 
     def snap_to_grid(self, value):
         snap_value = round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
@@ -234,10 +234,10 @@ class DefFile:
     def parse_pins(self):
         f = open(self.def_file)
         index, flag = 0, 0
-        list = []
+        pin_list = []
         index_found = []
         for line in f:
-            list.append(line.strip().split('\n'))
+            pin_list.append(line.strip().split('\n'))
             index += 1
             if flag < 2:
                 if 'PINS' in line:
@@ -247,44 +247,44 @@ class DefFile:
                 break
         f.close()
         if flag == 2:
-            list        = list[index_found[0]:index_found[1]-1]
+            pin_list        = pin_list[index_found[0]:index_found[1]-1]
             replace_list = ['+ ', '( ', ') ', ' )', ';', 'LAYER ', 'FIXED ', 'PLACED ', 'NET ', 'DIRECTION ', 'INPUT ', 'OUTPUT ', 'USE ', 'SIGNAL', 'met', ' N', ' FN', ' S', ' FS']
-            for element in list:
+            for element in pin_list:
                 for char in replace_list:
                     element[0] = element[0].replace(char, '')
                 element[0] = element[0].strip().split(' ')
             i = 0
-            length = len(list)
+            length = len(pin_list)
             while i < length:
-                if list[i][0][0] == 'PORT':
-                    del list[i]
+                if pin_list[i][0][0] == 'PORT':
+                    del pin_list[i]
                     i = 0
-                    length = len(list)
+                    length = len(pin_list)
                 else:
                     i += 1
             index       = 0
             index_found = []
-            for pin in list:
+            for pin in pin_list:
                 if pin[0][0] == '-':
                     index_found.append(index)
                 index += 1
             index_found.append(index)
             for i in range(0, len(index_found)-1):
-                list[index_found[i]+2][0].insert(0, list[index_found[i]+1][0][0])
-                list[index_found[i]+2][0].insert(0, list[index_found[i]][0][1])
+                pin_list[index_found[i]+2][0].insert(0, pin_list[index_found[i]+1][0][0])
+                pin_list[index_found[i]+2][0].insert(0, pin_list[index_found[i]][0][1])
             i = 0
-            length = len(list)
+            length = len(pin_list)
             while i < length:
-                if list[i][0][0] == '-' or len(list[i][0]) > 4:
-                    del list[i]
+                if pin_list[i][0][0] == '-' or len(pin_list[i][0]) > 4:
+                    del pin_list[i]
                     i = 0
-                    length = len(list)
+                    length = len(pin_list)
                 else:
                     i += 1
-            for pin in list:
+            for pin in pin_list:
                 pin[0][2] = self.snap_to_grid(pin[0][2])
                 pin[0][3] = self.snap_to_grid(pin[0][3])
-            return(list)
+            return pin_list
         else:
             pass # add error later
 
