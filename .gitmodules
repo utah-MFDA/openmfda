@@ -4,3 +4,6 @@
 [submodule "pdks/h.r.3.3_pdk"]
 	path = pdks/h.r.3.3_pdk
 	url = https://github.com/utah-MFDA/h.r.3.3_pdk.git
+[submodule "simulation_flow"]
+	path = simulation_flow
+	url = https://github.com/utah-MFDA/simulation.git

@@ -4,8 +4,9 @@ from solid.utils import *
 import os
 import numpy as np
 import pandas as pd
+import re
 
-
+LAYERS=15
 class set_scale_parameters:
     """
     This sets the pixel size scale unique to the printer.
@@ -109,31 +110,28 @@ class design_space_init:
         design_space_       = np.zeros((num_layers, int(yspace/pitch_)+1, int(xspace/pitch_)+1), dtype=np.bool_)
         design_space_nets_  = np.empty((num_layers, int(yspace/pitch_)+1, int(xspace/pitch_)+1), dtype=object)
 
-
-class place:
+class DefFile:
     """
-    This class takes a .def file with place information and can get the 2D components
-    found in the file as well as the placement location and transform that information
-    to openSCAD with the corresponding 3D components.
+    This class takes a .def file and parses it
     """
-    def __init__(self, def_file) -> None:
-        self.def_file = def_file
+    def __init__(self, filename):
+        self.def_file = filename
 
-    def get_components(self):
-        f = open(self.def_file)
-        index, flag = 0, 0
-        list = []
-        index_found = []
-        for line in f:
-            list.append(line.strip())
-            index += 1
-            if flag < 2:
-                if 'COMPONENTS' in line:
-                    flag += 1
-                    index_found.append(index)
-            else:
-                break
-        f.close()
+    def parse_place(self):
+        with open(self.def_file) as f:
+            index, flag = 0, 0
+            list = []
+            index_found = []
+            for line in f:
+                list.append(line.strip())
+                index += 1
+                if flag < 2:
+                    if 'COMPONENTS' in line:
+                        flag += 1
+                        index_found.append(index)
+                else:
+                    break
+
 
         if flag == 2:
             list = list[index_found[0]:index_found[1]-1]
@@ -145,6 +143,192 @@ class place:
             return(list)
         else:
             return(list) # return the same for now but can add error later
+
+    def snap_to_grid(self, value):
+        snap_value = round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
+        return(f"{snap_value}")
+
+    def parse_routing(self):
+        with open(self.def_file) as f:
+            index, flag = 0, 0
+            routes = []
+            index_found = []
+            for line in f:
+                routes.append(line.strip())
+                index += 1
+                if flag < 2:
+                    if 'NETS' in line:
+                        flag += 1
+                        index_found.append(index)
+                else:
+                    break
+
+        if flag == 2:
+            routes = routes[index_found[0]:index_found[1]-1]
+            index = 0
+            index_found = []
+            for net in routes:
+                if net[0] == '-':
+                    index_found.append(index)
+                index += 1
+            index_found.append(index)
+            replace_list = ['+ ', '( ', ') ', ' )', ';', 'NEW', 'ROUTED', 'met', 'USE', 'SIGNAL']
+            for i in range(0, len(routes)):
+                for char in replace_list:
+                    routes[i] = routes[i].replace(char, '')
+                routes[i] = routes[i].strip().split(' ')
+            for j in range(0, len(index_found)-1):
+                for i in range(index_found[j]+1, index_found[j+1]):
+                    routes[i].insert(0, routes[index_found[j]][1])
+                    if len(routes[i]) >= 7:
+                        if len(routes[i]) == 7:
+                            if routes[i][4] == '0':
+                                del routes[i][4]
+                            else:
+                                del routes[i][6]
+                        else:
+                            del routes[i][4]
+                            del routes[i][6]
+                    if '*' in routes[i]:
+                        star_index = routes[i].index('*')
+                        routes[i][star_index] = routes[i][star_index-2]
+                    if 'PIN' in routes[index_found[j]]:
+                        routes[i].append('PIN')
+            i = 0
+            length = len(routes)
+            while i < length:
+                if routes[i][0] == '-':
+                    del routes[i]
+                    i = 0
+                    length = len(routes)
+                else:
+                    i += 1
+            for net in routes:
+                if (len(net) == 6 and net[5] != 'PIN') or len(net) == 7:
+                    net[2] = self.snap_to_grid(net[2])
+                    net[3] = self.snap_to_grid(net[3])
+                    net[4] = self.snap_to_grid(net[4])
+                    net[5] = self.snap_to_grid(net[5])
+                else:
+                    net[2] = self.snap_to_grid(net[2])
+                    net[3] = self.snap_to_grid(net[3])
+            i = 0
+            length = len(routes)
+            while i < length:
+                if len(routes[i]) >= 6 and (routes[i][2]==routes[i][4] and routes[i][3]==routes[i][5]):
+                    if 'PIN' in routes[i]:
+                        if routes.count([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR", 'PIN']) == 2:
+                            routes = list(filter(([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR", 'PIN']).__ne__, routes))
+                    else:
+                        if routes.count([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR"]) == 2:
+                            routes = list(filter(([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR"]).__ne__, routes))
+                    del routes[i]
+                    i = 0
+                    length = len(routes)
+                else:
+                    i += 1
+            return(routes)
+        else:
+            pass # add error later
+
+    def parse_pins(self):
+        f = open(self.def_file)
+        index, flag = 0, 0
+        list = []
+        index_found = []
+        for line in f:
+            list.append(line.strip().split('\n'))
+            index += 1
+            if flag < 2:
+                if 'PINS' in line:
+                    flag += 1
+                    index_found.append(index)
+            else:
+                break
+        f.close()
+        if flag == 2:
+            list        = list[index_found[0]:index_found[1]-1]
+            replace_list = ['+ ', '( ', ') ', ' )', ';', 'LAYER ', 'FIXED ', 'PLACED ', 'NET ', 'DIRECTION ', 'INPUT ', 'OUTPUT ', 'USE ', 'SIGNAL', 'met', ' N', ' FN', ' S', ' FS']
+            for element in list:
+                for char in replace_list:
+                    element[0] = element[0].replace(char, '')
+                element[0] = element[0].strip().split(' ')
+            i = 0
+            length = len(list)
+            while i < length:
+                if list[i][0][0] == 'PORT':
+                    del list[i]
+                    i = 0
+                    length = len(list)
+                else:
+                    i += 1
+            index       = 0
+            index_found = []
+            for pin in list:
+                if pin[0][0] == '-':
+                    index_found.append(index)
+                index += 1
+            index_found.append(index)
+            for i in range(0, len(index_found)-1):
+                list[index_found[i]+2][0].insert(0, list[index_found[i]+1][0][0])
+                list[index_found[i]+2][0].insert(0, list[index_found[i]][0][1])
+            i = 0
+            length = len(list)
+            while i < length:
+                if list[i][0][0] == '-' or len(list[i][0]) > 4:
+                    del list[i]
+                    i = 0
+                    length = len(list)
+                else:
+                    i += 1
+            for pin in list:
+                pin[0][2] = self.snap_to_grid(pin[0][2])
+                pin[0][3] = self.snap_to_grid(pin[0][3])
+            return(list)
+        else:
+            pass # add error later
+
+
+class DimmFile:
+    def __init__(self, filename):
+        self.dimm_file = filename
+    def parse_route_params(self):
+        if self.dimm_file == None:
+            return({})
+        else:
+            from csv import reader
+            with open(self.dimm_file) as f:
+                params = list(reader(f))
+            net_params_keys   = {}
+            for param in params:
+                if len(param) > 2:
+                    net_params_keys.update({param[0]:list(param[1:4])})
+            return(net_params_keys)
+    def parse_pin_params(self):
+        if self.dimm_file == None:
+            return({})
+        else:
+            from csv import reader
+            with open(self.dimm_file) as f:
+                params = list(reader(f))
+            net_params_keys   = {}
+            for param in params:
+                if len(param) == 2:
+                    net_params_keys.update({param[0]:list(param[1:2])})
+            return(net_params_keys)
+
+class place:
+    """
+    This class takes a .def file with place information and can get the 2D components
+    found in the file as well as the placement location and transform that information
+    to openSCAD with the corresponding 3D components.
+    """
+    def __init__(self, def_file) -> None:
+        self.def_file = def_file
+
+    def get_components(self):
+        parser = DefFile(self.def_file)
+        return parser.parse_place()
 
     def place_components(self):
         list = self.get_components()
@@ -296,92 +480,9 @@ class route:
     def __init__(self, def_file) -> None:
         self.def_file = def_file
 
-    def snap_to_grid(self, value):
-        snap_value = round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
-        return(f"{snap_value}")
-
     def get_routing(self):
-        f = open(self.def_file)
-        index, flag = 0, 0
-        routes = []
-        index_found = []
-        for line in f:
-            routes.append(line.strip())
-            index += 1
-            if flag < 2:
-                if 'NETS' in line:
-                    flag += 1
-                    index_found.append(index)
-            else:
-                break
-        f.close()
-        if flag == 2:
-            routes = routes[index_found[0]:index_found[1]-1]
-            index = 0
-            index_found = []
-            for net in routes:
-                if net[0] == '-':
-                    index_found.append(index)
-                index += 1
-            index_found.append(index)
-            replace_list = ['+ ', '( ', ') ', ' )', ';', 'NEW', 'ROUTED', 'met', 'USE', 'SIGNAL']
-            for i in range(0, len(routes)):
-                for char in replace_list:
-                    routes[i] = routes[i].replace(char, '')
-                routes[i] = routes[i].strip().split(' ')
-            for j in range(0, len(index_found)-1):
-                for i in range(index_found[j]+1, index_found[j+1]):
-                    routes[i].insert(0, routes[index_found[j]][1])
-                    if len(routes[i]) >= 7:
-                        if len(routes[i]) == 7:
-                            if routes[i][4] == '0':
-                                del routes[i][4]
-                            else:
-                                del routes[i][6]
-                        else:
-                            del routes[i][4]
-                            del routes[i][6]
-                    if '*' in routes[i]:
-                        star_index = routes[i].index('*')
-                        routes[i][star_index] = routes[i][star_index-2]
-                    if 'PIN' in routes[index_found[j]]:
-                        routes[i].append('PIN')
-            i = 0
-            length = len(routes)
-            while i < length:
-                if routes[i][0] == '-':
-                    del routes[i]
-                    i = 0
-                    length = len(routes)
-                else:
-                    i += 1
-            for net in routes:
-                if (len(net) == 6 and net[5] != 'PIN') or len(net) == 7:
-                    net[2] = self.snap_to_grid(net[2])
-                    net[3] = self.snap_to_grid(net[3])
-                    net[4] = self.snap_to_grid(net[4])
-                    net[5] = self.snap_to_grid(net[5])
-                else:
-                    net[2] = self.snap_to_grid(net[2])
-                    net[3] = self.snap_to_grid(net[3])
-            i = 0
-            length = len(routes)
-            while i < length:
-                if len(routes[i]) >= 6 and (routes[i][2]==routes[i][4] and routes[i][3]==routes[i][5]):
-                    if 'PIN' in routes[i]:
-                        if routes.count([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR", 'PIN']) == 2:
-                            routes = list(filter(([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR", 'PIN']).__ne__, routes))
-                    else:
-                        if routes.count([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR"]) == 2:
-                            routes = list(filter(([routes[i][0], str(int(routes[i][1])-1), routes[i][2], routes[i][3], f"M{int(routes[i][1])-1}M{int(routes[i][1])}_PR"]).__ne__, routes))
-                    del routes[i]
-                    i = 0
-                    length = len(routes)
-                else:
-                    i += 1
-            return(routes)
-        else:
-            pass # add error later
+        parser = DefFile(self.def_file)
+        return parser.parse_routing()
 
     def get_target_routing(self, target):
         """
@@ -404,6 +505,8 @@ class route:
             one_length_routes           = self.get_target_routing(target)
             for i in range(0, 9):
                 for route in one_length_routes:
+
+
                     if  ([route[0], str(int(route[1])-1), route[2], route[3], f'M{int(route[1])-1}M{int(route[1])}_PR'] in routes or \
                         [route[0], str(int(route[1])-1), route[2], route[3], f'M{int(route[1])-1}M{int(route[1])}_PR', 'PIN'] in routes) and \
                         ([route[0], str(int(route[1])-1), route[4], route[5], f'M{int(route[1])-1}M{int(route[1])}_PR'] in routes or \
@@ -434,17 +537,8 @@ class route:
         return(nets)
 
     def get_route_params(self, dimm_file = None):
-        if dimm_file == None:
-            return({})
-        else:
-            from csv import reader
-            with open(dimm_file) as f:
-                params = list(reader(f))
-            net_params_keys   = {}
-            for param in params:
-                if len(param) > 2:
-                    net_params_keys.update({param[0]:list(param[1:4])})
-            return(net_params_keys)
+        parser = DimmFile(dimm_file)
+        return parser.parse_route_params()
 
     def generate_dimm(self, wchan, xychan, hchan):
         dimm = f"[[[0, 0], [-{wchan}/2*{px_}, {wchan}/2*{px_}], [0, {hchan}*{layer_}]],\n [[-{wchan}/2*{px_}, {wchan}/2*{px_}], [0, 0], [0, {hchan}*{layer_}]],\n [[-{xychan}/2*{px_}, {xychan}/2*{px_}], [-{xychan}/2*{px_}, {xychan}/2*{px_}], [0, 0]]]"
@@ -590,17 +684,32 @@ class design_space_route:
         self.route_list = route_list
 
         for route in self.route_list:
-            if (len(route) == 6 and route[5] != 'PIN') or len(route) == 7:
-                if route[2] == route[4]:
-                    design_space_[int(route[1])-1, int(int(route[3])/def_scale_/pitch_):int(int(route[5])/def_scale_/pitch_)+1, int(int(route[2])/def_scale_/pitch_)] = True
-                    design_space_nets_[int(route[1])-1, int(int(route[3])/def_scale_/pitch_):int(int(route[5])/def_scale_/pitch_)+1, int(int(route[2])/def_scale_/pitch_)] = route[0]
+            print(route)
+            name = route[0]
+            kind = route[-1]
+            layer = int(route[1])
+            x0 = int(route[2])
+            y0 = int(route[3])
+            y0 = int(y0/def_scale_/pitch_)
+            x0 = int(x0/def_scale_/pitch_)
+            # This is a routed pin
+            if (len(route) == 6 and kind != 'PIN') or len(route) == 7:
+                x1, y1 = [int(i) for i in route[-5:-3]]
+                y1 = int(y1/def_scale_/pitch_)
+                x1 = int(x1/def_scale_/pitch_)
+                if x0 == x1:
+                    design_space_[layer, y0:y1+1, x0] = True
+                    design_space_nets_[layer, y0:y1+1, x0] = name
                 else:
-                    design_space_[int(route[1])-1, int(int(route[3])/def_scale_/pitch_), int(int(route[2])/def_scale_/pitch_):int(int(route[4])/def_scale_/pitch_)+1] = True
-                    design_space_nets_[int(route[1])-1, int(int(route[3])/def_scale_/pitch_), int(int(route[2])/def_scale_/pitch_):int(int(route[4])/def_scale_/pitch_)+1] = route[0]
+                    design_space_[layer, y0, x0:x1+1] = True
+                    design_space_nets_[layer, y0, x0:x1+1] = name
+            # this is a via
             else:
-                design_space_[int(route[4][1])-1:int(route[4][3]), int(int(route[3])/def_scale_/pitch_), int(int(route[2])/def_scale_/pitch_)] = True
-                design_space_nets_[int(route[4][1])-1:int(route[4][3]), int(int(route[3])/def_scale_/pitch_), int(int(route[2])/def_scale_/pitch_)] = route[0]
-
+                m = re.match("M([0-9]*)M([0-9]*)", route[4])
+                via_a = int(m.group(1))
+                via_b = int(m.group(2))
+                design_space_[via_a:via_b, y0, x0] = True
+                design_space_nets_[via_a:via_b, y0, x0] = name
 
 class pin_place:
     """
@@ -614,85 +723,23 @@ class pin_place:
         return(f"{snap_value}")
 
     def get_pins(self):
-        f = open(self.def_file)
-        index, flag = 0, 0
-        list = []
-        index_found = []
-        for line in f:
-            list.append(line.strip().split('\n'))
-            index += 1
-            if flag < 2:
-                if 'PINS' in line:
-                    flag += 1
-                    index_found.append(index)
-            else:
-                break
-        f.close()
-        if flag == 2:
-            list        = list[index_found[0]:index_found[1]-1]
-            replace_list = ['+ ', '( ', ') ', ' )', ';', 'LAYER ', 'FIXED ', 'PLACED ', 'NET ', 'DIRECTION ', 'INPUT ', 'OUTPUT ', 'USE ', 'SIGNAL', 'met', ' N', ' FN', ' S', ' FS']
-            for element in list:
-                for char in replace_list:
-                    element[0] = element[0].replace(char, '')
-                element[0] = element[0].strip().split(' ')
-            i = 0
-            length = len(list)
-            while i < length:
-                if list[i][0][0] == 'PORT':
-                    del list[i]
-                    i = 0
-                    length = len(list)
-                else:
-                    i += 1
-            index       = 0
-            index_found = []
-            for pin in list:
-                if pin[0][0] == '-':
-                    index_found.append(index)
-                index += 1
-            index_found.append(index)
-            for i in range(0, len(index_found)-1):
-                list[index_found[i]+2][0].insert(0, list[index_found[i]+1][0][0])
-                list[index_found[i]+2][0].insert(0, list[index_found[i]][0][1])
-            i = 0
-            length = len(list)
-            while i < length:
-                if list[i][0][0] == '-' or len(list[i][0]) > 4:
-                    del list[i]
-                    i = 0
-                    length = len(list)
-                else:
-                    i += 1
-            for pin in list:
-                pin[0][2] = self.snap_to_grid(pin[0][2])
-                pin[0][3] = self.snap_to_grid(pin[0][3])
-            return(list)
-        else:
-            pass # add error later
+        parser = DefFile(self.def_file)
+        return parser.parse_pins()
 
     def get_pin_params(self, dimm_file = None):
-        if dimm_file == None:
-            return({})
-        else:
-            from csv import reader
-            with open(dimm_file) as f:
-                params = list(reader(f))
-            net_params_keys   = {}
-            for param in params:
-                if len(param) == 2:
-                    net_params_keys.update({param[0]:list(param[1:2])})
-            return(net_params_keys)
+        parser = DimmFile(dimm_file)
+        return parser.parse_pin_params()
 
     def get_nets(self):
         list = self.get_pins()
         nets = []
         for line in list:
             nets.append(line[0][0])
-        return(nets)
+        return nets
 
     def generate_dimm(self, xychan):
         dimm = f"[[[-{xychan}/2*{px_}, {xychan}/2*{px_}], [-{xychan}/2*{px_}, {xychan}/2*{px_}], [0, 0]]]"
-        return(dimm)
+        return dimm
 
     def generate_dimms(self, dimm_file = None):
         if dimm_file == None:
@@ -707,7 +754,7 @@ class pin_place:
                 dimms.update({nets[i]:self.generate_dimm(route_params[nets[i]][0])})
             else:
                 dimms.update({nets[i]:self.generate_dimm(14)})
-        return(dimms)
+        return dimms
 
     def place_pinholes(self):
         list = self.get_pins()
@@ -881,7 +928,7 @@ def scad_pnr(platform, design, def_file, results_dir, px, layer, bottom_layer, l
     set_bottom_layer(bottom_layer)
 
     print("\nInitializing design space")
-    design_space_init(xbulk, ybulk, 10)
+    design_space_init(xbulk, ybulk, LAYERS)
     print("Initialization complete.")
 
     print(f"\nBuilding the design model for '{design}' from:\n'{def_file}'")
