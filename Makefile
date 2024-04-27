@@ -14,6 +14,7 @@ DESIGN = demo
 
 OPENROAD_FLOW_DIR ?= openroad_flow
 SCAD_FLOW_DIR ?= scad_flow
+SIM_FLOW_DIR ?= simulation_flow
 
 export SCAD_DIR ?= ${SCAD_FLOW_DIR}/scad
 export SCAD_FLOW_DESIGN_DIR ?= ${SCAD_FLOW_DIR}/designs
@@ -21,6 +22,7 @@ export SCAD_FLOW_DESIGN_DIR ?= ${SCAD_FLOW_DIR}/designs
 # This does not change the output directory in openroad.
 OR_RESULTS = ${OPENROAD_FLOW_DIR}/results
 SCAD_RESULTS = ${SCAD_FLOW_DIR}/results
+SIM_RESULTS = ${SIM_FLOW_DIR}/results
 
 # Import the SCAD configuration
 include $(SCAD_FLOW_DESIGN_DIR)/$(PLATFORM)/$(DESIGN)/config.mk
@@ -30,7 +32,7 @@ DESIGN_CONFIG = ./designs/${PLATFORM}/${DESIGN}/config.mk
 # OpenROAD place and route
 pnr: $(OR_RESULTS)/$(DESIGN)/$(DESIGN_VARIANT)/4_final.def
 
-$(OR_RESULTS)/$(DESIGN)/$(DESIGN_VARIANT)/4_final.def:
+$(OR_RESULTS)/$(DESIGN)/$(DESIGN_VARIANT)/4_final.def $(OR_RESULTS)/$(DESIGN)/$(DESIGN_VARIANT)/4_final.v:
 	cd $(OPENROAD_FLOW_DIR) && $(MAKE)
 
 or_nuke:
@@ -60,6 +62,17 @@ slice: ${SCAD_RESULTS}/${DESIGN}/$(DESIGN_VARIANT)/${DESIGN}.slices
 
 %.slices: %.stl
 	xvfb-run python3 tools/slicer/pyqt5/app_qt.py $< ${LAYER_HEIGHT} $@
+
+simulate: $(OR_RESULTS)/$(DESIGN)/$(DESIGN_VARIANT)/4_final.v
+	python3 simulation_flow/runMFDASim.py \
+		--netlist $< \
+		--sim_file ${SIM_RESULTS}/simulation.config \
+		--sim_dir ${SIM_RESULTS}/asdf \
+		--lib  \
+		--cir_config \
+		--design=${DESIGN}
+		--length_file $(OR_RESULTS)/$(DESIGN)/$(DESIGN_VARIANT)/wire_length.csv \
+		--local_xyce
 
 # ALL
 all: ${DESIGN}.${PLATFORM}.zip
