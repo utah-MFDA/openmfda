@@ -5,8 +5,9 @@ import os
 import numpy as np
 import pandas as pd
 import re
+from collections import namedtuple
 
-LAYERS=15
+LAYERS=9
 class set_scale_parameters:
     """
     This sets the pixel size scale unique to the printer.
@@ -145,8 +146,7 @@ class DefFile:
             return(lines) # return the same for now but can add error later
 
     def snap_to_grid(self, value):
-        snap_value = round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
-        return(f"{snap_value}")
+        return round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
 
     def parse_routing(self):
         with open(self.def_file) as f:
@@ -227,7 +227,24 @@ class DefFile:
                     length = len(routes)
                 else:
                     i += 1
-            return(routes)
+            results = []
+            for route in routes:
+                name = route[0]
+                kind = route[-1]
+                layer = int(route[1])-1
+                x0 = int(route[2])
+                y0 = int(route[3])
+                if (len(route) == 6 and kind != 'PIN') or len(route) == 7:
+                    x1 = int(route[4])
+                    y1 = int(route[5])
+                    results.append(ChannelRoute(name, layer, x0, y0, x1, y1, 'CHANNEL'))
+                else:
+                    m = re.match("M([0-9]*)M([0-9]*)", route[4])
+                    via_a = int(m.group(1))
+                    via_b = int(m.group(2))
+                    results.append(ChannelRoute(name, layer, x0, y0, via_a, via_b, 'VIA'))
+
+            return results
         else:
             pass # add error later
 
@@ -284,10 +301,13 @@ class DefFile:
             for pin in pin_list:
                 pin[0][2] = self.snap_to_grid(pin[0][2])
                 pin[0][3] = self.snap_to_grid(pin[0][3])
-            return pin_list
+
+            return [PinRoute(pin[0][0], int(pin[0][1])-1, pin[0][2], pin[0][3]) for pin in pin_list]
         else:
             pass # add error later
 
+PinRoute = namedtuple('PinRoute', ['name', 'layer', 'x0', 'y0'])
+ChannelRoute = namedtuple('ChannelRoute', ['name', 'layer', 'x0', 'y0', 'x1', 'y1', 'kind'])
 
 class DimmFile:
     def __init__(self, filename):
@@ -492,10 +512,11 @@ class route:
         if target == 'one_length': # Targets routes that are one grid unit in length for flattening
             one_length_routes = []
             for route in routes:
-                if ((len(route) == 6 and route[5] != 'PIN') or len(route) == 7) and route[1] != '1':
-                    if route[2] == route[4] and ((int(route[5])-int(route[3]))/def_scale_/pitch_) == 1:
+#                print("target_routing", route)
+                if route.kind == "CHANNEL" and route.layer != 1:
+                    if route.x0 == route.x1 and (route.y1 -route.y0)/def_scale_/pitch_ == 1:
                         one_length_routes.append(route)
-                    elif route[3] == route[5] and ((int(route[4])-int(route[2]))/def_scale_/pitch_) == 1:
+                    elif route.y0 == route.y1 and (route.x1 -route.x0)/def_scale_/pitch_ == 1:
                         one_length_routes.append(route)
             return(one_length_routes)
 
@@ -506,35 +527,30 @@ class route:
             for i in range(0, 9):
                 for route in one_length_routes:
 
-
-                    if  ([route[0], str(int(route[1])-1), route[2], route[3], f'M{int(route[1])-1}M{int(route[1])}_PR'] in routes or \
-                        [route[0], str(int(route[1])-1), route[2], route[3], f'M{int(route[1])-1}M{int(route[1])}_PR', 'PIN'] in routes) and \
-                        ([route[0], str(int(route[1])-1), route[4], route[5], f'M{int(route[1])-1}M{int(route[1])}_PR'] in routes or \
-                        [route[0], str(int(route[1])-1), route[4], route[5], f'M{int(route[1])-1}M{int(route[1])}_PR', 'PIN'] in routes):
+#                    print("flatten_routes", route)
+                    if  ([route.name, str(route.layer), route.x0, route.y0, f'M{route.layer}M{int(route.layer+1)}_PR'] in routes or \
+                        [route.name, str(route.layer), route.x0, route.y0, f'M{route.layer}M{int(route.layer+1)}_PR', 'PIN'] in routes) and \
+                        ([route.name, str(route.layer), route.x1, route[5], f'M{route.layer}M{int(route.layer+1)}_PR'] in routes or \
+                        [route.name, str(route.layer), route.x1, route.y1, f'M{route.layer}M{int(route.layer+1)}_PR', 'PIN'] in routes):
 
                         if len(route) == 6:
-                            routes.remove([route[0], str(int(route[1])-1), route[2], route[3], f'M{int(route[1])-1}M{int(route[1])}_PR'])
-                            routes.remove([route[0], str(int(route[1])-1), route[4], route[5], f'M{int(route[1])-1}M{int(route[1])}_PR'])
+                            routes.remove([route.name, str(route.layer), route.x0, route.y0, f'M{route.layer}M{int(route.layer+1)}_PR'])
+                            routes.remove([route.name, str(route.layer), route.x1, route.y1, f'M{route.layer}M{int(route.layer+1)}_PR'])
                         else:
-                            routes.remove([route[0], str(int(route[1])-1), route[2], route[3], f'M{int(route[1])-1}M{int(route[1])}_PR', 'PIN'])
-                            routes.remove([route[0], str(int(route[1])-1), route[4], route[5], f'M{int(route[1])-1}M{int(route[1])}_PR', 'PIN'])
+                            routes.remove([route.name, str(route.layer), route.x0, route.y0, f'M{route.layer}M{int(route.layer+1)}_PR', 'PIN'])
+                            routes.remove([route.name, str(route.layer), route.x1, route.y1, f'M{route.layer}M{int(route.layer+1)}_PR', 'PIN'])
 
-                        design_space_nets_[int(route[1])-1, int(int(route[3])/def_scale_/pitch_), int(int(route[2])/def_scale_/pitch_)] = ''
-                        design_space_nets_[int(route[1])-1, int(int(route[5])/def_scale_/pitch_), int(int(route[4])/def_scale_/pitch_)] = ''
+                        design_space_nets_[route.layer, int(route.y1/def_scale_/pitch_), int(route.x0/def_scale_/pitch_)] = ''
+                        design_space_nets_[route.layer, int(route.y1/def_scale_/pitch_), int(route.x1/def_scale_/pitch_)] = ''
 
                         index = routes.index(route)
-                        routes[index][1]             = str(int(route[1])-1)  # drop the length down one level
-                        route[1]  = str(int(route[1])-1)  # update one_length_routes
+                        routes[index][1]             = str(route.layer)  # drop the length down one level
+                        route.layer  = route.layer+1  # update one_length_routes
         return(routes)
 
     def get_nets(self):
-        list = self.get_routing()
-        nets_repeat = []
-        nets = []
-        for line in list:
-            nets_repeat.append(line[0])
-        [nets.append(net) for net in nets_repeat if net not in nets]
-        return(nets)
+        lines = self.get_routing()
+        return list({line.name for line in lines})
 
     def get_route_params(self, dimm_file = None):
         parser = DimmFile(dimm_file)
@@ -550,30 +566,23 @@ class route:
         else:
             route_params = self.get_route_params(dimm_file)
         nets        = self.get_nets()
-        nets_params = route_params.keys()
-        dimms       = {}
-        for i in range(len(nets)):
-            if nets[i] in nets_params:
-                dimms.update({nets[i]:self.generate_dimm(route_params[nets[i]][0], route_params[nets[i]][1], route_params[nets[i]][2])})
-            else:
-                dimms.update({nets[i]:self.generate_dimm(14, 14, 10)})
-        return(dimms)
+        return {net:self.generate_dimm(*route_params.get(net, (14,14,10))) for net in nets}
 
     def report_route_lengths(self, nets, pins, output_dir, design):
         lengths = {}
         for net in nets:
-            if net[0] not in list(lengths.keys()):
-                lengths[net[0]] = 0
+            if net.name not in list(lengths.keys()):
+                lengths[net.name] = 0
         for net in nets:
-            if net[4][0] == 'M':
-                lengths[net[0]] += lpv_*layer_
-            elif net[2] == net[4]:
-                lengths[net[0]] += (int(net[5])-int(net[3]))/def_scale_*px_
+            if net.kind == "VIA":
+                lengths[net.name] += lpv_*layer_
+            elif net.x0 == net.x1:
+                lengths[net.name] += (net.y1 - net.y0)/def_scale_*px_
             else:
-                lengths[net[0]] += (int(net[4])-int(net[2]))/def_scale_*px_
+                lengths[net.name] += (net.x1 - net.x0)/def_scale_*px_
         for pin in pins:
-            if pin[0][0] in lengths:
-                lengths[pin[0][0]] += z_bdim_ - (int(pin[0][1])-1)*lpv_*layer_+bottom_layer_
+            if pin.name in lengths:
+                lengths[pin.name] += z_bdim_ - (pin.layer)*lpv_*layer_+bottom_layer_
 
         df = pd.DataFrame(lengths, index=['length (mm)'])
         df.to_csv(os.path.join(output_dir, design + "_lengths.csv"))
@@ -639,37 +648,39 @@ class route:
             route_params = self.get_route_params(dimm_file)
         routes        = self.get_routing()
         routing     = str()
-        if flatten:
+        if False:
             routes = self.flatten_routes(routes, 'one_length')
         self.report_route_lengths(routes, pin_place(self.def_file).get_pins(), output_dir, design)
         for route in routes:
-            if (route[4][0] == 'M'):
-                p0 =    [int(route[2])/def_scale_*px_,
-                         int(route[3])/def_scale_*px_,
-                         (int(route[1])-1)*lpv_*layer_+bottom_layer_]
-                p1 =    [int(route[2])/def_scale_*px_,
-                         int(route[3])/def_scale_*px_,
-                         (int(route[4][3])-1)*lpv_*layer_+bottom_layer_]
+#            print("perform_routing", route)
+            param = (int(route_params[route.name][0]) if (dimm_file != None and route.name in route_params.keys()) else 14)
+            if route.kind == "VIA":
+                p0 =    [route.x0/def_scale_*px_,
+                         route.y0/def_scale_*px_,
+                         (route.x1)*lpv_*layer_+bottom_layer_]
+                p1 =    [route.x0/def_scale_*px_,
+                         route.y0/def_scale_*px_,
+                         (route.y1)*lpv_*layer_+bottom_layer_]
                 connect_matrix = [["z", p1, 2]]
-                routing = routing + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[route[0]] + ") + "
-            elif route[2] == route[4]:
-                p0 =    [int(route[2])/def_scale_*px_,
-                         int(route[3])/def_scale_*px_ - 0.5 * (int(route_params[route[0]][0]) if (dimm_file != None and route[0] in route_params.keys()) else 14) * px_,
-                         (int(route[1])-1)*lpv_*layer_+bottom_layer_]
-                p1 =    [int(route[4])/def_scale_*px_,
-                         int(route[5])/def_scale_*px_ + 0.5 * (int(route_params[route[0]][0]) if (dimm_file != None and route[0] in route_params.keys()) else 14) * px_,
-                         (int(route[1])-1)*lpv_*layer_+bottom_layer_]
+                routing = routing + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[route.name] + ") + "
+            elif route.x0 == route.x1:
+                p0 =    [route.x0/def_scale_*px_,
+                         route.y0/def_scale_*px_ - 0.5 * param * px_,
+                         (route.layer)*lpv_*layer_+bottom_layer_]
+                p1 =    [route.x1/def_scale_*px_,
+                         route.y1/def_scale_*px_ + 0.5 * param * px_,
+                         (route.layer)*lpv_*layer_+bottom_layer_]
                 connect_matrix = [["y", p1, 1]]
-                routing = routing + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[route[0]] + ") + "
+                routing = routing + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[route.name] + ") + "
             else:
-                p0 =    [int(route[2])/def_scale_*px_ - 0.5 * (int(route_params[route[0]][0]) if (dimm_file != None and route[0] in route_params.keys()) else 14) * px_,
-                         int(route[3])/def_scale_*px_,
-                         (int(route[1])-1)*lpv_*layer_+bottom_layer_]
-                p1 =    [int(route[4])/def_scale_*px_ + 0.5 * (int(route_params[route[0]][0]) if (dimm_file != None and route[0] in route_params.keys()) else 14) * px_,
-                         int(route[5])/def_scale_*px_,
-                         (int(route[1])-1)*lpv_*layer_+bottom_layer_]
+                p0 =    [route.x0/def_scale_*px_ - 0.5 * param * px_,
+                         route.y0/def_scale_*px_,
+                         (route.layer)*lpv_*layer_+bottom_layer_]
+                p1 =    [route.x1/def_scale_*px_ + 0.5 * param * px_,
+                         route.y1/def_scale_*px_,
+                         (route.layer)*lpv_*layer_+bottom_layer_]
                 connect_matrix = [["x", p1, 0]]
-                routing = routing + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[route[0]] + ") + "
+                routing = routing + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[route.name] + ") + "
         routing = routing[0:-3]
         if routing == "":
             routing = f"scad_std_cell.empty_obj('NO ROUTING')"
@@ -684,32 +695,21 @@ class design_space_route:
         self.route_list = route_list
 
         for route in self.route_list:
-            print(route)
-            name = route[0]
-            kind = route[-1]
-            layer = int(route[1])
-            x0 = int(route[2])
-            y0 = int(route[3])
-            y0 = int(y0/def_scale_/pitch_)
-            x0 = int(x0/def_scale_/pitch_)
-            # This is a routed pin
-            if (len(route) == 6 and kind != 'PIN') or len(route) == 7:
-                x1, y1 = [int(i) for i in route[-5:-3]]
-                y1 = int(y1/def_scale_/pitch_)
-                x1 = int(x1/def_scale_/pitch_)
+#            print("design_space", route)
+            y0 = int(route.y0/def_scale_/pitch_)
+            x0 = int(route.x0/def_scale_/pitch_)
+            if route.kind == "CHANNEL":
+                y1 = int(route.y1/def_scale_/pitch_)
+                x1 = int(route.x1/def_scale_/pitch_)
                 if x0 == x1:
-                    design_space_[layer, y0:y1+1, x0] = True
-                    design_space_nets_[layer, y0:y1+1, x0] = name
+                    design_space_[route.layer, y0:y1+1, x0] = True
+                    design_space_nets_[route.layer, y0:y1+1, x0] = route.name
                 else:
-                    design_space_[layer, y0, x0:x1+1] = True
-                    design_space_nets_[layer, y0, x0:x1+1] = name
-            # this is a via
+                    design_space_[route.layer, y0, x0:x1+1] = True
+                    design_space_nets_[route.layer, y0, x0:x1+1] = route.name
             else:
-                m = re.match("M([0-9]*)M([0-9]*)", route[4])
-                via_a = int(m.group(1))
-                via_b = int(m.group(2))
-                design_space_[via_a:via_b, y0, x0] = True
-                design_space_nets_[via_a:via_b, y0, x0] = name
+                design_space_[route.x1:route.y1, y0, x0] = True
+                design_space_nets_[route.x1:route.y1, y0, x0] = name
 
 class pin_place:
     """
@@ -719,8 +719,7 @@ class pin_place:
         self.def_file = def_file
 
     def snap_to_grid(self, value):
-        snap_value = round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
-        return(f"{snap_value}")
+        return round(int(value)/pitch_/def_scale_) * pitch_ * def_scale_
 
     def get_pins(self):
         parser = DefFile(self.def_file)
@@ -731,11 +730,8 @@ class pin_place:
         return parser.parse_pin_params()
 
     def get_nets(self):
-        list = self.get_pins()
-        nets = []
-        for line in list:
-            nets.append(line[0][0])
-        return nets
+        pins = self.get_pins()
+        return [pin.name for pin in pins]
 
     def generate_dimm(self, xychan):
         dimm = f"[[[-{xychan}/2*{px_}, {xychan}/2*{px_}], [-{xychan}/2*{px_}, {xychan}/2*{px_}], [0, 0]]]"
@@ -747,31 +743,25 @@ class pin_place:
         else:
             route_params = self.get_pin_params(dimm_file)
         nets        = self.get_nets()
-        nets_params = route_params.keys()
-        dimms       = {}
-        for i in range(len(nets)):
-            if nets[i] in nets_params:
-                dimms.update({nets[i]:self.generate_dimm(route_params[nets[i]][0])})
-            else:
-                dimms.update({nets[i]:self.generate_dimm(14)})
-        return dimms
+        return { net: route_params.get(net, 14) for net in nets}
 
     def place_pinholes(self):
-        list = self.get_pins()
+        pin_list = self.get_pins()
         pinholes_placed = str()
-        for i in range(0, len(list)):
-            cond_x_left    = int(list[i][0][2]) <= (x_cdim_[0]+1) * def_scale_
-            cond_x_right   = int(list[i][0][2]) >= (x_cdim_[1]-1) * def_scale_
-            cond_y_bottom  = int(list[i][0][3]) <= (y_cdim_[0]+1) * def_scale_
-            cond_y_top     = int(list[i][0][3]) >= (y_cdim_[1]-1) * def_scale_
+        for pin in pin_list:
+            print(pin)
+            cond_x_left    = pin.x0 <= (x_cdim_[0]+1) * def_scale_
+            cond_x_right   = pin.x0 >= (x_cdim_[1]-1) * def_scale_
+            cond_y_bottom  = pin.y0 <= (y_cdim_[0]+1) * def_scale_
+            cond_y_top     = pin.y0 >= (y_cdim_[1]-1) * def_scale_
             if (cond_x_left):
-                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0(0, {list[i][0][3]}/{def_scale_}, {(int(list[i][0][1])-1)*lpv_+bottom_layer_/layer_}, 'left') + "
+                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0(0, {pin.y0}/{def_scale_}, {(pin.layer)*lpv_+bottom_layer_/layer_}, 'left') + "
             elif (cond_x_right):
-                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0({x_bdim_/px_}, {list[i][0][3]}/{def_scale_}, {(int(list[i][0][1])-1)*lpv_+bottom_layer_/layer_}, 'right') + "
+                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0({x_bdim_/px_}, {pin.y0}/{def_scale_}, {(pin.layer)*lpv_+bottom_layer_/layer_}, 'right') + "
             elif (cond_y_bottom):
-                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0({list[i][0][2]}/{def_scale_}, 0, {(int(list[i][0][1])-1)*lpv_+bottom_layer_/layer_}, 'bottom') + "
+                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0({pin.x0}/{def_scale_}, 0, {(pin.layer)*lpv_+bottom_layer_/layer_}, 'bottom') + "
             elif (cond_y_top):
-                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0({list[i][0][2]}/{def_scale_}, {y_bdim_/px_}, {(int(list[i][0][1])-1)*lpv_+bottom_layer_/layer_}, 'top') + "
+                pinholes_placed = pinholes_placed + f"scad_std_cell.pinhole_325px_0({pin.x0}/{def_scale_}, {y_bdim_/px_}, {(pin.layer)*lpv_+bottom_layer_/layer_}, 'top') + "
         pinholes_placed = pinholes_placed[0:-3]
         if pinholes_placed == "":
             pinholes_placed = f"scad_std_cell.empty_obj('NO PINHOLES')"
@@ -782,18 +772,20 @@ class pin_place:
             route_dimms = self.generate_dimms()
         else:
             route_dimms = self.generate_dimms(dimm_file)
-        list = self.get_pins()
+        pin_list = self.get_pins()
         pins_placed = str()
-        for i in range(0, len(list)):
-            cond_x_left    = int(list[i][0][2]) <= (x_cdim_[0]+1) * def_scale_
-            cond_x_right   = int(list[i][0][2]) >= (x_cdim_[1]-1) * def_scale_
-            cond_y_bottom  = int(list[i][0][3]) <= (y_cdim_[0]+1) * def_scale_
-            cond_y_top     = int(list[i][0][3]) >= (y_cdim_[1]-1) * def_scale_
+        for pin in pin_list:
+            cond_x_left    = pin.x0 <= (x_cdim_[0]+1) * def_scale_
+            cond_x_right   = pin.x0 >= (x_cdim_[1]-1) * def_scale_
+            cond_y_bottom  = pin.y0 <= (y_cdim_[0]+1) * def_scale_
+            cond_y_top     = pin.y0 >= (y_cdim_[1]-1) * def_scale_
             if (not cond_x_left and not cond_x_right and not cond_y_bottom and not cond_y_top):
-                p0 = [int(list[i][0][2])*px_/def_scale_, int(list[i][0][3])*px_/def_scale_, (int(list[i][0][1])-1)*lpv_*layer_+bottom_layer_]
-                p1 = [int(list[i][0][2])*px_/def_scale_, int(list[i][0][3])*px_/def_scale_, z_bdim_]
+                x0_p = pin.x0*px_/def_scale_
+                y0_p = pin.y0*px_/def_scale_
+                p0 = [x0_p, y0_p, (pin.layer)*lpv_*layer_+bottom_layer_]
+                p1 = [x0_p, y0_p, z_bdim_]
                 connect_matrix = [["z", p1, 0]]
-                pins_placed = pins_placed + f"scad_routing.routing({p0}, {connect_matrix}, " + route_dimms[list[i][0][0]] + ") + "
+                pins_placed = pins_placed + f"scad_routing.routing({p0}, {connect_matrix}, " + str(route_dimms[pin.name]) + ") + "
         pins_placed = pins_placed[0:-3]
         if pins_placed == "":
             pins_placed = f"scad_std_cell.empty_obj('NO PINS')"
@@ -808,17 +800,17 @@ class interconnect_place:
         self.def_file = def_file
 
     def place_interconnect(self):
-        list                = pin_place(self.def_file).get_pins()
+        pin_list                = pin_place(self.def_file).get_pins()
         interconnect_placed = str()
         xpos                = floor(x_bdim_/px_/2)
         ypos                = floor(y_bdim_/px_/2)
-        for i in range(0, len(list)):
-            cond_x_left    = int(list[i][0][2]) <= (x_cdim_[0]+1) * def_scale_
-            cond_x_right   = int(list[i][0][2]) >= (x_cdim_[1]-1) * def_scale_
-            cond_y_bottom  = int(list[i][0][3]) <= (y_cdim_[0]+1) * def_scale_
-            cond_y_top     = int(list[i][0][3]) >= (y_cdim_[1]-1) * def_scale_
+        for pin in pin_list:
+            cond_x_left    = pin.x0 <= (x_cdim_[0]+1) * def_scale_
+            cond_x_right   = pin.x0 >= (x_cdim_[1]-1) * def_scale_
+            cond_y_bottom  = pin.y0 <= (y_cdim_[0]+1) * def_scale_
+            cond_y_top     = pin.y0 >= (y_cdim_[1]-1) * def_scale_
             if (not cond_x_left and not cond_x_right and not cond_y_bottom and not cond_y_top):
-                print(f"Pin '{list[i][0][0]}' is located inside of the chip boundary.\nUsing interconnect module - ensure pins are alligned correctly in io_constraints.tcl.")
+                print(f"Pin '{pin.name}' is located inside of the chip boundary.\nUsing interconnect module - ensure pins are alligned correctly in io_constraints.tcl.")
                 interconnect_placed = f"scad_std_cell.interconnect_32channel({xpos}, {ypos}, {z_bdim_/layer_})"
                 break
         if interconnect_placed == "":
