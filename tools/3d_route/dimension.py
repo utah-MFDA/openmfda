@@ -1,15 +1,8 @@
+from datetime import datetime
 import networkx as nx
+from pandas.core.series import SparseAccessor
 from networkx_helpers import *
 import pandas as pd
-
-def distance_graph(G):
-    N = nx.Graph()
-    for start in G.nodes:
-        for end in G.nodes:
-            if start < end:
-                length = nx.shortest_path_length(G, start, end)
-                N.add_edge(start, end, weight=length)
-    return N
 
 def find_least_impactful(adj: pd.DataFrame) -> tuple[pd.DataFrame, pd.Index]:
     dim = adj.copy() # just need same rows
@@ -57,6 +50,7 @@ def pca_reduce(name, p):
     for node, coord in d.iterrows():
         G.nodes[node]["coordinates"] = coord.array
     s = render_flat(G)
+    d.to_csv(f"{name}.pca.csv")
     s.save_as_scad(f"{name}.pca.scad")
 
 def increment_pca_reduce(name, p):
@@ -71,11 +65,12 @@ def increment_pca_reduce(name, p):
     for node, coord in d.iterrows():
         G.nodes[node]["coordinates"] = coord.array
     s = render_flat(G)
+    d.to_csv(f"{name}.incremental.csv")
     s.save_as_scad(f"{name}.incremental.scad")
 
-def mds_reduce(name, p):
+def mds_reduce(name, p, metric):
     from sklearn.manifold import MDS
-    mds = MDS(n_components=3, dissimilarity="precomputed")
+    mds = MDS(n_components=3, dissimilarity="precomputed", metric=metric)
     mds.fit(p)
     cmp = mds.embedding_.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
@@ -89,30 +84,41 @@ def mds_reduce(name, p):
 
         G.edges[edge]["dimensions"] = [1, 1, 1]
     s = render_flat(G)
-    s.save_as_scad(f"{name}.mds.scad")
+    if metric:
+        suffix = "mds_metric"
+    else:
+        suffix = "mds"
+    d.to_csv(f"{name}.{suffix}.csv")
+    s.save_as_scad(f"{name}.{suffix}.scad")
 
-def smacof_reduce(name, p):
+def smacof_reduce(name, p, metric=True):
     from sklearn.manifold import smacof
-    cmp, stress = smacof(n_components=3, dissimilarities=p)
+    cmp, stress = smacof(n_components=3, dissimilarities=p,  metric=metric)
     cmp = cmp.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
     d /= d.abs().min()
+    # d *= 200
+    print(stress)
     print(d.abs().min())
     print(d)
     for node, coord in d.iterrows():
+
         G.nodes[node]["coordinates"] = coord.array
         G.nodes[node]["dimensions"] = [20, 20, 20]
     for edge in G.edges:
-
         G.edges[edge]["dimensions"] = [5, 5, 5]
     s = render_flat(G)
-    s.save_as_scad(f"{name}.smacof.scad")
+    if metric:
+        suffix = "smacof_metric"
+    else:
+        suffix = "smacof"
+    d.to_csv(f"{name}.{suffix}.csv")
+    s.save_as_scad(f"{name}.{suffix}.scad")
 
 
-def spectral_reduce(name, N):
+def spectral_reduce(name, q):
     from sklearn.manifold import SpectralEmbedding
     spectral = SpectralEmbedding(n_components=3, affinity="precomputed")
-    q = nx.to_pandas_adjacency(N, dtype=int)
     spectral.fit(q)
     cmp = spectral.embedding_.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=q.index)
@@ -126,6 +132,7 @@ def spectral_reduce(name, N):
 
         G.edges[edge]["dimensions"] = [5, 5, 5]
     s = solid2.scale((1,0.05,1))(render_flat(G))
+    d.to_csv(f"{name}.spectral.csv")
     s.save_as_scad(f"{name}.spectral.scad")
 
 def isomap_reduce(name, q):
@@ -145,24 +152,8 @@ def isomap_reduce(name, q):
 
         G.edges[edge]["dimensions"] = [10, 10, 10]
     s = render_flat(G)
+    d.to_csv(f"{name}.isomap.csv")
     s.save_as_scad(f"{name}.isomap.scad")
-
-def smacof_reduce(name, p):
-    from sklearn.manifold import smacof
-    cmp, stress = smacof(n_components=3, dissimilarities=p)
-    cmp = cmp.T
-    d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    print(d.abs().min())
-    print(d)
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
-        G.nodes[node]["dimensions"] = [100, 100, 100]
-    for edge in G.edges:
-
-        G.edges[edge]["dimensions"] = [5, 5, 5]
-    s = render_flat(G)
-    s.save_as_scad(f"{name}.smacof.scad")
 
 def grp_reduce(name, p):
     from sklearn.random_projection import GaussianRandomProjection
@@ -180,6 +171,7 @@ def grp_reduce(name, p):
 
         G.edges[edge]["dimensions"] = [5, 5, 5]
     s = render_flat(G)
+    d.to_csv(f"{name}.grp.csv")
     s.save_as_scad(f"{name}.grp.scad")
 
 def ica_reduce(name, p):
@@ -198,35 +190,43 @@ def ica_reduce(name, p):
 
         G.edges[edge]["dimensions"] = [1, 1, 1]
     s = render_flat(G)
+    d.to_csv(f"{name}.ica.csv")
     s.save_as_scad(f"{name}.ica.scad")
 
 import sys
 name = sys.argv[1]
-
+print(datetime.now().isoformat(), "Starting up")
 G = read_yosys_json(f"{name}.json", top="thing")
-print("Read file")
+print(datetime.now().isoformat(), "Read file")
 G = collapse_edges(G)
 # labels = {node: f"{i:03}" for i, node in enumerate(G.nodes)}
 # nx.relabel_nodes(G, labels, copy=False)
-print("Graph cleaned")
-N = distance_graph(G)
-print("Distances calculated")
-p = nx.to_pandas_adjacency(N, dtype=int, weight="weight")
+print(datetime.now().isoformat(), "Graph cleaned")
+# N = distance_graph(G)
+# p = nx.to_pandas_adjacency(N, dtype=int, weight="weight")
+q = nx.to_pandas_adjacency(G)
+print(datetime.now().isoformat(), "Adjacency generated")
+p = pd.DataFrame(dict(nx.all_pairs_shortest_path_length(G)), index=G.nodes, columns=G.nodes)
+print(datetime.now().isoformat(), "Distances calculated")
 p.to_csv(f"{name}.csv")
-print("Adjacency generated")
-pca_reduce(name, p)
-print("Next 0")
-increment_pca_reduce(name, p)
-print("Nexti 1")
-mds_reduce(name, p)
-print("Next 2")
+print(datetime.now().isoformat(), "spectral")
+spectral_reduce(name, q)
+print(datetime.now().isoformat(), "mds metric")
+mds_reduce(name, p, True)
+print(datetime.now().isoformat(), "smacof")
 smacof_reduce(name, p)
-print("Next 3")
-# spectral_reduce(name, q)
-# print("Next 4")
-isomap_reduce(name, p)
-print("Next 5")
-grp_reduce(name, p)
-print("Next 6")
+print(datetime.now().isoformat(), "ica")
 ica_reduce(name, p)
-print("Next 7")
+print(datetime.now().isoformat(), "isomap")
+isomap_reduce(name, p)
+print(datetime.now().isoformat(), "pca")
+pca_reduce(name, p)
+print(datetime.now().isoformat(), "increment pca")
+increment_pca_reduce(name, p)
+# print(datetime.now().isoformat(), "mds non- metric")
+# mds_reduce(name, q, False)
+# print(datetime.now().isoformat(), "smacof nonmetric")
+# smacof_reduce(name, q, metric=False)
+# print(datetime.now().isoformat(), "grp")
+# grp_reduce(name, p)
+print(datetime.now().isoformat(), "done")

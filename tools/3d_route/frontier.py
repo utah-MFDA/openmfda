@@ -773,7 +773,7 @@ def extract_stats(g):
             # log.warning("No coordinates for %s", node)
     data = ([start, end, *extract_coord(g.nodes[start]["coordinates"], g.nodes[start]["shell"]), *extract_coord(g.nodes[end]["coordinates"], g.nodes[start]["shell"])]
         for start, end in g.edges
-        if "coordinates" in g.nodes[start] and "coordinates" in g.nodes[end])
+        if "coordinates" in g.nodes[start] and "coordinates" in g.nodes[end] and not g.edges[(start, end)]["dummy"])
     data = pd.DataFrame(data, columns=["start", "end", "sx", "sy", "sz", "ex", "ey", "ez"])
     data["dx"] = (data["sx"] - data["ex"]).abs()
     data["dy"] = (data["sy"] - data["ey"]).abs()
