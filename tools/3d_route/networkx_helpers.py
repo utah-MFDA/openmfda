@@ -11,7 +11,7 @@ def read_yosys_json(input_file, top):
     for cell, detail in m["cells"].items():
         if detail["type"] == "$scopeinfo":
             continue
-        G.add_node(cell, hyperedge=False, cell=detail["type"],
+        G.add_node(cell, hyperedge=False, cell=detail["type"], name=cell,
                    parameters=detail["parameters"], attributes=detail["attributes"])
         for port, bits in detail["connections"].items():
             if "port_directions" in detail:
@@ -22,7 +22,7 @@ def read_yosys_json(input_file, top):
                 name = f"$_{bit}"
                 if name not in G.nodes:
                     # If this is an input/output/inout, it will get marked from netnames section
-                    G.add_node(name, weight=0, hyperedge=True, cell="$_wire", netnames=set(), bit=bit)
+                    G.add_node(name, weight=0, hyperedge=True, cell="$_wire", name=name, netnames=set(), bit=bit)
                 if (cell, name) not in G.edges: # this would for a multigraph
                     G.add_edge(cell, name, hyperedge=True, bit=bit, port=port, direction=direction)
                 else:
