@@ -30,18 +30,21 @@ def render_components(g):
 
 def render_edges(G):
     for edge in G.edges:
-        start, end = edge
-        ex, ey, ez = G.nodes[end]["coordinates"]
-        end_orig = [ex, ey, ez]
-        sx, sy, sz = G.nodes[start]["coordinates"]
-        start_orig = [sx, sy, sz]
-        channel_dim = G.edges[edge].get("dimensions", (0.1,0.1,0.1))
-        start_pin = G.edges[edge].get("start_pin", (0, 0, 0))
-        end_pin = G.edges[edge].get("end_pin", (0, 0, 0))
-        front = [i + j for i, j in zip(start_orig, start_pin)]
-        back = [i + j for i, j in zip(end_orig, end_pin)]
-        bit = G.edges[edge].get("bit", "unknown")
-        yield scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
+        yield render_edge(G, edge)
+
+def render_edge(G, edge):
+    start, end = edge
+    ex, ey, ez = G.nodes[end]["coordinates"]
+    end_orig = [ex, ey, ez]
+    sx, sy, sz = G.nodes[start]["coordinates"]
+    start_orig = [sx, sy, sz]
+    channel_dim = G.edges[edge].get("dimensions", (0.1,0.1,0.1))
+    start_pin = G.edges[edge].get("start_pin", (0, 0, 0))
+    end_pin = G.edges[edge].get("end_pin", (0, 0, 0))
+    front = [i + j for i, j in zip(start_orig, start_pin)]
+    back = [i + j for i, j in zip(end_orig, end_pin)]
+    bit = G.edges[edge].get("bit", "unknown")
+    return scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
 
 def distance(s, e):
     se = pd.Series(s, ["x", "y", "z"])
@@ -108,10 +111,26 @@ def cleanup(H):
     H.remove_edges_from(empty)
     empty = [h for h in H.nodes if H.degree(h) < 1]
     H.remove_nodes_from(empty)
-    labels = {node: props["name"] for node, props in H.nodes.items()}
+    # labels = {node: props["name"] for node, props in H.nodes.items()}
 
-    return nx.relabel_nodes(H, labels)
+    # return nx.relabel_nodes(H, labels)
+    return H
+def plane_bound(i, j, k, l):
+    return min(i, j) <= max(k, l) and max(i, j) >= min(k, l)
 
+def intersections(G):
+    for i, j in G.edges:
+        for k, l in G.edges:
+            if i == k and j == l:
+                continue
+            # only interects if bounding boxes intersect
+            if plane_bound(i[0], j[0], k[0], l[0]) \
+                and plane_bound(i[1], j[1], k[1], l[1]) and \
+                 plane_bound(i[2], j[2], k[2], l[2]):
+                yield solid2.intersection()(render_edge(h, (i, j)), render_edge(h, (k,l)))
+            # vector only intersects if coplanar
+# line/cuboid intersection
+# occurs when line intersects two planes
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
