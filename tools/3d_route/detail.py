@@ -1,3 +1,4 @@
+import pyvista as pv
 from render import scad_comment
 from frontier import *
 from collections import deque
@@ -8,6 +9,39 @@ import pandas as pd
 import logging
 import solid2
 
+def render_components_pv(g):
+    for node, props in g.nodes.items():
+        x, y, z = props["coordinates"]
+        yield pv.Cube(center = [x,y,z], x_length=1, y_length=1, z_length=1)
+
+def render_edges_pv(G):
+    for edge in G.edges:
+        yield render_edge_pv(G, edge)
+
+def render_edge_pv(G, edge):
+    start, end = edge
+    ex, ey, ez = G.nodes[end]["coordinates"]
+    end_orig = [ex, ey, ez]
+    sx, sy, sz = G.nodes[start]["coordinates"]
+    start_orig = [sx, sy, sz]
+    channel_dim = G.edges[edge].get("dimensions", (0.1,0.1,0.1))
+    start_pin = G.edges[edge].get("start_pin", (0, 0, 0))
+    end_pin = G.edges[edge].get("end_pin", (0, 0, 0))
+    front = [i + j for i, j in zip(start_orig, start_pin)]
+    back = [i + j for i, j in zip(end_orig, end_pin)]
+    bit = G.edges[edge].get("bit", "unknown")
+    return draw_channel_pv(front, back, channel_dim)
+
+def draw_channel_pv(a, b, d):
+    v = [i - j for i, j in zip(a, b)]
+    c = [(i + j)/2 for i, j in zip(a, b)]
+    length = sqrt(sum((i-j)**2 for i, j in zip(a, b)))
+    bounds = d[0], d[1], length
+    if length == 0.0:
+        length += 0.000001
+    angle = [0,180*acos(v[2]/length)/pi, 180*atan2(v[1], v[0])/pi]
+    mesh = pv.Cube(x_length=bounds[0], y_length=bounds[1], z_length=bounds[2])
+    return mesh.rotate_x(angle[0]).rotate_y(angle[1]) .rotate_z(angle[2]).translate(c)
 
 def render_components(g):
     for node, props in g.nodes.items():
@@ -44,7 +78,8 @@ def render_edge(G, edge):
     front = [i + j for i, j in zip(start_orig, start_pin)]
     back = [i + j for i, j in zip(end_orig, end_pin)]
     bit = G.edges[edge].get("bit", "unknown")
-    return scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
+    return draw_channel_pv(front, back, channel_dim)
+
 
 def distance(s, e):
     se = pd.Series(s, ["x", "y", "z"])
@@ -91,17 +126,16 @@ def swap_id(G):
 
 def reroute(H):
     problems = { (start, end): props  for (start, end), props in H.edges.items() if props["weight"] > 1}
+    print(len(problems), "connections rerouted")
     H.remove_edges_from(problems.keys())
     gen = 0
     for (start, end), props in problems.items():
-        print("fixing", start, end)
         path = nx.shortest_path(H, start, end, weight="weight")
-        print(path, start, end)
         for stop_a, stop_b in zip(path, path[1:]):
-            print("inserting", stop_a, stop_b)
             H.edges[(stop_a, stop_b)]["weight"] += 1
-            H.nodes[stop_a]["name"] = f"inserted_{gen}"
-            gen += 1
+            if "name" not in H.nodes[stop_a]:
+                H.nodes[stop_a]["name"] = f"inserted_{gen}"
+                gen += 1
             for k, v in props.items():
                 H.edges[(stop_a, stop_b)][k] = v
     return H
@@ -137,6 +171,7 @@ if __name__ == "__main__":
     parser.add_argument("--cache")
     parser.add_argument("--graph")
     parser.add_argument("--top", default="thing")
+    parser.add_argument("--scad", action="store_true", default=False)
     args = parser.parse_args()
 
     g = read_yosys_json(args.graph,args.top)
@@ -151,11 +186,21 @@ if __name__ == "__main__":
         if "coordinates" not in g.nodes[node]:
             log.warning("No coordinates for %s", node)
     h = cleanup(reroute(swap_id(g.copy())))
-    # orig = solid2.union()(solid2.background()(solid2.union()(*render_components(g))),
-                           # solid2.color("grey")(solid2.union()(*render_edges(g))))
     print(pd.Series(props["weight"] for i, props in h.edges.items()).value_counts())
-    update = solid2.union()(solid2.union()(*render_components(h)),
-                            solid2.union()(*render_edges(h)))
-
-    update.save_as_scad("test.scad")
-    # solid2.union()(update, orig).save_as_scad("test.scad")
+    if args.scad:
+        update = solid2.union()(solid2.union()(*render_components(h)),
+                                  solid2.union()(*render_edges(h)))
+        update.save_as_scad("test.scad")
+        # h = cleanup(swap_id(g))
+        # orig = solid2.union()(*intersections(h))
+        # orig = solid2.union()(solid2.background()(solid2.union()(*render_components(g))),
+                             # solid2.color("grey")(solid2.union()(*render_edges(g))))
+        # orig.save_as_scad("test.scad")
+        # solid2.union()(update, orig).save_as_scad("test.scad")
+    else:
+        p = pv.Plotter()
+        for mesh in render_components_pv(h):
+            p.add_mesh(mesh)
+        for mesh in render_edges_pv(h):
+            p.add_mesh(mesh)
+        p.show()
