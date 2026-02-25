@@ -52,6 +52,7 @@ def render_components(g):
         if kind in {"$_input", "$_output", "$_wire"}:
             color = "yellow"
         elif kind in {"pump_valve", "sieve_valve", "valve", "chamber"}:
+            size = [0.5, 0.5, 0.5]
             color = "blue"
         elif kind in {"pinhole_320px_0", "ctrl_hole_0", "flush_hole_0"}:
             size = [0.5, 0.5, 0.5]
@@ -60,11 +61,18 @@ def render_components(g):
                 color = "pink"
         else:
             color = "grey"
+        x -= size[0]/2
+        y -= size[1]/2
+        z -= size[2]/2
         yield scad_comment(f"{kind} {name}")(solid2.color(color)(solid2.translate([x, y, z])(solid2.cube(size))))
 
 def render_edges(G):
     for edge in G.edges:
-        yield render_edge(G, edge)
+        if is_control_edge(G, edge):
+            color = "purple"
+        else:
+            color = "yellow"
+        yield solid2.color(color)(render_edge(G, edge))
 
 def render_edge(G, edge):
     start, end = edge
@@ -72,13 +80,13 @@ def render_edge(G, edge):
     end_orig = [ex, ey, ez]
     sx, sy, sz = G.nodes[start]["coordinates"]
     start_orig = [sx, sy, sz]
-    channel_dim = G.edges[edge].get("dimensions", (0.1,0.1,0.1))
+    channel_dim = G.edges[edge].get("dimensions", (0.05,0.05,0.05))
     start_pin = G.edges[edge].get("start_pin", (0, 0, 0))
     end_pin = G.edges[edge].get("end_pin", (0, 0, 0))
     front = [i + j for i, j in zip(start_orig, start_pin)]
     back = [i + j for i, j in zip(end_orig, end_pin)]
     bit = G.edges[edge].get("bit", "unknown")
-    return draw_channel_pv(front, back, channel_dim)
+    return draw_channel(front, back, channel_dim)
 
 
 def distance(s, e):
@@ -163,6 +171,7 @@ def intersections(G):
                  plane_bound(i[2], j[2], k[2], l[2]):
                 yield solid2.intersection()(render_edge(h, (i, j)), render_edge(h, (k,l)))
             # vector only intersects if coplanar
+
 # line/cuboid intersection
 # occurs when line intersects two planes
 if __name__ == "__main__":

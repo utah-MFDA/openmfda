@@ -39,7 +39,10 @@ def read_yosys_json(input_file, top):
                 # there is a possible offset, ignoring
             G.nodes[bit]["attributes"] = details["attributes"]
             if "type" in details["attributes"]:
-                G.nodes[bit]["type"] = details["attributes"]["type"]
+                kind = details["attributes"]["type"]
+                G.nodes[bit]["type"] = kind
+                for neighbor in G.adj[bit]:
+                    G.edges[(bit, neighbor)]["type"] = kind
             else:
                 G.nodes[bit]["type"] = "unknown"
             # If the wire type is input/output/inout, mark here
@@ -49,21 +52,48 @@ def read_yosys_json(input_file, top):
     return G
 
 def is_net(G, node):
-    return G.nodes[node]["cell"] in {"$_output", "$_inout", "$_wire", "$_input"}
+    return G.nodes[node].get("cell", "unknown") in {"$_output", "$_inout", "$_wire", "$_input"}
 
 def is_port(G, node):
-    return G.nodes[node]["cell"] in {"$_output", "$_inout", "$_input"}
+    return G.nodes[node].get("cell", "unknown") in {"$_output", "$_inout", "$_input"}
 
 def is_input_port(G, node):
-    return G.nodes[node]["cell"] == "$_input"
+    return G.nodes[node].get("cell", "unknown") == "$_input"
 
 def is_inout_port(G, node):
-    return G.nodes[node]["cell"] == "$_inout"
+    return G.nodes[node].get("cell", "unknown") == "$_inout"
 def is_output_port(G, node):
-    return G.nodes[node]["cell"] == "$_output"
+    return G.nodes[node].get("cell", "unknown") == "$_output"
 
 def is_wire(G, node):
-    return G.nodes[node]["cell"] == "$_wire"
+    return G.nodes[node].get("cell", "unknown") == "$_wire"
+
+def is_dummy(G, node):
+    return G.nodes[node]["cell"] == "$_dummy"
+
+def is_flow(G, node):
+    return is_net(G, node) and G.nodes[node]["type"] == "flow"
+
+def is_control(G, node):
+    return is_net(G, node) and G.nodes[node]["type"] == "ctrl"
+
+def is_flush(G, node):
+    return is_net(G, node) and G.nodes[node]["type"] == "flush"
+
+def is_unknown(G, node):
+    return is_net(G, node) and G.nodes[node]["type"] == "unknown"
+
+def is_control_cell(G, n):
+    return G.nodes[n]["cell"] == "ctrl_hole_0"
+
+def is_flush_cell(G, n):
+    return G.nodes[n]["cell"] == "flush_hole_0"
+
+def is_pinhole(G, n):
+    return G.nodes[n]["cell"] == "pinhole_320px_0"
+
+def is_control_edge(G, edge):
+    return G.edges[edge].get("type") == "ctrl"
 
 def collapse_edges(G: nx.Graph):
     rm = []

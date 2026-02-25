@@ -34,30 +34,6 @@ def is_ancestor(G, node, other):
 def is_older(G, n, shell):
     return G.nodes[n]["shell"] > shell
 
-def is_dummy(G, node):
-    return G.nodes[node]["cell"] == "$_dummy"
-
-def is_flow(G, node):
-    return is_net(G, node) and G.nodes[node]["type"] == "flow"
-
-def is_control(G, node):
-    return is_net(G, node) and G.nodes[node]["type"] == "ctrl"
-
-def is_flush(G, node):
-    return is_net(G, node) and G.nodes[node]["type"] == "flush"
-
-def is_unknown(G, node):
-    return is_net(G, node) and G.nodes[node]["type"] == "unknown"
-
-def is_control_cell(G, n):
-    return G.nodes[n]["cell"] == "ctrl_hole_0"
-
-def is_flush_cell(G, n):
-    return G.nodes[n]["cell"] == "flush_hole_0"
-
-def is_pinhole(G, n):
-    return G.nodes[n]["cell"] == "pinhole_320px_0"
-
 ##################### Setup #####################
 def add_shell(G, starts):
     assert(len(starts) > 0)

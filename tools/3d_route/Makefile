@@ -39,7 +39,7 @@ benchmarks/picorv32.json: benchmarks/picorv32.v
 
 %.cylinder.scad: %.json frontier.py
 	date --iso-8601=seconds >> $*.cylinder.timer
-	${PYTHON3} frontier.py $< --orientation cylinder --output $@ --offset 2  ${COMMON_ARGS} --cache $*.cylinder.csv --add_buffers --logfile $*.cylinder.log --backtrack 2>&1 >> $*.cylinder.err.log
+	${PYTHON3} frontier.py $< --orientation cylinder --output $@ --offset 2  ${COMMON_ARGS} --cache $*.cylinder.csv --add_buffers --minimize --logfile $*.cylinder.log --backtrack 2>&1 >> $*.cylinder.err.log
 	date --iso-8601=seconds >> $*.cylinder.timer
 
 %.horizontal.scad: %.json frontier.py
