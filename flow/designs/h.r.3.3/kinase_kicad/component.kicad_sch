@@ -1,0 +1,7392 @@
+(kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "5f7f49bf-a20c-4427-803c-114d6e86577c")
+	(paper "A4")
+	(lib_symbols
+		(symbol "mfda:chamber"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "R"
+				(at -4.445 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "${SIM.PARAMS}"
+				(at 3.81 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at -5.334 -7.366 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at -5.334 -7.366 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at -5.334 -7.366 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Library" "/Users/snelgrov/kicad/verilogA_build/channel_flow.lib"
+				(at 2.794 10.414 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Name" "channel"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Device" "SUBCKT"
+				(at 0.254 -7.874 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Pins" "1=in 2=out"
+				(at -0.254 -5.842 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Sim.Params" "length=5 width=5u height=10u"
+				(at 12.446 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "chamber_0_1"
+				(bezier
+					(pts
+						(xy -5.08 1.27) (xy -6.35 1.27) (xy -6.35 0) (xy -6.35 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(bezier
+					(pts
+						(xy -5.08 -1.27) (xy -6.35 -1.27) (xy -6.35 0) (xy -6.35 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(bezier
+					(pts
+						(xy 5.08 1.27) (xy 6.35 1.27) (xy 6.35 0) (xy 6.35 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(bezier
+					(pts
+						(xy 6.35 0) (xy 6.35 -1.27) (xy 5.08 -1.27) (xy 5.08 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "chamber_1_1"
+				(polyline
+					(pts
+						(xy -5.08 -1.27) (xy 5.08 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 5.08 1.27) (xy -5.08 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -8.89 0 0)
+					(length 2.54)
+					(name "in"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 8.89 0 180)
+					(length 2.54)
+					(name "out"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "mfda:mux_3"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "V"
+				(at 4.826 5.334 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" ""
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "mux_3_0_1"
+				(polyline
+					(pts
+						(xy -5.08 -5.08) (xy 3.81 -2.54) (xy 3.81 2.54) (xy -5.08 5.08) (xy -5.08 -5.08)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 5.08) (xy -2.54 4.445)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -5.08) (xy -2.54 -4.445)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 5.08) (xy 0 3.683)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -5.08) (xy 0 -3.683)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 5.08) (xy 2.5308 2.9468)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -5.08) (xy 2.5443 -2.9233)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "mux_3_1_1"
+				(pin input line
+					(at -7.62 2.54 0)
+					(length 2.54)
+					(name "a"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -7.62 0 0)
+					(length 2.54)
+					(name "b"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -7.62 -2.54 0)
+					(length 2.54)
+					(name "c"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -2.54 7.62 270)
+					(length 2.54)
+					(name "sa"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 7.62 270)
+					(length 2.54)
+					(name "sb"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 2.54 7.62 270)
+					(length 2.54)
+					(name "sc"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 6.35 0 180)
+					(length 2.54)
+					(name "y"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at -2.54 -7.62 90)
+					(length 2.54)
+					(name "saf"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 0 -7.62 90)
+					(length 2.54)
+					(name "sbf"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "9"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 2.54 -7.62 90)
+					(length 2.54)
+					(name "scf"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "10"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "mfda:pump_1"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "P"
+				(at 2.794 3.048 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "pump_1_0_1"
+				(polyline
+					(pts
+						(xy -2.54 3.81) (xy -2.54 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 3.81) (xy -2.54 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 2.54 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0 0)
+					(radius 2.54)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 0) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "pump_1_1_1"
+				(pin input line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "in"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "out"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 5.08 270)
+					(length 2.54)
+					(name "pump_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 0 -5.08 90)
+					(length 2.54)
+					(name "pump_1fl"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "mfda:pump_3"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "P"
+				(at 4.064 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "pump_3_0_1"
+				(polyline
+					(pts
+						(xy -2.54 3.81) (xy -2.54 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 3.81) (xy -2.54 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 3.81) (xy -2.54 2.921)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -3.81) (xy -2.54 -2.921)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -3.81) (xy -2.54 -3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.54 -3.81) (xy -2.54 -3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 3.81) (xy 3.81 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0 0)
+					(radius 3.81)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 3.81) (xy 2.54 3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 3.81) (xy 2.54 2.921)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -3.81) (xy 2.54 -2.921)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -3.81) (xy 2.54 -3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 3.81 0) (xy 0 -3.81)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "pump_3_1_1"
+				(pin input line
+					(at -6.35 0 0)
+					(length 2.54)
+					(name "in"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 6.35 0 180)
+					(length 2.54)
+					(name "out"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -2.54 6.35 270)
+					(length 2.54)
+					(name "pump_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at -2.54 -6.35 90)
+					(length 2.54)
+					(name "pump_1f"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 6.35 270)
+					(length 2.54)
+					(name "pump_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 0 -6.35 90)
+					(length 2.54)
+					(name "pump_2fl"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 2.54 6.35 270)
+					(length 2.54)
+					(name "pump_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 2.54 -6.35 90)
+					(length 2.54)
+					(name "pump_3fl"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "mfda:valve_alt"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "V"
+				(at -2.54 2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "valve_alt_1_1"
+				(polyline
+					(pts
+						(xy -2.54 1.27) (xy 2.54 -1.27) (xy 2.54 1.27) (xy -2.54 -1.27) (xy -2.54 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin bidirectional line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "fluid_left"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "fluid_left"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "fluid_right"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "fluid_right"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 3.81 270)
+					(length 2.54)
+					(name "control_in"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 3.81 270)
+					(length 3.81)
+					(name "control_in"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "valve_alt_2_1"
+				(unit_name "F")
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type solid)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin output line
+					(at 0 -3.81 90)
+					(length 3.81)
+					(name "control_out"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "mfda:valve_alt_sieve"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "V"
+				(at 1.524 2.54 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "valve*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "valve_alt_sieve_1_1"
+				(polyline
+					(pts
+						(xy -2.54 -1.27) (xy -1.016 -0.508) (xy -1.016 0.508) (xy -2.54 1.27) (xy -2.54 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(rectangle
+					(start -1.016 1.016)
+					(end 1.016 -1.016)
+					(stroke
+						(width 0)
+						(type solid)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center -0.635 0.508)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center -0.635 -0.508)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center -0.381 0)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 1.27) (xy 0 1.016)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0 0.508)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0 -0.508)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0.381 0)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0.635 0.508)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 0.635 -0.508)
+					(radius 0.1796)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 2.54 -1.27) (xy 1.016 -0.508) (xy 1.016 0.508) (xy 2.54 1.27) (xy 2.54 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin input line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "fluid_in"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "fluid_out"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 3.81 270)
+					(length 2.54)
+					(name "control"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(symbol "valve_alt_sieve_2_1"
+				(unit_name "F")
+				(polyline
+					(pts
+						(xy 0 -1.016) (xy 0 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin output line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "control"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(junction
+		(at 173.99 60.96)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "07f81fb7-47a2-41d5-bdf3-095e579925f3")
+	)
+	(junction
+		(at 186.69 60.96)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4f5ed88d-1861-4bdf-b492-c86bd0e697e4")
+	)
+	(junction
+		(at 247.65 102.87)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a5507369-2616-40ec-a0a3-0545ea60bdc7")
+	)
+	(junction
+		(at 101.6 60.96)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b7e81227-36fd-437a-a486-cc61057ce4e8")
+	)
+	(junction
+		(at 173.99 110.49)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "e9ef4f51-4ff8-4030-b8db-65772e0ef658")
+	)
+	(bus_entry
+		(at 96.52 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0a662ad3-f884-4888-bcf4-bda1fa38ce3a")
+	)
+	(bus_entry
+		(at 88.9 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1997cd11-9c8c-4f4f-957d-251238065f63")
+	)
+	(bus_entry
+		(at 142.24 129.54)
+		(size -2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1a1d430d-5364-4a4a-8624-dc5b70cb6366")
+	)
+	(bus_entry
+		(at 86.36 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1bd103bd-7819-4a1c-b764-02ddf38b96ae")
+	)
+	(bus_entry
+		(at 191.77 134.62)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "23e21b28-039d-4706-baf3-e3a5fb079847")
+	)
+	(bus_entry
+		(at 236.22 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "263bd4bb-9b7f-48f8-9234-9f22b21a7b29")
+	)
+	(bus_entry
+		(at 124.46 72.39)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "27eeb0e4-cdce-4267-8271-d21a135a26ab")
+	)
+	(bus_entry
+		(at 92.71 132.08)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "40a71b09-28fc-4fa5-941f-790fe2a35760")
+	)
+	(bus_entry
+		(at 78.74 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "43aa2e79-63d1-45be-9e61-05d3e79683b3")
+	)
+	(bus_entry
+		(at 77.47 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "462cf2c9-aebd-4301-8fc5-3b861fa8b034")
+	)
+	(bus_entry
+		(at 129.54 48.26)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4882f10f-618e-40d7-bb64-7cbe0080dde3")
+	)
+	(bus_entry
+		(at 93.98 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4cac9515-485d-4d92-be11-77f4dffa77bd")
+	)
+	(bus_entry
+		(at 99.06 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "502c7335-baba-4daa-a88b-3ac15b271149")
+	)
+	(bus_entry
+		(at 139.7 129.54)
+		(size -2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "53fd71f9-1181-49a5-b414-d0400daf8415")
+	)
+	(bus_entry
+		(at 81.28 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "55ac223d-256a-4bfc-8f9d-f5c00fa82a31")
+	)
+	(bus_entry
+		(at 111.76 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5a1ad0a5-da91-441e-b129-03aff3db04ad")
+	)
+	(bus_entry
+		(at 101.6 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5f78c317-daa2-406d-97fa-e905a94c47e9")
+	)
+	(bus_entry
+		(at 91.44 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6b9e9433-8e78-4b68-80e1-91dfc3a79e52")
+	)
+	(bus_entry
+		(at 157.48 48.26)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6cde87ca-0cdf-4505-a189-cb4d4f6a1bfc")
+	)
+	(bus_entry
+		(at 163.83 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6ed0f18a-6750-4a55-bd7f-23ed29ee2d32")
+	)
+	(bus_entry
+		(at 80.01 86.36)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6f2a8354-dc0a-473d-a8fa-4e4faebb95c8")
+	)
+	(bus_entry
+		(at 132.08 95.25)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "784bb4fb-2641-464a-9e1b-701d9a13e7da")
+	)
+	(bus_entry
+		(at 176.53 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "78f14514-2eaa-4380-a6cd-261a3ea7e086")
+	)
+	(bus_entry
+		(at 137.16 95.25)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "859331cc-e829-464b-a4db-7d0aef40adb3")
+	)
+	(bus_entry
+		(at 104.14 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "88e352fc-f9c4-4fb1-9a1f-e8403d44c114")
+	)
+	(bus_entry
+		(at 77.47 86.36)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8a8aa234-435c-4acd-98e6-6783f5d149a2")
+	)
+	(bus_entry
+		(at 80.01 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "93f8cf4c-379e-4a89-ab78-eb1c5c751cc6")
+	)
+	(bus_entry
+		(at 76.2 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "972f117c-9a1d-4ab6-a2b2-3d25979c11b9")
+	)
+	(bus_entry
+		(at 167.64 134.62)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "980c46df-7db0-4ccc-a10d-90668053df9d")
+	)
+	(bus_entry
+		(at 82.55 86.36)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a04a545f-63a2-4768-9a98-309d5a7d3214")
+	)
+	(bus_entry
+		(at 189.23 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b98e1efd-de72-442e-91d0-06662740b863")
+	)
+	(bus_entry
+		(at 256.54 132.08)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c12bc26f-cd46-4ba1-8485-36f4a2740348")
+	)
+	(bus_entry
+		(at 71.12 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cd09fde5-8d88-45e0-b03e-7a846f49932b")
+	)
+	(bus_entry
+		(at 260.35 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dad2f4cf-ed7d-41df-a527-4b4585bafaa0")
+	)
+	(bus_entry
+		(at 91.44 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e24460ad-fd78-4ce5-80c6-4ca0d76c57d8")
+	)
+	(bus_entry
+		(at 204.47 132.08)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e2a86534-0213-4591-8209-9978c5e1ad84")
+	)
+	(bus_entry
+		(at 104.14 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e81a0c1f-6a12-4405-9e79-cc7c0f6cc7dd")
+	)
+	(bus_entry
+		(at 152.4 72.39)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e9319432-7c9f-414a-ba5d-4317e3243864")
+	)
+	(bus_entry
+		(at 83.82 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eb671020-8ec3-477e-85dc-78650b738ab6")
+	)
+	(bus_entry
+		(at 176.53 134.62)
+		(size 2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eed8c64a-27df-4f3a-940b-c032097cb1bd")
+	)
+	(bus_entry
+		(at 73.66 154.94)
+		(size -2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f1b82a89-9a65-45e6-b1d6-2dca3796b620")
+	)
+	(bus_entry
+		(at 134.62 95.25)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f23910f0-8efe-4e74-ad96-07fd1a1b6a9a")
+	)
+	(bus_entry
+		(at 82.55 30.48)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f3f594b8-c79f-448f-bb2b-3adc8a2e6b93")
+	)
+	(bus_entry
+		(at 137.16 129.54)
+		(size -2.54 -2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f884faa6-a016-4450-b27f-09bb8db3843b")
+	)
+	(bus
+		(pts
+			(xy 189.23 30.48) (xy 176.53 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "00f32a4e-5074-4cd2-8a6c-373f86846a30")
+	)
+	(bus
+		(pts
+			(xy 48.26 30.48) (xy 77.47 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "023c4675-6486-4036-81db-c4d8cdce4a60")
+	)
+	(wire
+		(pts
+			(xy 127 50.8) (xy 127 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "02faa56f-b464-4dce-bb74-a982d12749f6")
+	)
+	(wire
+		(pts
+			(xy 99.06 60.96) (xy 101.6 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "03147922-59dc-4424-b660-5435d078bbb8")
+	)
+	(wire
+		(pts
+			(xy 73.66 157.48) (xy 73.66 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "08773b60-0f8e-40f7-b700-0f5ca89330a0")
+	)
+	(bus
+		(pts
+			(xy 76.2 86.36) (xy 85.09 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0886e602-09bc-411a-a2c2-c005be7bf67e")
+	)
+	(wire
+		(pts
+			(xy 247.65 100.33) (xy 247.65 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "08a5771a-21e1-4a0f-8a36-3eef50ee9ba8")
+	)
+	(wire
+		(pts
+			(xy 179.07 33.02) (xy 179.07 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0ae24b4c-f9f7-4697-9e15-4e7cef2237bb")
+	)
+	(wire
+		(pts
+			(xy 83.82 157.48) (xy 83.82 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0b113966-935c-4262-b335-95dde1089078")
+	)
+	(wire
+		(pts
+			(xy 267.97 100.33) (xy 271.78 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0cf0fd0e-8b03-4ec4-9112-53b20d1272d3")
+	)
+	(wire
+		(pts
+			(xy 247.65 102.87) (xy 247.65 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "12725271-7922-446b-afd3-3aef7e4ecb4d")
+	)
+	(wire
+		(pts
+			(xy 204.47 106.68) (xy 204.47 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1445726e-8512-45fc-bef0-02579fedcc2d")
+	)
+	(bus
+		(pts
+			(xy 137.16 95.25) (xy 134.62 95.25)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "15f93004-d787-4cb7-9bef-43aba3960f12")
+	)
+	(wire
+		(pts
+			(xy 184.15 110.49) (xy 185.42 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2105f96e-8aaf-472a-bb70-74b85f16883d")
+	)
+	(wire
+		(pts
+			(xy 111.76 60.96) (xy 109.22 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "220854e2-fff0-4ea4-9019-ad7b07c662dd")
+	)
+	(wire
+		(pts
+			(xy 186.69 102.87) (xy 189.23 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "221137ef-c855-4b91-b0b8-bfe0de0ecd87")
+	)
+	(bus
+		(pts
+			(xy 167.64 134.62) (xy 191.77 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "24ab11fd-efd9-4010-87b6-c0d75eca80cb")
+	)
+	(wire
+		(pts
+			(xy 194.31 106.68) (xy 194.31 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "266548d0-c47b-4cf2-96ca-407aacf0a410")
+	)
+	(wire
+		(pts
+			(xy 184.15 60.96) (xy 186.69 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2b8c91bd-af03-4fba-9d12-32a4558f28fc")
+	)
+	(wire
+		(pts
+			(xy 160.02 60.96) (xy 161.29 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2c139058-c6e2-43e0-8748-24495e82733e")
+	)
+	(wire
+		(pts
+			(xy 186.69 60.96) (xy 186.69 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2d1cc884-a121-4cdd-916b-b620c82f0f78")
+	)
+	(bus
+		(pts
+			(xy 127 48.26) (xy 157.48 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2e6beda5-c95e-4101-9294-fad5033b6796")
+	)
+	(bus
+		(pts
+			(xy 176.53 30.48) (xy 163.83 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2fe8a26e-eb3d-464d-9eec-c37437031642")
+	)
+	(wire
+		(pts
+			(xy 119.38 60.96) (xy 121.92 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "34bd7165-3f11-464b-92e8-41d0c6670532")
+	)
+	(wire
+		(pts
+			(xy 171.45 60.96) (xy 173.99 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "376e33a6-2118-4ce4-a072-10ddb5aafb9b")
+	)
+	(wire
+		(pts
+			(xy 71.12 157.48) (xy 71.12 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "39fe1a1f-f84e-4c42-b402-b913a9010d96")
+	)
+	(bus
+		(pts
+			(xy 129.54 95.25) (xy 132.08 95.25)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3a703a2d-133a-429f-b0b6-6d9f4e26f120")
+	)
+	(wire
+		(pts
+			(xy 106.68 33.02) (xy 106.68 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3b2d0082-94f6-4f5a-806b-2388405e7f50")
+	)
+	(wire
+		(pts
+			(xy 134.62 97.79) (xy 134.62 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3e391cfe-4fdc-4e83-bda9-14301c5581f1")
+	)
+	(wire
+		(pts
+			(xy 69.85 58.42) (xy 74.93 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f71a1fc-57fe-45e1-8eeb-930e0b3debd0")
+	)
+	(wire
+		(pts
+			(xy 76.2 157.48) (xy 76.2 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "41b6d99d-eb6b-4dc1-a7ae-ef1287b6977e")
+	)
+	(wire
+		(pts
+			(xy 231.14 102.87) (xy 233.68 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "44bd7529-a5be-418c-b279-96058daea71f")
+	)
+	(bus
+		(pts
+			(xy 80.01 30.48) (xy 77.47 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "45127d1f-779c-44a8-9477-2140f3d5ea87")
+	)
+	(wire
+		(pts
+			(xy 114.3 33.02) (xy 114.3 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "49382784-e594-4519-a0d4-88467ca68d16")
+	)
+	(wire
+		(pts
+			(xy 99.06 157.48) (xy 99.06 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a8336e4-cd81-4ae9-bac9-b32b6ee9619b")
+	)
+	(wire
+		(pts
+			(xy 143.51 110.49) (xy 147.32 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "549449c3-6771-407d-b83f-1f92bba905d8")
+	)
+	(wire
+		(pts
+			(xy 92.71 102.87) (xy 97.79 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "56b7d867-192f-4af2-b9cd-36661f1d59b4")
+	)
+	(bus
+		(pts
+			(xy 67.31 154.94) (xy 93.98 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "63622bc8-4b1c-490f-b9ee-484097f5088f")
+	)
+	(wire
+		(pts
+			(xy 243.84 102.87) (xy 247.65 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "640593f8-fbdf-45c7-b1c1-33a19004ff30")
+	)
+	(wire
+		(pts
+			(xy 85.09 33.02) (xy 85.09 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6848a37d-d5b1-4b68-8d9e-e22f5d048af6")
+	)
+	(wire
+		(pts
+			(xy 82.55 33.02) (xy 82.55 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a15c8a9-b459-4985-87a6-704975419d68")
+	)
+	(wire
+		(pts
+			(xy 68.58 157.48) (xy 68.58 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a1ca755-1e2b-4d82-80a5-996a16ba1d81")
+	)
+	(bus
+		(pts
+			(xy 111.76 30.48) (xy 104.14 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6cd66f74-c9e6-44bb-8aec-4e54488f600c")
+	)
+	(wire
+		(pts
+			(xy 173.99 95.25) (xy 173.99 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6df2f8d4-9757-484d-9abc-625ae265c6fe")
+	)
+	(wire
+		(pts
+			(xy 238.76 33.02) (xy 238.76 99.06)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6f1f4b7b-d683-4c9b-b6f4-cb6c73c7f6fa")
+	)
+	(wire
+		(pts
+			(xy 101.6 157.48) (xy 101.6 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "716ae9f5-51ff-4544-bae6-0aa7666e5dff")
+	)
+	(wire
+		(pts
+			(xy 81.28 157.48) (xy 81.28 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "71961b84-0536-4d5d-9e56-fdac3b7a0867")
+	)
+	(wire
+		(pts
+			(xy 101.6 107.95) (xy 101.6 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "757b197f-f983-4806-91f9-3fd02ec0fd0a")
+	)
+	(wire
+		(pts
+			(xy 127 66.04) (xy 127 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "76cf4e3c-02f4-484d-bc78-b57646f8005a")
+	)
+	(wire
+		(pts
+			(xy 78.74 157.48) (xy 78.74 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7ad0fdb3-47df-4cc5-9733-7491863ad733")
+	)
+	(wire
+		(pts
+			(xy 69.85 63.5) (xy 74.93 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7b25ade2-06c7-44be-9855-a8da97f52085")
+	)
+	(wire
+		(pts
+			(xy 191.77 33.02) (xy 191.77 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "800b88fc-66e4-47db-93c9-b5430b124875")
+	)
+	(wire
+		(pts
+			(xy 166.37 33.02) (xy 166.37 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8450fee6-c0b6-4671-82d9-421ccc605094")
+	)
+	(wire
+		(pts
+			(xy 137.16 116.84) (xy 137.16 127)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85594fdd-7995-45b0-b45c-e9e134f87e1c")
+	)
+	(wire
+		(pts
+			(xy 93.98 33.02) (xy 93.98 57.15)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "87cdbd1b-c737-4fa1-87ea-aa07fccb4947")
+	)
+	(wire
+		(pts
+			(xy 247.65 100.33) (xy 257.81 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8b443fc4-3c39-451a-a301-4e896d7470d7")
+	)
+	(wire
+		(pts
+			(xy 251.46 111.76) (xy 247.65 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8d3f683e-a0c3-4224-b8a1-219e67b48c17")
+	)
+	(bus
+		(pts
+			(xy 46.99 134.62) (xy 167.64 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "91e8e4a1-cf59-4119-9a4c-3ab99aa2b3ac")
+	)
+	(wire
+		(pts
+			(xy 82.55 68.58) (xy 82.55 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92b29e2c-1962-4e80-b713-d4b4da119506")
+	)
+	(wire
+		(pts
+			(xy 170.18 90.17) (xy 170.18 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "94c8fc02-4c6f-4e14-b011-d01ea6c003f2")
+	)
+	(wire
+		(pts
+			(xy 88.9 157.48) (xy 88.9 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9ce72b41-e038-49c3-a61c-656e8de367fd")
+	)
+	(bus
+		(pts
+			(xy 104.14 154.94) (xy 107.95 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a43dab14-dccd-49c0-bc3f-78c0e53e034d")
+	)
+	(bus
+		(pts
+			(xy 82.55 30.48) (xy 91.44 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "abc48a0b-0577-408a-b085-70f4145bb7bd")
+	)
+	(bus
+		(pts
+			(xy 93.98 154.94) (xy 104.14 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "abde94f2-bdc2-42b3-a3ae-75fa785bba5d")
+	)
+	(bus
+		(pts
+			(xy 91.44 30.48) (xy 104.14 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ac3dd61b-601a-4080-907b-e11cebcbcc25")
+	)
+	(wire
+		(pts
+			(xy 92.71 102.87) (xy 92.71 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ad479985-6b06-4ae0-bc44-97908f1ad82a")
+	)
+	(bus
+		(pts
+			(xy 82.55 30.48) (xy 80.01 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b3be51e6-9fcd-41f4-b44c-21c5146c1795")
+	)
+	(wire
+		(pts
+			(xy 165.1 110.49) (xy 173.99 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b6a37643-f2dd-4d3c-9527-5d993d3c27d9")
+	)
+	(wire
+		(pts
+			(xy 173.99 60.96) (xy 173.99 85.09)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b8005fcc-0ecc-48ca-b356-dd9f27271386")
+	)
+	(bus
+		(pts
+			(xy 132.08 95.25) (xy 134.62 95.25)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b825c99d-57e9-4601-94cf-157e0abfb2ca")
+	)
+	(wire
+		(pts
+			(xy 139.7 97.79) (xy 139.7 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b93caea9-324e-4a7f-92a0-56225e448597")
+	)
+	(wire
+		(pts
+			(xy 91.44 157.48) (xy 91.44 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bb7582c9-ce14-4808-a171-485abc4b8cea")
+	)
+	(wire
+		(pts
+			(xy 86.36 157.48) (xy 86.36 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bf58ee8b-d907-4b5b-b342-0d883c4c3219")
+	)
+	(wire
+		(pts
+			(xy 80.01 68.58) (xy 80.01 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c34f1213-8010-4e1b-aa48-f26eea75095f")
+	)
+	(wire
+		(pts
+			(xy 69.85 60.96) (xy 74.93 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c66cc334-e5ca-4309-b4bc-88b63ba60a1c")
+	)
+	(wire
+		(pts
+			(xy 85.09 68.58) (xy 85.09 83.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cb5aaf91-acef-48ce-85d0-c56f95d6b17a")
+	)
+	(wire
+		(pts
+			(xy 209.55 102.87) (xy 213.36 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cc8405b3-6837-4d56-a4cd-35e027ca52e3")
+	)
+	(bus
+		(pts
+			(xy 191.77 134.62) (xy 201.93 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cd798a3b-2661-4716-a565-374b73ffdf46")
+	)
+	(bus
+		(pts
+			(xy 144.78 129.54) (xy 142.24 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ce338503-3dd3-400c-aa93-6cca8e3f1571")
+	)
+	(bus
+		(pts
+			(xy 130.81 129.54) (xy 142.24 129.54)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cf9841e3-267f-4c5d-a95b-ddfe0a5a3ff7")
+	)
+	(wire
+		(pts
+			(xy 137.16 97.79) (xy 137.16 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d1323611-33e7-4950-a394-e48453f67c1f")
+	)
+	(bus
+		(pts
+			(xy 121.92 72.39) (xy 156.21 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d13e2196-0894-4050-b62f-e68d7d13472c")
+	)
+	(wire
+		(pts
+			(xy 134.62 127) (xy 134.62 116.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d1a1dddb-c839-44c3-9893-b76a65937896")
+	)
+	(bus
+		(pts
+			(xy 254 134.62) (xy 201.93 134.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5824fad-5f80-41ba-bf28-acc13a26e476")
+	)
+	(wire
+		(pts
+			(xy 261.62 111.76) (xy 265.43 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d79be831-f7b9-4e8c-90b5-8f35300f4d5b")
+	)
+	(wire
+		(pts
+			(xy 179.07 114.3) (xy 179.07 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e136a528-b72d-42f3-9377-6ab2879bb5cb")
+	)
+	(wire
+		(pts
+			(xy 256.54 115.57) (xy 256.54 132.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e4c419e5-db41-4751-8c73-e67c7b0e0818")
+	)
+	(wire
+		(pts
+			(xy 154.94 50.8) (xy 154.94 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e6ea2e06-bc17-4e14-9b4d-587345190cd0")
+	)
+	(wire
+		(pts
+			(xy 80.01 33.02) (xy 80.01 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e7b67ee9-75f8-43a6-bd74-9d6a4ee67c08")
+	)
+	(wire
+		(pts
+			(xy 123.19 110.49) (xy 130.81 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e7dc0d39-6f0d-4725-a2cb-85539a71bf96")
+	)
+	(wire
+		(pts
+			(xy 93.98 157.48) (xy 93.98 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eb71c5a3-1d50-4c08-8534-1f72d1d52bc0")
+	)
+	(wire
+		(pts
+			(xy 262.89 33.02) (xy 262.89 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f1cfa250-707d-4cc6-a972-307b14f184f4")
+	)
+	(bus
+		(pts
+			(xy 236.22 30.48) (xy 260.35 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f21c951d-56bf-4379-adb2-31af9c77118d")
+	)
+	(wire
+		(pts
+			(xy 96.52 157.48) (xy 96.52 181.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f62e3ef1-1173-4e18-a868-9903fff07589")
+	)
+	(wire
+		(pts
+			(xy 139.7 116.84) (xy 139.7 127)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f7d32d59-39ef-4c8f-ba04-d16f40c29ee9")
+	)
+	(bus
+		(pts
+			(xy 163.83 30.48) (xy 111.76 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f927e05f-30e6-4269-8e69-01eda53d604c")
+	)
+	(wire
+		(pts
+			(xy 101.6 110.49) (xy 105.41 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f94137f2-bd00-4af3-86d6-a1dd90edef31")
+	)
+	(bus
+		(pts
+			(xy 189.23 30.48) (xy 236.22 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f9614819-049e-4f0e-bd08-9829bf42942a")
+	)
+	(wire
+		(pts
+			(xy 101.6 60.96) (xy 101.6 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fd0dff28-e49c-4b2d-a30e-eb43c1c72be6")
+	)
+	(wire
+		(pts
+			(xy 196.85 60.96) (xy 198.12 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fe56f89f-e1c9-4724-8516-8fcdc929fc27")
+	)
+	(wire
+		(pts
+			(xy 154.94 66.04) (xy 154.94 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fecdc8ee-09f8-40df-8929-3a9374b87c43")
+	)
+	(label "control.filter1"
+		(at 114.3 52.07 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "036fc011-650c-461f-8453-73e772f80667")
+	)
+	(label "flush.flush1"
+		(at 73.66 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "076a01c4-80ec-4cb3-8f28-65c4bcc4975b")
+	)
+	(label "pump1"
+		(at 134.62 97.79 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "0b4dfb99-d83a-4df6-b0fd-3958f4f6a4fe")
+	)
+	(label "flush.flush2"
+		(at 71.12 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "1759362f-8dab-4236-a7e4-c0e3a7709ddc")
+	)
+	(label "flush.circulate_out"
+		(at 99.06 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "18abf335-6ff5-4de9-8459-edd2074104b6")
+	)
+	(label "control.fluid_in1"
+		(at 80.01 50.8 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "18b128eb-8f7c-46f3-bfff-0235955f4591")
+	)
+	(label "control.flush2"
+		(at 191.77 53.34 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1dcc342c-fdf4-43da-97d1-30e869da615c")
+	)
+	(label "flush.fluid_in1"
+		(at 80.01 83.82 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "1dee325a-7782-49b5-b5dc-ff6d8c980585")
+	)
+	(label "control.circulate3"
+		(at 106.68 54.61 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "24e7e358-32c5-411d-acf2-b3adef485660")
+	)
+	(label "flush.circulate1"
+		(at 81.28 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "27ad5a72-bef6-4672-94c4-d02f9eece2f0")
+	)
+	(label "pump5"
+		(at 154.94 54.61 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "3017e861-bf24-442b-ad39-b14f9540763f")
+	)
+	(label "flush.fluid_in3"
+		(at 85.09 83.82 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "32557310-a238-451e-bdbd-450e3286566e")
+	)
+	(label "pump3"
+		(at 139.7 97.79 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "396f2f7c-3dd3-48ad-87f5-3b32b95d0669")
+	)
+	(label "control.out"
+		(at 262.89 93.98 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "3ac1e3ef-1396-467e-8389-503a1236b770")
+	)
+	(label "control.filter2"
+		(at 166.37 50.8 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "48ca8847-108d-44af-be61-fa11cd77eaec")
+	)
+	(label "pump4"
+		(at 127 54.61 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "4b2a7fbc-8be7-4d9e-b00e-ab84a6a0f6b7")
+	)
+	(label "flush.out"
+		(at 101.6 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "5578905a-3a8a-4183-973f-78091156aeee")
+	)
+	(label "pump_flush5"
+		(at 154.94 69.85 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "605f61fb-34aa-4924-9d9f-3228c7171ba4")
+	)
+	(label "control.circulate_out"
+		(at 179.07 54.61 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6b759461-5b7e-4d5b-9eea-f43f3cf75aeb")
+	)
+	(label "control.circulate2"
+		(at 92.71 102.87 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6dea7eb3-0f5a-4b83-a4aa-f047cdaf05ac")
+	)
+	(label "control.flush3"
+		(at 256.54 118.11 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "6e298321-7146-45a6-8ead-39306795829b")
+	)
+	(label "control.circulate_in"
+		(at 93.98 55.88 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "70c0e8b7-68e4-4964-9fe4-196c8f15742e")
+	)
+	(label "flush.fluid_in2"
+		(at 82.55 83.82 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "7274906b-5c44-46e9-a4f2-31a77c74dcac")
+	)
+	(label "flush.flush3"
+		(at 68.58 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "77f75210-0bff-46f4-a639-2923bcb88bbc")
+	)
+	(label "flush.filter3"
+		(at 86.36 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "7d7c89b7-f222-4683-ad66-0d5bdb3ccdd4")
+	)
+	(label "flush.filter1"
+		(at 91.44 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "81c9ef72-e5d0-49dd-a15d-928ac957e277")
+	)
+	(label "pump_flush4"
+		(at 127 69.85 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "85ed078a-c57b-442f-be2f-0d2232b56ed1")
+	)
+	(label "flush.circulate_in"
+		(at 96.52 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "8ae58c25-adfd-4de3-8207-63ca471bee75")
+	)
+	(label "control.stage"
+		(at 194.31 113.03 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "8c64d803-05e9-449c-9cd7-db304846f71d")
+	)
+	(label "control.circulate1"
+		(at 170.18 114.3 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "93ef2f2f-6a84-4ef0-9efe-c0dbfdb6b7fa")
+	)
+	(label "control.fluid_in3"
+		(at 85.09 50.8 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "9423c07d-1097-454c-b156-231be55f1a39")
+	)
+	(label "flush.filter2"
+		(at 88.9 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "a1429827-44cd-490f-a1a9-f4cb3b8e52b1")
+	)
+	(label "pump_flush1"
+		(at 134.62 127 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "adbef973-12f2-430a-98a2-8db0dd08ce04")
+	)
+	(label "pump_flush2"
+		(at 137.16 127 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b81131f2-7638-4b6d-a3f6-2282b8a378aa")
+	)
+	(label "flush.circulate3"
+		(at 76.2 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "b90d9a1a-b4a0-473b-a3c7-e565cf99a858")
+	)
+	(label "control.flush1"
+		(at 179.07 116.84 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "bcac1d2d-7b75-44bc-9ab8-bbf96073ddff")
+	)
+	(label "control.filter3"
+		(at 238.76 95.25 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ca84a5f7-8532-45d7-971b-41564f3e16a5")
+	)
+	(label "control.filter4"
+		(at 204.47 110.49 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "d4dc8320-e377-4922-9844-ba67c6b2a53f")
+	)
+	(label "control.fluid_in2"
+		(at 82.55 50.8 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d9a0b284-1ea1-4f7a-b219-80f98c6284cc")
+	)
+	(label "flush.circulate2"
+		(at 78.74 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "de800226-26fb-41c4-bbd1-cae61b17e395")
+	)
+	(label "flush.filter4"
+		(at 83.82 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "eee4cc5a-68a3-477e-b5a9-f7191b84fb1e")
+	)
+	(label "flush.stage"
+		(at 93.98 158.75 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "fb5134f0-f7b5-4e7b-9749-d4ab67bc22a7")
+	)
+	(label "pump_flush3"
+		(at 139.7 127 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "fbcbb4a2-6a1f-495f-87df-3d631dbb4f07")
+	)
+	(label "pump2"
+		(at 137.16 97.79 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "fcf3ee38-11c4-46f3-beb5-e7b32519a38e")
+	)
+	(hierarchical_label "fluid_in1"
+		(shape input)
+		(at 69.85 58.42 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "03688684-1676-4a1b-87f9-16c920ec2913")
+	)
+	(hierarchical_label "fluid_in3"
+		(shape input)
+		(at 69.85 63.5 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "13d974ee-20e4-4422-ab5b-a62ee4fad92c")
+	)
+	(hierarchical_label "pump[1..5]"
+		(shape input)
+		(at 127 48.26 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "2e4ad85a-ce6c-468a-b94c-a4aa8a790106")
+	)
+	(hierarchical_label "pump_flush[1..5]"
+		(shape output)
+		(at 156.21 72.39 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "45c924c2-498c-4652-b6cc-f729cec27c5c")
+	)
+	(hierarchical_label "control{ctrl_pins}"
+		(shape input)
+		(at 46.99 134.62 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "7d65c0a0-e88f-47c2-8a4d-79a6f2d57638")
+	)
+	(hierarchical_label "out"
+		(shape output)
+		(at 271.78 100.33 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "94555a87-93f9-4576-8c32-6565754651fe")
+	)
+	(hierarchical_label "flush_2"
+		(shape output)
+		(at 198.12 60.96 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "96093ccf-624e-45d6-a5e6-ae81e48404fd")
+	)
+	(hierarchical_label "fluid_in2"
+		(shape input)
+		(at 69.85 60.96 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "9cf84ac1-689a-4b5c-ac80-2df337e6e870")
+	)
+	(hierarchical_label "control{ctrl_pins}"
+		(shape input)
+		(at 48.26 30.48 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "a9b19444-b2cb-40be-9e1b-9665f693e928")
+	)
+	(hierarchical_label "flush_1"
+		(shape output)
+		(at 185.42 110.49 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b25f8099-7333-4026-b859-c31301959130")
+	)
+	(hierarchical_label "flush{ctrl_pins}"
+		(shape output)
+		(at 85.09 86.36 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "c4ba2dd1-4432-4633-9130-eaa0361a0fb5")
+	)
+	(hierarchical_label "flush{ctrl_pins}"
+		(shape output)
+		(at 107.95 154.94 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d1428eb5-04ff-4989-8f2f-458741a7a2ea")
+	)
+	(hierarchical_label "flush_3"
+		(shape output)
+		(at 265.43 111.76 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d5d79149-d40e-4efc-8942-e8eeef209a64")
+	)
+	(hierarchical_label "pump_flush[1..5]"
+		(shape output)
+		(at 144.78 129.54 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "da11666e-a7a2-457d-bec4-adbd85de17a7")
+	)
+	(hierarchical_label "pump[1..5]"
+		(shape input)
+		(at 129.54 95.25 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "f036c6fc-782a-4d32-a4da-22d81d9dad32")
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 101.6 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "04933428-9e70-4816-ac5b-9d93c26ee2d9")
+		(property "Reference" "V15"
+			(at 100.584 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 101.6 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 101.6 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 101.6 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 101.6 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "73c1e20e-3c5c-40f9-a007-3beb2df81cd8")
+		)
+		(pin "2"
+			(uuid "47b72aa5-8ea0-403e-b266-04587f205475")
+		)
+		(pin "3"
+			(uuid "7f2bf5fc-a9b8-47d7-81e2-8ca3ccfc91f9")
+		)
+		(pin "4"
+			(uuid "5c2faf48-acd3-4b51-882b-2b5007d2324b")
+		)
+		(pin "3"
+			(uuid "de452cc6-02df-4c20-a1c1-27deac7e348c")
+		)
+		(pin "1"
+			(uuid "4c9fb1e1-5493-4214-8dab-dd46189c3f59")
+		)
+		(pin "2"
+			(uuid "ac7ce50c-48cf-41b0-b98d-abd56391afba")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V15")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V30")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:chamber")
+		(at 114.3 110.49 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "11ccc61e-7e29-4121-898a-50aed0f2374d")
+		(property "Reference" "C1"
+			(at 109.855 106.68 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 114.3 110.49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:serpentine_100px_0"
+			(at 114.3 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 114.3 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 114.3 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Library" "/Users/snelgrov/kicad/verilogA_build/channel_flow.lib"
+			(at 117.094 100.076 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Name" "channel"
+			(at 114.3 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "SUBCKT"
+			(at 114.554 118.364 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=in 2=out"
+			(at 114.046 116.332 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Params" "length=5 width=5u height=10u"
+			(at 126.746 105.41 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "cad5f971-5210-4daf-bc3b-f307baa209e5")
+		)
+		(pin "2"
+			(uuid "df02c21c-27be-469f-8429-1796e6553077")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "C1")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "C4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 96.52 185.42 0)
+		(mirror x)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "1623e12e-77e7-40c9-bba0-8a7967a428c3")
+		(property "Reference" "V13"
+			(at 95.25 185.4199 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 96.52 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 96.52 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 96.52 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 96.52 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "01426b65-5eea-4105-a2e1-b2eeda060cd1")
+		)
+		(pin "2"
+			(uuid "e909e1e5-7651-4433-baae-3833966c71df")
+		)
+		(pin "3"
+			(uuid "62e426aa-82d5-4ec9-aeb8-827dcc483c88")
+		)
+		(pin "4"
+			(uuid "d3c1c0ab-8473-42f9-8aa9-0d77b2761a03")
+		)
+		(pin "1"
+			(uuid "3333ac5a-966a-40d2-92b9-effc7e41c9ec")
+		)
+		(pin "3"
+			(uuid "c7ecf67a-0e38-40b9-8e70-9c86c7fe3ad9")
+		)
+		(pin "2"
+			(uuid "95543b93-4c93-4e7d-9e94-43f874ceae28")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V13")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V28")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 76.2 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "173af31d-57c0-4904-9d92-f613ca878afa")
+		(property "Reference" "V4"
+			(at 75.184 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 76.2 180.34 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 76.2 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 76.2 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 76.2 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "d27e192e-b928-49da-af1d-c9498b6248e6")
+		)
+		(pin "1"
+			(uuid "ea22914a-0471-44ea-8f4d-befcfe7af5de")
+		)
+		(pin "3"
+			(uuid "46d4f140-97ce-4f0d-bb3d-25bec5ab91f1")
+		)
+		(pin "4"
+			(uuid "56d06df8-cf7c-4f1a-9bf8-6b8a1f2725f5")
+		)
+		(pin "3"
+			(uuid "23a18cc3-cfec-4512-b0c2-016e98fc09e0")
+		)
+		(pin "1"
+			(uuid "a01f230c-e400-4ad9-8e1a-bd4e27dc8092")
+		)
+		(pin "2"
+			(uuid "dad337be-e89a-46b0-a627-70f89bb5e107")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V4")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V19")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 262.89 100.33 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "2be57e73-bfe4-471a-8851-8258cd0081b7")
+		(property "Reference" "V15"
+			(at 260.35 97.79 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 262.89 100.33 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 262.89 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 262.89 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 262.89 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "7a7eec88-3a7f-4a9d-8072-25b1ded51c55")
+		)
+		(pin "2"
+			(uuid "64685384-089d-4611-aa26-2f06d3e5a16a")
+		)
+		(pin "3"
+			(uuid "89f4115f-79c8-4801-b9e6-779e7cad84c5")
+		)
+		(pin "4"
+			(uuid "43eb35e5-7a4b-4a03-80b4-46a67969a60b")
+		)
+		(pin "3"
+			(uuid "57f33983-e4cd-4ec3-8b10-aa2160eb4701")
+		)
+		(pin "1"
+			(uuid "836382c7-6501-4f39-a5c8-5bb942233f12")
+		)
+		(pin "2"
+			(uuid "39606c89-a3ca-4317-b840-1942c60b17c8")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V15")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V30")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 101.6 102.87 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "2d026935-9068-43a6-aa73-65ee4b5f5034")
+		(property "Reference" "V2"
+			(at 105.156 101.346 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 101.6 102.87 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 101.6 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 101.6 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 101.6 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "335e8888-8b6e-490a-8ac7-a2c12cfaaa5f")
+		)
+		(pin "1"
+			(uuid "0403df8f-3391-4a89-8905-db26fb7889ca")
+		)
+		(pin "4"
+			(uuid "5e159b1a-5877-43dc-9c3d-cebc842d1580")
+		)
+		(pin "2"
+			(uuid "1922106d-a7c5-45c7-b3c6-a135aab97559")
+		)
+		(pin "2"
+			(uuid "303b0430-3f27-44cb-8f41-e8f0d2706a70")
+		)
+		(pin "3"
+			(uuid "57b1a065-934c-41e9-a05e-597ffaf0bbed")
+		)
+		(pin "1"
+			(uuid "675cbca1-14f0-43f3-9b97-a02bed17d801")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V2")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V17")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:chamber")
+		(at 222.25 102.87 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "34f9966b-b06f-467a-afeb-44d529d57a13")
+		(property "Reference" "C3"
+			(at 222.25 96.52 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 222.25 99.06 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:serpentine_100px_0"
+			(at 222.25 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 222.25 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 222.25 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Library" "/Users/snelgrov/kicad/verilogA_build/channel_flow.lib"
+			(at 219.456 92.456 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Name" "channel"
+			(at 222.25 106.68 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "SUBCKT"
+			(at 221.996 110.744 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=in 2=out"
+			(at 222.504 108.712 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Params" "length=5 width=5u height=10u"
+			(at 209.804 97.79 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "97e02e5c-658d-48ce-b87a-72c4cd565da2")
+		)
+		(pin "1"
+			(uuid "d9d1f643-3bd1-453f-a0d2-307dcddd7bcc")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "C3")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "C6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 166.37 60.96 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "3c77d0a1-981f-464b-8908-448b9641195d")
+		(property "Reference" "V9"
+			(at 166.37 64.77 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 166.37 66.04 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 166.37 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 166.37 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 166.37 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "6e2915f7-0769-4e18-ba5f-65a767dcdf36")
+		)
+		(pin "2"
+			(uuid "43de1249-d405-4cce-b75b-08972513d27d")
+		)
+		(pin "1"
+			(uuid "c76824fb-a4a5-4fea-8538-c41b94f2cf1a")
+		)
+		(pin "4"
+			(uuid "70e1ee29-9ecf-42fb-a36f-3cc3b3349ddd")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V9")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V24")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:pump_3")
+		(at 137.16 110.49 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "4a65cfc4-fca0-4017-8945-3d50f55064fc")
+		(property "Reference" "P2"
+			(at 143.51 108.0768 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 137.16 110.49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 137.16 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 137.16 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 137.16 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "8"
+			(uuid "f5b07a61-9d09-4194-92e6-2ac9a2c284d1")
+		)
+		(pin "2"
+			(uuid "0a5c0992-e9f3-48c4-91d9-c9924c48b64e")
+		)
+		(pin "1"
+			(uuid "a4ad4789-755f-4d27-9a1a-a19a3ff24a84")
+		)
+		(pin "6"
+			(uuid "78218eb4-d8ec-440b-913b-50ba458b83ef")
+		)
+		(pin "5"
+			(uuid "fa7cd358-8616-498e-9da4-ecc3a9c1484e")
+		)
+		(pin "3"
+			(uuid "574ebbd9-86cb-4135-bba9-1942883682b5")
+		)
+		(pin "7"
+			(uuid "363edca7-a118-411b-a605-a7ca7e6e7979")
+		)
+		(pin "4"
+			(uuid "ac564547-97c1-4f46-bb32-340e823c1e63")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "P2")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "P5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 114.3 60.96 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "4a77aa2c-0e55-474b-8845-a23bb27cb286")
+		(property "Reference" "V8"
+			(at 114.3 64.77 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 114.3 66.04 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 114.3 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 114.3 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 114.3 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "384e48b3-962a-4bbd-9f49-72fbdadb6064")
+		)
+		(pin "1"
+			(uuid "afcac770-5874-40b9-b9f8-896219e99fc4")
+		)
+		(pin "2"
+			(uuid "46c10872-5f27-4b1d-be04-ec24265bdec3")
+		)
+		(pin "4"
+			(uuid "4d765457-4dc5-4b44-b4a8-30c18b1636d1")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V8")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V23")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:chamber")
+		(at 156.21 110.49 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "52c25e0b-e689-47e9-95e1-c84dfc1372f7")
+		(property "Reference" "C2"
+			(at 160.655 106.68 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 156.21 110.49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:serpentine_100px_0"
+			(at 156.21 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 156.21 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 156.21 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Library" "/Users/snelgrov/kicad/verilogA_build/channel_flow.lib"
+			(at 153.416 100.076 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Name" "channel"
+			(at 156.21 114.3 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "SUBCKT"
+			(at 155.956 118.364 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=in 2=out"
+			(at 156.464 116.332 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Params" "length=5 width=5u height=10u"
+			(at 143.764 105.41 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "76eb6e64-556d-4d80-a24b-2b896dda5a66")
+		)
+		(pin "2"
+			(uuid "e62c3933-fe3e-4f94-9384-66d75be1c9aa")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "C2")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "C5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 71.12 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "59427e37-a339-4271-92c4-2b447765c92d")
+		(property "Reference" "V2"
+			(at 70.104 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 71.12 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 71.12 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 71.12 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 71.12 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "30a7841a-6ec5-4a64-b0af-d1530d308f58")
+		)
+		(pin "2"
+			(uuid "de5ef680-3663-41af-af8d-53279a894c5d")
+		)
+		(pin "3"
+			(uuid "a4e8e794-ff76-4266-8a8c-098916039da4")
+		)
+		(pin "4"
+			(uuid "92570032-3729-4495-895f-a1e0cfe89bb4")
+		)
+		(pin "3"
+			(uuid "81eabca9-69a7-4c23-b4f7-de7188919130")
+		)
+		(pin "1"
+			(uuid "5255cd2c-bc85-4442-a59f-8668a768401b")
+		)
+		(pin "2"
+			(uuid "06c61599-43ef-4d4c-9409-593d9d063fee")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V2")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V17")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:pump_1")
+		(at 154.94 60.96 0)
+		(mirror x)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "5b20bbe3-4dd9-4b45-a38f-24f40d926d63")
+		(property "Reference" "P3"
+			(at 159.004 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 154.94 54.61 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 154.94 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 154.94 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 154.94 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "4f3341fa-5e30-426d-ac54-afb4e49cf478")
+		)
+		(pin "1"
+			(uuid "a3928bc3-52e3-4a11-997f-128790ddf16f")
+		)
+		(pin "2"
+			(uuid "c5da59f9-a66b-4a9c-b30f-3dfd8cc683da")
+		)
+		(pin "5"
+			(uuid "65396a15-5ad7-4f7a-8e5d-e904f58b4cda")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "P3")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "P6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 238.76 102.87 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "61fd3b05-b2a2-4d27-b3e8-f365762fa396")
+		(property "Reference" "V11"
+			(at 241.3 100.33 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 238.76 102.87 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 238.76 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 238.76 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 238.76 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bc3e7260-d87a-4884-8ae1-222aa2393c8b")
+		)
+		(pin "2"
+			(uuid "12b2c723-2b12-48e4-be2a-c68d6ee4be53")
+		)
+		(pin "3"
+			(uuid "6e447747-8a3d-4774-abb7-2efd9d172cdf")
+		)
+		(pin "4"
+			(uuid "0e38759b-3212-4f9f-822f-ab9de4452785")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V11")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V26")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 93.98 185.42 0)
+		(mirror x)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "661df5c9-4640-4117-b12a-0900cab96360")
+		(property "Reference" "V12"
+			(at 92.71 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 93.98 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 93.98 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 93.98 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 93.98 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "524ca7db-90fe-44f7-a5ef-7d7f6c332aa4")
+		)
+		(pin "2"
+			(uuid "01ca0013-c01a-4552-a2ca-739e5e485a83")
+		)
+		(pin "3"
+			(uuid "bde1dd83-2a07-4ccd-b28b-a3a29142bfed")
+		)
+		(pin "4"
+			(uuid "f9627957-e57a-4d1c-b061-2d18277c16b7")
+		)
+		(pin "1"
+			(uuid "07807627-5cf5-404d-9988-4e1a1774b8af")
+		)
+		(pin "3"
+			(uuid "680cb506-5731-4352-9e17-f8a797e3c9ad")
+		)
+		(pin "2"
+			(uuid "906d75da-37d5-47cc-b47b-05f1275f55df")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V12")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V27")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 179.07 60.96 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "6a6cb2ef-e074-45f0-ae23-dc470fcadc2a")
+		(property "Reference" "V5"
+			(at 181.61 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 179.07 60.96 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 179.07 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 179.07 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 179.07 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "353364f5-15af-4572-ba11-d39005975adc")
+		)
+		(pin "2"
+			(uuid "f11d31f5-b788-4b76-90d2-00466a84d0db")
+		)
+		(pin "3"
+			(uuid "ef2a94f3-f108-42b0-aeb2-e9efe610b1a2")
+		)
+		(pin "4"
+			(uuid "5f9f7a92-f0f9-4162-8f90-944222ca995c")
+		)
+		(pin "3"
+			(uuid "8c11c9d1-4726-42b5-8759-e0a75ae30ef6")
+		)
+		(pin "1"
+			(uuid "8b53a34e-ae51-415e-9eea-8cdc615c6e6a")
+		)
+		(pin "2"
+			(uuid "594bce38-3146-425b-9feb-3b826be3aace")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V5")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V20")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 73.66 185.42 0)
+		(mirror x)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "6dbad102-50f8-4aed-9c46-cee485db79a6")
+		(property "Reference" "V3"
+			(at 72.644 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 73.66 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 73.66 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 73.66 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 73.66 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9b32e1ec-63de-4fa8-990e-52d872d690ae")
+		)
+		(pin "2"
+			(uuid "add00482-bb66-408d-a880-9e5c6406853f")
+		)
+		(pin "3"
+			(uuid "9758c1a1-46ed-44e0-8e00-85810ffae005")
+		)
+		(pin "4"
+			(uuid "b6ba1a5c-41b6-4271-951a-85ddfcbb5fd9")
+		)
+		(pin "1"
+			(uuid "20c7dadf-139e-4f7f-9f8d-30701e260748")
+		)
+		(pin "3"
+			(uuid "1270125e-ed0e-45e3-a09c-56f5ea1bc659")
+		)
+		(pin "2"
+			(uuid "0154ca08-ac81-442b-a52b-0e1d06ba66bc")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V3")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V18")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 173.99 90.17 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "7f968438-06bf-4cfa-bee8-11d7f12c09c2")
+		(property "Reference" "V4"
+			(at 177.038 85.852 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 173.99 90.17 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 173.99 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 173.99 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 173.99 90.17 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "25baf923-cb74-47fa-a4ef-137e8f5d3df0")
+		)
+		(pin "2"
+			(uuid "26106bc0-b03e-4640-a5f0-3953a8cee77d")
+		)
+		(pin "3"
+			(uuid "52772ab2-e466-480e-9d44-fa975653ea4f")
+		)
+		(pin "4"
+			(uuid "9e97ff17-1bf4-4f70-9728-ba06f9a068a3")
+		)
+		(pin "1"
+			(uuid "94cccf49-a6b4-4e45-b243-0b285823615b")
+		)
+		(pin "3"
+			(uuid "8d01269d-73c9-40bb-ba5f-f207ec651116")
+		)
+		(pin "2"
+			(uuid "7d40dc92-cf7f-4b42-8038-7866571832aa")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V4")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V19")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:chamber")
+		(at 140.97 60.96 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "89fc2ca9-8365-4f61-9ebf-68bd368d5bd4")
+		(property "Reference" "R1"
+			(at 136.398 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "${SIM.PARAMS}"
+			(at 140.97 55.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 146.304 68.326 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 146.304 68.326 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 146.304 68.326 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Library" "/Users/snelgrov/kicad/verilogA_build/channel_flow.lib"
+			(at 138.176 50.546 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Name" "channel"
+			(at 140.97 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Device" "SUBCKT"
+			(at 140.716 68.834 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Pins" "1=in 2=out"
+			(at 141.224 66.802 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Sim.Params" "length=5 width=5u height=10u"
+			(at 128.524 55.88 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "94248fb6-7d09-4389-9f75-08f3d218a11f")
+		)
+		(pin "2"
+			(uuid "b69308f0-ba16-4261-aa00-d4be42539938")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "R1")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 204.47 102.87 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "8e939c55-1796-47ba-b266-7fb458d7a5a8")
+		(property "Reference" "V10"
+			(at 207.01 105.41 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 204.47 102.87 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 204.47 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 204.47 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 204.47 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "3babdc6c-d7c6-4906-86b2-ed914170eadb")
+		)
+		(pin "2"
+			(uuid "718e8b5f-ccf8-45e1-ab35-8f4fea4b592e")
+		)
+		(pin "3"
+			(uuid "33c3dff3-799a-4acc-9565-f64628bf2136")
+		)
+		(pin "4"
+			(uuid "2bd809a4-cdc9-4266-b7c3-f14ea34091a6")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V10")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V25")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:pump_1")
+		(at 127 60.96 0)
+		(mirror x)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "a82ebad3-092d-4e92-85ab-5f24a36d3421")
+		(property "Reference" "P1"
+			(at 131.064 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 127 54.61 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 127 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 127 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 127 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "dd9b8b95-b0ec-4e1d-b58a-2b752e6d304e")
+		)
+		(pin "2"
+			(uuid "ebcbce1a-7d61-4351-9c93-cf31f8934f18")
+		)
+		(pin "1"
+			(uuid "0ae7ae31-7c83-4a2f-ad70-f814950bb840")
+		)
+		(pin "5"
+			(uuid "cedf5516-3c5b-4f9e-a177-be17a8c77e7a")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "P1")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "P4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 256.54 111.76 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ae89e4b1-54d3-4225-8c96-1e7bc6668fa6")
+		(property "Reference" "V14"
+			(at 259.08 114.3 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 256.54 111.76 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 256.54 111.76 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 256.54 111.76 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 256.54 111.76 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "ad9b7757-0236-4e39-b510-e948364592f3")
+		)
+		(pin "2"
+			(uuid "b6ca2ce5-580d-4146-99d6-da4f631004db")
+		)
+		(pin "3"
+			(uuid "178b33a6-2e0c-464c-a10d-c646f8bf40ba")
+		)
+		(pin "4"
+			(uuid "3d31fe03-ac38-421b-b348-9dc248228ef3")
+		)
+		(pin "1"
+			(uuid "590b4b1f-480a-40ad-b2f8-ffaa02919f67")
+		)
+		(pin "3"
+			(uuid "f5522823-2c8f-4093-b64d-c83365061000")
+		)
+		(pin "2"
+			(uuid "b250cef5-5c22-46d1-8778-29aa2fc84892")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V14")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V29")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 81.28 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "bfeb718b-2cbd-4fea-8d97-efb6f2a402a8")
+		(property "Reference" "V6"
+			(at 80.264 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 81.28 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 81.28 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 81.28 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 81.28 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "fb6b10d3-1450-4e96-911a-993186868c16")
+		)
+		(pin "2"
+			(uuid "9bc3bdaa-ce7f-4df6-a7f1-c5b337288812")
+		)
+		(pin "3"
+			(uuid "56bb37ca-a4ec-443b-974b-31f81bf067b8")
+		)
+		(pin "4"
+			(uuid "e68e73fc-b19e-48d6-9e90-4230ed96953b")
+		)
+		(pin "1"
+			(uuid "2cf310e8-834d-40cf-a093-b7f206ba575f")
+		)
+		(pin "3"
+			(uuid "c9ffb281-4b27-42f1-b0fc-3d7f8ca12d47")
+		)
+		(pin "2"
+			(uuid "03de9d6a-927c-4c9e-89c0-cf32ce54e7a6")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V6")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V21")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 93.98 60.96 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "c5fca709-097a-4fa2-8924-73837340932c")
+		(property "Reference" "V1"
+			(at 96.52 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 93.98 60.96 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 93.98 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 93.98 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 93.98 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "3e5fbdfc-bb3a-4f57-8a5b-8019c1a43661")
+		)
+		(pin "2"
+			(uuid "b05f689c-e0a1-446a-b957-3d86c63694b3")
+		)
+		(pin "3"
+			(uuid "2e846a1a-050e-447f-ba86-2ffc94b96639")
+		)
+		(pin "4"
+			(uuid "708bb33b-16d7-4ef6-8a0b-4e4450394479")
+		)
+		(pin "1"
+			(uuid "3aff0436-ebcf-4472-bbae-97636b08015e")
+		)
+		(pin "3"
+			(uuid "7c80e5a7-0ea1-4b9c-9de6-36786b016199")
+		)
+		(pin "2"
+			(uuid "a7db659d-ef81-4547-9cb6-abc9e4a345d3")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V1")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V16")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 78.74 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "cd2c702a-b83e-48cb-8fa4-f8fd8175e1d0")
+		(property "Reference" "V5"
+			(at 77.724 183.642 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 78.74 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 78.74 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 78.74 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 78.74 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "a51f02e0-1d19-4729-9def-d53178559773")
+		)
+		(pin "1"
+			(uuid "aebc9292-6194-4f1e-bda0-5b9a06e22cca")
+		)
+		(pin "4"
+			(uuid "1e22ab6f-d578-4790-bd0e-5094dcabfc51")
+		)
+		(pin "2"
+			(uuid "471b5cb1-2730-4366-a1bb-0ff123b8a4a2")
+		)
+		(pin "2"
+			(uuid "533afe04-5670-4686-a764-9f2315181e60")
+		)
+		(pin "3"
+			(uuid "667b53ee-bcb2-4f52-84a3-02740910b59f")
+		)
+		(pin "1"
+			(uuid "f7ae55c3-1b0a-472d-bec9-1d1ebb2bc955")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V5")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V20")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:mux_3")
+		(at 82.55 60.96 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "d4c936a2-46a8-4670-a8c6-9b9b9428dfda")
+		(property "Reference" "V7"
+			(at 87.884 56.642 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 81.915 69.85 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:mux3_20px_0"
+			(at 87.63 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 87.63 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 82.55 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "4"
+			(uuid "1aaed047-7a20-47ec-af05-a43772d82ce7")
+		)
+		(pin "5"
+			(uuid "eb0aac77-6cc2-418a-9f3f-d81d2318313a")
+		)
+		(pin "1"
+			(uuid "b23d1939-97a5-4d82-b08d-0d0f57246d45")
+		)
+		(pin "2"
+			(uuid "4dfb4dc0-59af-4816-aeb6-7629bc46ca7d")
+		)
+		(pin "3"
+			(uuid "c92ed4e6-8ac3-4921-9c37-48f7561bdc64")
+		)
+		(pin "6"
+			(uuid "eeeebe87-6b83-4824-a1e3-7d32eea3d885")
+		)
+		(pin "7"
+			(uuid "69921514-15f5-4647-bee2-7a365ba7eca5")
+		)
+		(pin "8"
+			(uuid "591ec455-3ebd-409d-8455-615a4135a001")
+		)
+		(pin "9"
+			(uuid "18e1f230-bb5d-4d9a-92cc-66b0c6f6fbe6")
+		)
+		(pin "10"
+			(uuid "66fbceae-60cf-4498-88dd-8cda4235b3be")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V7")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V22")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 194.31 102.87 0)
+		(mirror x)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "da11cf72-409b-4370-be6b-da3eef7cf7c7")
+		(property "Reference" "V13"
+			(at 191.77 105.41 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 194.31 102.87 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 194.31 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 194.31 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 194.31 102.87 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "777ded9e-568a-444f-8c58-5b663491ac0f")
+		)
+		(pin "2"
+			(uuid "fe4981a2-f8b1-4715-87a6-4f8855e4cd0a")
+		)
+		(pin "3"
+			(uuid "ea684c31-53a2-4dfb-8b5e-5659e41bd461")
+		)
+		(pin "4"
+			(uuid "43a7c95f-f061-4c73-a21a-363d24fe872d")
+		)
+		(pin "1"
+			(uuid "a770fb75-0f83-432a-a97b-82781e7dd36e")
+		)
+		(pin "3"
+			(uuid "87d5de39-be82-44eb-b211-60549261f970")
+		)
+		(pin "2"
+			(uuid "3d2e70de-f7dd-44ad-9974-95dfc17094e5")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V13")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V28")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 91.44 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e04bbd94-75e0-492c-b6e2-db6a9d8536d2")
+		(property "Reference" "V11"
+			(at 90.17 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 91.44 180.34 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 91.44 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 91.44 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 91.44 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "81ee5c9e-228f-4545-9780-8ebc2759d70e")
+		)
+		(pin "1"
+			(uuid "ffdf311e-e504-4a5d-9a05-3116ca4d1dfd")
+		)
+		(pin "2"
+			(uuid "67d7bb9a-7478-4908-8a34-8571b0f3a172")
+		)
+		(pin "4"
+			(uuid "91a57e0e-c810-42d4-9084-565310db3daa")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V11")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V26")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 83.82 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e06ccfa5-cd2a-41f3-8f88-2998761289b7")
+		(property "Reference" "V8"
+			(at 82.55 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 83.82 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 83.82 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 83.82 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 83.82 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c6efbbfa-2d60-4f9e-afea-199cbcf68efb")
+		)
+		(pin "2"
+			(uuid "fb3432b6-4ca7-432a-a4a2-972129081aa2")
+		)
+		(pin "3"
+			(uuid "8c6b92b0-d02e-4798-b004-0683b7bb08c8")
+		)
+		(pin "4"
+			(uuid "5ba1154d-0b2f-47fe-8fa2-1acde4b88452")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V8")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V23")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 106.68 60.96 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e16c8f83-0208-46c6-9837-3f79d77acac9")
+		(property "Reference" "V3"
+			(at 106.68 64.77 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 106.68 66.04 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 106.68 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 106.68 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 106.68 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "f38fa136-8719-49e0-9ff3-afeaec097c7e")
+		)
+		(pin "1"
+			(uuid "81894d43-f408-479c-9abe-a083527ff0a5")
+		)
+		(pin "3"
+			(uuid "b7f0a25e-e2d1-4302-b455-1039387f5438")
+		)
+		(pin "4"
+			(uuid "be17e2d6-2d36-437b-b305-f0766d45c35a")
+		)
+		(pin "3"
+			(uuid "5aec9c0e-ce11-498f-b582-1193073eaa5e")
+		)
+		(pin "1"
+			(uuid "4550b224-f06c-46cf-a8b7-ce15ce75e6a7")
+		)
+		(pin "2"
+			(uuid "5fe3831f-23ed-4875-8aa2-e9cbf6ba96a5")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V3")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V18")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 68.58 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e68a3854-ba61-4946-bfc0-071fcb9c7774")
+		(property "Reference" "V1"
+			(at 67.31 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 68.58 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 68.58 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 68.58 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 68.58 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "29e567d2-c93e-4f22-aef4-b15f93afc75a")
+		)
+		(pin "2"
+			(uuid "db427005-ba16-4f02-89bd-5e87e1347d38")
+		)
+		(pin "3"
+			(uuid "0e41131d-b95f-4467-9754-360affa340bf")
+		)
+		(pin "4"
+			(uuid "f4240db8-c972-46a0-8e8b-01d44399bd09")
+		)
+		(pin "1"
+			(uuid "a896644b-7d4c-4d4d-952e-b66c717ab075")
+		)
+		(pin "3"
+			(uuid "5aad372e-d34a-49b7-9f21-281991df06c8")
+		)
+		(pin "2"
+			(uuid "22203872-aa83-4cf4-80be-11850f4b37c8")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V1")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V16")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 99.06 185.42 0)
+		(mirror x)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e8c443a5-8a14-4930-a959-e3071b172582")
+		(property "Reference" "V14"
+			(at 98.044 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 99.06 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 99.06 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 99.06 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 99.06 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e288f9a9-32bb-43cf-bca9-d89078219b52")
+		)
+		(pin "2"
+			(uuid "5614456f-67cd-42b2-ae0c-f4ac1694b0fd")
+		)
+		(pin "3"
+			(uuid "96ed05ae-cc19-4290-8740-1493cd4981c8")
+		)
+		(pin "4"
+			(uuid "7230c5a6-53fc-4548-aec9-6265e57b0527")
+		)
+		(pin "3"
+			(uuid "b8ef2851-21a6-4c52-bb5f-d11c96a1aa9c")
+		)
+		(pin "1"
+			(uuid "68edd77b-b92f-41e0-a924-e99ab9f5528d")
+		)
+		(pin "2"
+			(uuid "5d834f56-d99c-466c-8bd6-42f4bc964d96")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V14")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V29")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 179.07 110.49 0)
+		(mirror x)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ead15dc2-847b-48a5-bd11-704b325ad885")
+		(property "Reference" "V6"
+			(at 176.53 113.03 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 179.07 110.49 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 179.07 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 179.07 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 179.07 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "55803d94-c0f4-47c7-8f53-7103ffc5cedf")
+		)
+		(pin "2"
+			(uuid "dda4377b-8259-425c-a52a-268da639d4f9")
+		)
+		(pin "3"
+			(uuid "5435a775-f419-4467-a6bb-7e92c2f40d7a")
+		)
+		(pin "4"
+			(uuid "5568334b-caeb-4eca-a8ce-d0049c906a6d")
+		)
+		(pin "1"
+			(uuid "a91d3962-37fa-4667-85f8-12b25c59943b")
+		)
+		(pin "3"
+			(uuid "9dc6e609-dd6c-48de-b7f2-c1d418f221eb")
+		)
+		(pin "2"
+			(uuid "38135434-8ab9-4e6f-8af9-61125e68b2a8")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V6")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V21")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 88.9 185.42 180)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ead9d182-5ebd-40d1-9685-b586c428ee28")
+		(property "Reference" "V10"
+			(at 87.63 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 88.9 180.34 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 88.9 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 88.9 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 88.9 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "4caae70d-24d3-4270-91e1-74016987b63f")
+		)
+		(pin "2"
+			(uuid "43ec7cba-b872-4e28-a903-34c851062460")
+		)
+		(pin "1"
+			(uuid "5aba99e3-bbbc-4b2d-b7a6-172fd94be667")
+		)
+		(pin "4"
+			(uuid "028f7957-1bcf-4cc5-86c5-b49d908065cb")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V10")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V25")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt_sieve")
+		(at 86.36 185.42 0)
+		(mirror x)
+		(unit 2)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "f6edf2c9-b9b4-4569-9896-a7f9d5307a2b")
+		(property "Reference" "V9"
+			(at 85.09 185.42 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" ""
+			(at 86.36 185.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 86.36 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 86.36 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 86.36 185.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "0715f3f6-cdb2-4064-adf0-e3a42185cf85")
+		)
+		(pin "2"
+			(uuid "53f4170c-278a-4ea4-baae-9c179995883e")
+		)
+		(pin "3"
+			(uuid "0bdd7c5d-052a-43c2-81a8-164dcfe4a470")
+		)
+		(pin "4"
+			(uuid "9a4a8321-6d45-4928-b877-77d2c7582754")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V9")
+					(unit 2)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V24")
+					(unit 2)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "mfda:valve_alt")
+		(at 191.77 60.96 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "faa0270f-51a1-46a3-983a-375b0de2d67d")
+		(property "Reference" "V12"
+			(at 189.23 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" ""
+			(at 191.77 60.96 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "h.r.3.3:valve_20px_1"
+			(at 191.77 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 191.77 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 191.77 60.96 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "3f905435-7ff1-4dc4-83cd-436fbaefdcbe")
+		)
+		(pin "2"
+			(uuid "dc8b780c-2acd-496d-ae0a-f67be57f4074")
+		)
+		(pin "3"
+			(uuid "6e239608-9923-4c68-b04b-2afabdad54d6")
+		)
+		(pin "4"
+			(uuid "77d734c5-6b39-4f39-99fd-2a8ccdcaef6e")
+		)
+		(pin "3"
+			(uuid "e603f215-4191-439c-bd6a-2e00624ffc83")
+		)
+		(pin "1"
+			(uuid "b211577b-ee14-4c6f-b760-7d399efac7a2")
+		)
+		(pin "2"
+			(uuid "85382659-4816-4ba4-9cb5-1c31b018f503")
+		)
+		(instances
+			(project "kinase_kicad"
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/481bfd06-53f7-40da-8587-8ed1f2dcbc2d"
+					(reference "V12")
+					(unit 1)
+				)
+				(path "/ac0907eb-ca5d-4912-8408-468f36c8ded7/fc156e43-0610-448d-83b6-f35a3f53abf4"
+					(reference "V27")
+					(unit 1)
+				)
+			)
+		)
+	)
+)
