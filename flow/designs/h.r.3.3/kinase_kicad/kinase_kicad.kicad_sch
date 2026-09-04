@@ -1963,7 +1963,7 @@
 		(uuid "e9c086dc-67ff-4cda-a6fc-eb3bdbd32b62")
 	)
 	(bus_entry
-		(at 184.15 52.07)
+		(at 184.15 48.26)
 		(size 2.54 2.54)
 		(stroke
 			(width 0)
@@ -2088,7 +2088,7 @@
 	)
 	(bus
 		(pts
-			(xy 184.15 30.48) (xy 184.15 52.07)
+			(xy 184.15 30.48) (xy 184.15 48.26)
 		)
 		(stroke
 			(width 0)
@@ -2148,7 +2148,7 @@
 	)
 	(bus
 		(pts
-			(xy 246.38 20.32) (xy 246.38 64.77)
+			(xy 246.38 24.13) (xy 246.38 64.77)
 		)
 		(stroke
 			(width 0)
@@ -2398,7 +2398,7 @@
 	)
 	(wire
 		(pts
-			(xy 186.69 54.61) (xy 231.14 54.61)
+			(xy 186.69 50.8) (xy 231.14 50.8)
 		)
 		(stroke
 			(width 0)
@@ -2558,7 +2558,7 @@
 	)
 	(wire
 		(pts
-			(xy 231.14 54.61) (xy 231.14 59.69)
+			(xy 231.14 50.8) (xy 231.14 59.69)
 		)
 		(stroke
 			(width 0)
@@ -2618,7 +2618,7 @@
 	)
 	(bus
 		(pts
-			(xy 105.41 20.32) (xy 105.41 48.26)
+			(xy 105.41 24.13) (xy 105.41 48.26)
 		)
 		(stroke
 			(width 0)
@@ -2758,7 +2758,7 @@
 	)
 	(bus
 		(pts
-			(xy 184.15 52.07) (xy 184.15 57.15)
+			(xy 184.15 48.26) (xy 184.15 57.15)
 		)
 		(stroke
 			(width 0)
@@ -2938,7 +2938,7 @@
 	)
 	(bus
 		(pts
-			(xy 246.38 20.32) (xy 105.41 20.32)
+			(xy 246.38 24.13) (xy 105.41 24.13)
 		)
 		(stroke
 			(width 0)
@@ -3487,7 +3487,7 @@
 		(uuid "cd6684e7-906d-4467-88c0-96b1edb5f8a1")
 	)
 	(label "pump5"
-		(at 203.2 54.61 0)
+		(at 194.31 50.8 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3577,7 +3577,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 80.01 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -3698,7 +3698,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 140.97 0)
 			(hide yes)
 			(show_name no)
@@ -3819,7 +3819,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -3940,7 +3940,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 161.29 0)
 			(hide yes)
 			(show_name no)
@@ -4061,7 +4061,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 146.05 0)
 			(hide yes)
 			(show_name no)
@@ -4182,7 +4182,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 148.59 0)
 			(hide yes)
 			(show_name no)
@@ -4302,7 +4302,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 59.69 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -4429,7 +4429,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 181.61 0)
 			(hide yes)
 			(show_name no)
@@ -4550,7 +4550,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -4671,7 +4671,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 171.45 0)
 			(hide yes)
 			(show_name no)
@@ -4791,7 +4791,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 161.29 105.41 0)
 			(hide yes)
 			(show_name no)
@@ -4917,7 +4917,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 154.94 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -5043,7 +5043,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 59.69 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -5169,7 +5169,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 80.01 158.75 0)
 			(hide yes)
 			(show_name no)
@@ -5290,7 +5290,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -5410,7 +5410,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 59.69 44.45 0)
 			(hide yes)
 			(show_name no)
@@ -5537,7 +5537,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 166.37 0)
 			(hide yes)
 			(show_name no)
@@ -5658,7 +5658,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 156.21 0)
 			(hide yes)
 			(show_name no)
@@ -5778,7 +5778,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 80.01 153.67 0)
 			(hide yes)
 			(show_name no)
@@ -5898,7 +5898,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 154.94 88.9 0)
 			(hide yes)
 			(show_name no)
@@ -6025,7 +6025,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 158.75 0)
 			(hide yes)
 			(show_name no)
@@ -6146,7 +6146,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 173.99 0)
 			(hide yes)
 			(show_name no)
@@ -6267,7 +6267,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 168.91 0)
 			(hide yes)
 			(show_name no)
@@ -6387,7 +6387,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 60.96 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -6514,7 +6514,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 179.07 0)
 			(hide yes)
 			(show_name no)
@@ -6634,7 +6634,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 154.94 91.44 0)
 			(hide yes)
 			(show_name no)
@@ -6760,7 +6760,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 80.01 148.59 0)
 			(hide yes)
 			(show_name no)
@@ -6880,7 +6880,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:pinhole_325px_met5"
+		(property "Footprint" "h.r.3.3:pinhole_325px_0"
 			(at 154.94 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -6988,7 +6988,7 @@
 		(fields_autoplaced yes)
 		(uuid "e35e08eb-b14f-4fdd-a4e7-9bf06ee86b78")
 		(property "Reference" "J32"
-			(at 215.5825 53.34 0)
+			(at 215.5825 54.61 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7007,7 +7007,7 @@
 				)
 			)
 		)
-		(property "Footprint" "h.r.3.3:interconnect_4x8"
+		(property "Footprint" "h.r.3.3:interconnect_8x4"
 			(at 222.25 97.79 0)
 			(hide yes)
 			(show_name no)
@@ -7183,7 +7183,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 176.53 0)
 			(hide yes)
 			(show_name no)
@@ -7303,7 +7303,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 80.01 156.21 0)
 			(hide yes)
 			(show_name no)
@@ -7424,7 +7424,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "h.r.3.3:flush_hole_0"
 			(at 129.54 153.67 0)
 			(hide yes)
 			(show_name no)
