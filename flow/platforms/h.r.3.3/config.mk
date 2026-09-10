@@ -14,8 +14,7 @@ export SC_LEF = $(PLATFORM_DIR)/lef/h.r.3.3_merged.lef
 
 export LIB_FILES = $(PLATFORM_DIR)/lib/h.r.3.3.lib \
                      $(ADDITIONAL_LIBS)
-export SCAD_COMPONENT_LIBRARY = $(PLATFORM_DIR)/scad/components.scad
-export SCAD_ROUTING_LIBRARY = $(PLATFORM_DIR)/scad/routing.scad
+export OPENSCADPATH = $(PLATFORM_DIR)/scad:${OPENSCADPATH}
 else
 # Locally built distribution files
 ROOT_DIR=$(PLATFORM_DIR)/pdk/Components
@@ -94,10 +93,9 @@ export YCHIP_VALS		= 325 1275
 export RES_VAL			= 120
 export PITCH            = 30
 # Default SCAD script arguments
-SCAD_ARGS = --component_file ${SCAD_COMPONENT_LIBRARY} \
-			--routing_file ${SCAD_ROUTING_LIBRARY} \
-			--lef_file ${SC_LEF} --tlef_file ${TECH_LEF} \
+SCAD_ARGS = --lef_file ${SC_LEF} --tlef_file ${TECH_LEF} \
             --platform "$(PLATFORM)" \
+            --openscad_path "${OPENSCAD_PATH}" \
             --px $(PX_VAL) --layer $(LAYER_VAL) --bottom_layer $(BOT_LAYER_VAL) --lpv $(LPV_VAL) --xbulk $(XBULK_VAL) \
             --ybulk $(YBULK_VAL) --zbulk $(ZBULK_VAL) --xchip $(XCHIP_VALS) --ychip $(YCHIP_VALS) \
             --pitch $(PITCH) --res $(RES_VAL)

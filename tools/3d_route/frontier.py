@@ -13,175 +13,6 @@ import pandas as pd
 
 log = logging.getLogger(__name__)
 
-################ Node type helpers ################
-def get_shell(G, node):
-    return G.nodes[node]["shell"]
-
-def set_shell(G, node, shell):
-    G.nodes[node]["shell"] = shell
-
-def is_peer(G, node, other):
-    return get_shell(G, node) == get_shell(G, other)
-
-# node is descendent of other
-def is_descendent(G, node, other):
-    return get_shell(G, other) > get_shell(G, node)
-
-# node is ancestor of other
-def is_ancestor(G, node, other):
-    return get_shell(G, other) < get_shell(G, node)
-
-def is_older(G, n, shell):
-    return G.nodes[n]["shell"] > shell
-
-##################### Setup #####################
-def add_shell(G, starts):
-    assert(len(starts) > 0)
-    for start in starts:
-        log.debug("Starting %s", start)
-
-        G.nodes[start]["shell"] = 0
-    frontier = starts
-    shell = 0
-    while frontier:
-        nexts = deque()
-        log.info("Traversing %d nodes in shell %d", len(frontier), shell)
-        for leaf in frontier:
-            for neighbor in G.adj[leaf]:
-                if "shell" in G.nodes[neighbor]:
-                    continue
-                else:
-                    log.debug("Found %s", neighbor)
-                    G.nodes[neighbor]["shell"] = shell + 1
-                    nexts.append(neighbor)
-        frontier = nexts
-        shell += 1
-    for node in G.nodes:
-        if "shell" not in G.nodes[node]:
-            log.error("Shell missing %s", node)
-    for node in G.nodes:
-        assert("shell" in G.nodes[node])
-        G.nodes[node]["shell"] = shell - G.nodes[node]["shell"] - 1
-        log.debug("Node %d %s", G.nodes[node]["shell"], node)
-    return shell
-
-def add_buffers_output(G, depth, targets):
-    for target in targets:
-        shell = G.nodes[target]["shell"]
-        if shell == 0:
-            continue
-        for i in range(0, shell):
-            G.add_node(f"{target}__{i}", cell="$_dummy", shell=i)
-        G.add_edge(target, f"{target}__{shell-1}", dummy=True, hyperedge=False, bit=-1)
-        for i in range(0, shell-1):
-            G.add_edge(f"{target}__{i}", f"{target}__{i+1}", dummy=True, hyperedge=False, bit=-1)
-
-def report_stats(G):
-    num_port = sum(1 for i in G.nodes if is_port(G, i))
-    num_input = sum(1 for i in G.nodes if is_input_port(G, i))
-    num_output = sum(1 for i in G.nodes if is_output_port(G, i))
-    num_inout = sum(1 for i in G.nodes if is_inout_port(G, i))
-    num_wire = sum(1 for i in G.nodes if is_net(G, i))
-    num_cells = len(G.nodes) - num_wire
-    log.info("Starting with %d ports (%d input %d output %d inout) %d nets and %d cells", num_port, num_input, num_output, num_inout, num_wire, num_cells)
-
-def find_center(G, start_condition, buffer_condition):
-    report_stats(G)
-    # remove = [n for n in G if is_control(G, n) or is_flush(G, n) or is_flush_cell(G,n) or is_control_cell(G,n)]
-    # G.remove_nodes_from(remove)
-    start = {node for node in G.nodes if start_condition(G, node)}
-    assert(len(start) > 0)
-    shell = add_shell(G, start)
-    render_dot(G, "shell.dot")
-    targets = {node for node in G.nodes if buffer_condition(G, node)}
-    add_buffers_output(G, shell, targets)
-    render_dot(G, "buffer.dot")
-
-    unreachable = [_ for _, p in G.nodes.items() if "shell" not in p]
-    if unreachable:
-        for u in unreachable:
-            log.error(u)
-        log.error("Total %d Unreachable %d", len(G.nodes), len(unreachable))
-        assert(len(unreachable) == 0)
-    precalc_dist(G)
-    return shell
-
-def add_buffers(G, frontier, depth):
-    shell = 0
-    while True:
-        assert(shell <= depth+1)
-        log.info("Shell buffer insertion %d for %d nodes", shell, len(frontier))
-        if all(G.nodes[n]["cell"] == "$_dummy" for n in frontier):
-            actual = set()
-            for dummy in frontier:
-                for adj in G.adj[dummy]:
-                    # should always be size one
-                    actual.add(adj)
-            for dummy in frontier:
-                G.remove_node(dummy)
-            return shell - 1, actual
-        nexts = set()
-        for node in frontier:
-            props = G.nodes[node]
-            assert(shell == props["shell"])
-            children = 0
-            for adj in G.adj[node]:
-                if is_descendent(G, adj, node):
-                    nexts.add(adj)
-                    children += 1
-                else:
-                    continue
-            if children == 0:
-                dummy = f"{node}_"
-                G.add_node(dummy, shell=shell-1, cell="$_dummy")
-                G.add_edge(node, dummy, dummy=True)
-                nexts.add(dummy)
-        frontier = nexts
-        shell += 1
-
-def gather_children(G, n):
-    props = G.nodes[n]
-    # skip non fluid
-    if "descendents" not in props:
-        desc = set()
-        children = 0
-        for adj in G.adj[n]:
-            if is_descendent(G, adj, n):
-                children += 1
-                desc |= gather_children(G, adj)
-            else:
-                continue
-        props["diverges"] = children > 1
-        props["descendents"] = desc
-        log.debug("Descendents %s: %s", n, ", ".join(desc))
-    return props["descendents"] | set([n])
-
-def gather_ancestors(G, n):
-    props = G.nodes[n]
-    # skip non fluid
-    if "ancestors" not in props:
-        desc = set()
-        children = 0
-        for adj in G.adj[n]:
-            if is_ancestor(G, adj, n):
-                children += 1
-                desc |= gather_ancestors(G, adj)
-            else:
-                continue
-        props["diverges_ancestor"] = children > 1
-        props["ancestors"] = desc
-        log.debug("ancestors %s: %s", n, ", ".join(desc))
-    return props["ancestors"] | set([n])
-
-def precalc_dist(G):
-    for node in G.nodes:
-        gather_children(G, node)
-        gather_ancestors(G, node)
-    # This could probably be smaller by limiting to only diverging cases.
-    # for node, props in G.nodes.items():
-        # if not props["diverges"]:
-            # del props["descendents"]
-
 ################# Constraints ##################
 def add_position(G, M, node, width, height, depth):
     coord = [M.addVar(f"{node}_{i}", vtype="INTEGER", lb=lb, ub=ub)
@@ -404,11 +235,17 @@ def distance_shell(G, M, s, e, shell, offset, relax, minimize):
         # Find worst case distance requirement
         bound = min(d for _, _, d in dist) + 1
         return [i for x, y in zip(a, b) for i in within_distance(G, M, x, y, bound, relax, minimize)]
+def min_distance(G, M, first, second, shell, offset, relax):
+    a = G.nodes[first]["coordinates"]
+    b = G.nodes[second]["coordinates"]
+    X = M.addVar(f"max_{first}_{second}", vtype="I", lb=offset)
+    M.addCons(X - scip.quicksum(abs(x - y) for x, y in zip(a, b)) >= 0 )#, name=f"{first}_{second}_maxdist")
+    return [X]
 
 def max_distance(G, M, first, second, shell, offset, relax):
     a = G.nodes[first]["coordinates"]
     b = G.nodes[second]["coordinates"]
-    X = M.addVar(f"max_{first}_{second}", vtype="I", lb=1)
+    X = M.addVar(f"max_{first}_{second}", vtype="I", lb=offset)
     M.addCons(scip.quicksum(abs(x - y) for x, y in zip(a, b)) >= X)#, name=f"{first}_{second}_maxdist")
     return [X]
 
@@ -469,6 +306,33 @@ def run_by_dimension(G, skip, outfile, cache, start_condition, buffer_condition,
         render_scad(G, f"{outfile[:-5]}.tmp.scad", shells, colorful)
         if cache:
             write_cache(G, cache)
+    return shells
+
+def run_everything_redux(G, skip, outfile, cache, start_condition, buffer_condition,
+                 overlap, inside, distance, proximate, ahead, attach,
+                 bounding, width = 40, height = 25, depth = 25,
+                 offset=0, limit=10, timeout=60, minimize=False):
+    shells = find_center(G, start_condition, buffer_condition)
+    M = scip.Model()
+    M.setParam("limits/time", timeout)
+    minim = []
+    minim += add_constraints_redux(G, M, skip,                     width, height, depth, bounding, offset, shells,
+                    relax = 0, minimize=False)
+
+    # solve and extract position values
+    if minim:
+        M.setObjective(scip.quicksum(minim), sense="minimize")
+    M.writeProblem(f"{cache}.cip")
+    log.info("Presolving with %d variables and %d constraints", M.getNVars(), M.getNConss())
+    M.presolve()
+    log.info("Starting optimizations with %d variables and %d constraints", M.getNVars(), M.getNConss())
+    M.optimize()
+    log.info("Finished optimizing, %d solutions found", M.getNSols())
+    if M.getNSols() == 0:
+        raise
+
+    for node, props in G.nodes.items():
+        props["coordinates"] = [int(M.getVal(i)) for i in props["coordinates"]]
     return shells
 
 def run_everything(G, skip, outfile, cache, start_condition, buffer_condition,
@@ -627,6 +491,35 @@ def solve_shell(G, M: scip.Model, cache, skip, overlap, inside, distance, proxim
         props = G.nodes[node]
         props["coordinates"] = [int(sol[i]) for i in props["coordinates"]]
     return True
+def add_constraints_redux(G, M, skip, width, height, depth, bounding, offset, max_shell,
+                relax = 0, limit=4, timeout=30, minimize=False):
+    minim = []
+    for node in G.nodes:
+        shell = G.nodes[node]["shell"]
+        coord = [M.addVar(f"{node}_{i}", vtype="INTEGER", lb=lb, ub=ub)
+                 for i, (lb, ub)
+                 in [("y", (-height, height)),
+                      ("z", (-depth, depth))]]
+        G.nodes[node]["coordinates"] = coord
+    for node in G.nodes:
+        shell = G.nodes[node]["shell"]
+        s_y, s_z = G.nodes[node]["coordinates"]
+        for other in G.nodes:
+            if node < other:
+                o_y, o_z = G.nodes[other]["coordinates"]
+                dy = abs(s_y - o_y)
+                dz = abs(s_z - o_z)
+                other_shell = G.nodes[other]["shell"]
+                if shell == other_shell:
+                    M.addCons(dy+dz >= 1, name=f"overlap_{node}_{other}")
+                if other in G.adj[node]:
+                    assert(-1 <= (shell - other_shell) <= 1)
+                    my = M.addVar(f"max_y_{node}_{other}", vtype="I", lb = 1)
+                    mz = M.addVar(f"max_z_{node}_{other}", vtype="I", lb = 1)
+                    M.addCons(dy <= my, name=f"neighbor_y_{node}_{other}")
+                    M.addCons(dz <= mz, name=f"neighbor_z_{node}_{other}")
+    return minim
+
 def add_constraints(G, M, skip, overlap, inside, distance, proximate, ahead, attach,
                 frontier, shell, width, height, depth, bounding, offset, max_shell,
                 relax = 0, limit=4, timeout=30, minimize=False):
@@ -749,7 +642,7 @@ def extract_stats(g):
             # log.warning("No coordinates for %s", node)
     data = ([start, end, *extract_coord(g.nodes[start]["coordinates"], g.nodes[start]["shell"]), *extract_coord(g.nodes[end]["coordinates"], g.nodes[start]["shell"])]
         for start, end in g.edges
-        if "coordinates" in g.nodes[start] and "coordinates" in g.nodes[end] and not g.edges[(start, end)]["dummy"])
+        if "coordinates" in g.nodes[start] and "coordinates" in g.nodes[end] and not g.edges[(start, end)].get("dummy", False))
     data = pd.DataFrame(data, columns=["start", "end", "sx", "sy", "sz", "ex", "ey", "ez"])
     data["dx"] = (data["sx"] - data["ex"]).abs()
     data["dy"] = (data["sy"] - data["ey"]).abs()
@@ -807,9 +700,9 @@ if __name__ == "__main__":
         orientation = in_horizontal
         # bound = bounded_horizontal
         shell_bound = horizontal_bound
-        start = lambda G, n: is_input_port(G, n) and is_flow(G, n)
-        if args.add_buffers:
-            buffer = lambda G, n: is_output_port(G, n) and is_flow(G, n)
+        start = lambda G, n: is_output_port(G, n) or is_input_port(G, n) and is_flow(G, n)
+        # if args.add_buffers:
+            # buffer = lambda G, n: is_output_port(G, n) and is_flow(G, n)
     elif args.orientation == "hemicube":
         orientation = in_hemicube
         shell_bound = hemicube_bound
@@ -827,7 +720,7 @@ if __name__ == "__main__":
     if args.backtrack:
         runner = run_backwards
     elif args.everything:
-        runner = run_everything
+        runner = run_everything_redux
         bound = bounded_noop
     else:
         runner = run_by_dimension
@@ -846,8 +739,8 @@ if __name__ == "__main__":
                 props["coordinates"] = [props["shell"], y, z]
 
     for x in g.nodes:
-        log.debug("Final solution %s %s", x, g.nodes[x].get("coordinates", "none"))
-    render_scad(g, args.output, shells, colorful)
+        print("Final solution %s %s", x, g.nodes[x].get("coordinates", "none"))
+    render_scad(g, args.output, shells)
     if args.cache:
         write_cache(g, args.cache)
         data = extract_stats(g)

@@ -1,7 +1,17 @@
 import networkx as nx
 from math import ceil, sqrt, acos, atan2, pi
 import solid2
+import solid2.extensions.bosl2 as bosl2
 from networkx_helpers import *
+
+mixer = solid2.import_scad("3d_blocks/block_mixer.scad")
+ports = solid2.import_scad("3d_blocks/ports.scad")
+resistor = solid2.import_scad("3d_blocks/block_resistor.scad")
+cells = {
+    "$_wire"
+}
+width=80
+config = solid2.ScadVariable("port_config", ports.create_port_config(width=80))
 
 def draw_channel(a, b, d):
     v = [i - j for i, j in zip(a, b)]
@@ -12,19 +22,36 @@ def draw_channel(a, b, d):
     angle = [0,180*acos(v[2]/length)/pi, 180*atan2(v[1], v[0])/pi]
     return solid2.translate(b)(solid2.rotate(angle)(solid2.cube(bounds)))
 
-def scad_render_nodes(G,nodes, colorful):
+def scad_render_nodes(G,nodes):
     for node in nodes:
         if "coordinates" not in G.nodes[node]:
             continue
 
-        dimensions = G.nodes[node].get("dimensions", [1,1,1])
         position = G.nodes[node]["coordinates"]
         if len(position) == 2:
             position = [G.nodes[node]["shell"]] + position
-        s = solid2.translate(position)(solid2.cube(dimensions))
+
+        ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
+                for n in G.neighbors(node)]
         cell = G.nodes[node]["cell"]
-        color = colorful(G, node)
-        yield scad_comment(f"Node {node}") (solid2.color(color, alpha=0.1)(s))
+
+        if cell == "$_output":
+            block = solid2.background(solid2.color("pink", alpha=0.1)(solid2.cube(width)))
+        elif cell == "p_resistor_0":
+            block = resistor.block_resistor(*ports[0:2], port_config=config)
+        elif cell == "diffmix_25px_0":
+            block = mixer.block_mixer(*ports[0:3], port_config=config)
+        elif cell == "$_wire":
+            block = solid2.background(solid2.color("yellow", alpha=0.1)(solid2.cube(width)))
+        elif cell == "$_input":
+            block = solid2.background(solid2.color("green", alpha=0.1)(solid2.cube(width)))
+        elif cell == "$_dummy":
+            continue
+        else:
+            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.cube(width)))
+        s = solid2.translate([width*p for p in position])(block)
+
+        yield scad_comment(f"Node {cell} {node}")(s)
 
 def scad_render_nodes_flat(G,nodes):
     for node in nodes:
@@ -69,14 +96,16 @@ def scad_render_edges(G, edges):
         bit = G.edges[edge]["bit"]
         yield scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
 
-def render_shell(G, shell, colorful):
+def render_shell(G, shell):
     nodes = [n for n, d in G.nodes.items() if d["shell"] == shell]
-    edges = [(s, e) for s, e in G.edges
-            if max(G.nodes[s]["shell"], G.nodes[e]["shell"]) == shell+1 and
-               min(G.nodes[s]["shell"], G.nodes[e]["shell"]) == shell]
-    scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes, colorful)))
-    scad_edges = scad_comment(f"Edges shell {shell}")(solid2.union()(*scad_render_edges(G, edges)))
-    return scad_comment(f"Shell {shell}")(solid2.union()(solid2.background()(scad_nodes),scad_edges))
+    # edges = [(s, e) for s, e in G.edges
+            # if max(G.nodes[s]["shell"], G.nodes[e]["shell"]) == shell+1 and
+            #    min(G.nodes[s]["shell"], G.nodes[e]["shell"]) == shell]
+    scad_nodes = solid2.union()(*scad_render_nodes(G, nodes))
+    # scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes)))
+    # scad_edges = scad_comment(f"Edges shell {shell}")(solid2.union()(*scad_render_edges(G, edges)))
+    # return scad_comment(f"Shell {shell}")(solid2.union()(solid2.background()(scad_nodes),scad_edge)
+    return scad_comment(f"Shell {shell}")(solid2.union()(scad_nodes))
 
 def render_flat(G):
     nodes = [n for n, d in G.nodes.items()]
@@ -93,7 +122,7 @@ class scad_comment(solid2.object_base.ObjectBase, solid2.object_base.AccessSynta
     def _render(self):
         return f"/*{self.comment}*/\n" + super()._render()
 
-def render_scad(G,outfile,shells, colorful):
-    final = (render_shell(G, shell, colorful) for shell in range(0, shells))
+def render_scad(G,outfile,shells):
+    final = (render_shell(G, shell) for shell in range(0, shells))
     scad = solid2.translate([-0.5, -0.5, 0])(*final)
     scad.save_as_scad(outfile)
