@@ -1,5 +1,6 @@
 import operator
 import math
+import random
 
 class MultiVectorR2():
     def __init__(self, s, x, y, xy):
@@ -108,8 +109,8 @@ class MultiVectorR2():
 
 class Vector():
     def __init__(self, x, y):
-        self.x = int(x)
-        self.y = int(y)
+        self.x = x
+        self.y = y
 
     def apply(self, func):
         return Vector(func(self.x), func(self.y))
@@ -168,18 +169,18 @@ class Vector():
         return other.norm() >= self.norm()
 
     def norm(self):
-        return max(abs(self.x), abs(self.y))
+        return math.sqrt(self.x**2 + self.y**2)
+        # return max(abs(self.x), abs(self.y))
 
     def __truth__(self):
         return self.norm() > 0
 
     def unit(self):
-        x = 0 if self.x == 0 else self.x/abs(self.x)
-        y = 0 if self.y == 0 else self.y/abs(self.y)
-        return Vector(x, y)
+        a = math.atan2(self.x, self.y)
+        return Vector(math.cos(a), math.sin(a))
 
     def tuple(self):
-        return (self.x, self.y)
+        return (int(self.x), int(self.y))
 
     def __repr__(self):
         return f"({self.x}, {self.y})"
@@ -191,3 +192,17 @@ class Vector():
             return a.y
         else:
             raise IndexError
+    def clamp(self, bounds):
+        xl, yl, xu, yu = bounds
+        return Vector(min(xu-1, max(self.x, xl)), min(yu-1, max(self.y, yl)))
+
+
+def vector_angle(angle):
+    radians = 2*math.pi*angle/360
+    return Vector(math.cos(radians), math.sin(radians))
+
+def random_unit_vector():
+    angle = 2*math.pi*random.random()
+    return Vector(math.cos(angle), math.sin(angle))
+
+zero_vector = Vector(0.0, 0.0)

@@ -10,8 +10,8 @@ resistor = solid2.import_scad("3d_blocks/block_resistor.scad")
 cells = {
     "$_wire"
 }
-width=80
-config = solid2.ScadVariable("port_config", ports.create_port_config(width=80))
+width=40
+config = solid2.ScadVariable("port_config", ports.create_port_config(width=width))
 
 def draw_channel(a, b, d):
     v = [i - j for i, j in zip(a, b)]
@@ -36,15 +36,17 @@ def scad_render_nodes(G,nodes):
         cell = G.nodes[node]["cell"]
 
         if cell == "$_output":
-            block = solid2.background(solid2.color("pink", alpha=0.1)(solid2.cube(width)))
+            block = solid2.background(solid2.color("pink", alpha=0.75)(solid2.cube(width)))
         elif cell == "p_resistor_0":
-            block = resistor.block_resistor(*ports[0:2], port_config=config)
+            block = solid2.background(solid2.color("blue", alpha=0.75)(solid2.cube(width)))
+            # block = resistor.block_resistor(*ports[0:2], port_config=config)
         elif cell == "diffmix_25px_0":
-            block = mixer.block_mixer(*ports[0:3], port_config=config)
+            block = solid2.background(solid2.color("orange", alpha=0.75)(solid2.cube(width)))
+            # block = mixer.block_mixer(*ports[0:3], port_config=config)
         elif cell == "$_wire":
-            block = solid2.background(solid2.color("yellow", alpha=0.1)(solid2.cube(width)))
+            block = solid2.background(solid2.color("yellow", alpha=0.75)(solid2.cube(width)))
         elif cell == "$_input":
-            block = solid2.background(solid2.color("green", alpha=0.1)(solid2.cube(width)))
+            block = solid2.background(solid2.color("green", alpha=0.75)(solid2.cube(width)))
         elif cell == "$_dummy":
             continue
         else:
