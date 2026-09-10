@@ -176,11 +176,11 @@ class Vector():
         return self.norm() > 0
 
     def unit(self):
-        a = math.atan2(self.x, self.y)
+        a = math.atan2(self.y, self.x)
         return Vector(math.cos(a), math.sin(a))
 
     def tuple(self):
-        return (int(self.x), int(self.y))
+        return (self.x, self.y)
 
     def __repr__(self):
         return f"({self.x}, {self.y})"
@@ -196,6 +196,8 @@ class Vector():
         xl, yl, xu, yu = bounds
         return Vector(min(xu-1, max(self.x, xl)), min(yu-1, max(self.y, yl)))
 
+    def round(self):
+        return Vector(round(self.x), round(self.y))
 
 def vector_angle(angle):
     radians = 2*math.pi*angle/360
