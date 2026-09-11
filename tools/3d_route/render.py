@@ -1,7 +1,7 @@
 import networkx as nx
 from math import ceil, sqrt, acos, atan2, pi
 import solid2
-import solid2.extensions.bosl2 as bosl2
+# import solid2.extensions.bosl2 as bosl2
 from networkx_helpers import *
 
 mixer = solid2.import_scad("3d_blocks/block_mixer.scad")
@@ -34,64 +34,38 @@ def scad_render_nodes(G,nodes):
         ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
                 for n in G.neighbors(node)]
         cell = G.nodes[node]["cell"]
-
+        alpha = 0.5
         if cell == "$_output":
-            block = solid2.background(solid2.color("pink", alpha=0.75)(solid2.cube(width)))
+            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.sphere(width//2)))
         elif cell == "p_resistor_0":
-            block = solid2.background(solid2.color("blue", alpha=0.75)(solid2.cube(width)))
+            block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.sphere(width//2)))
             # block = resistor.block_resistor(*ports[0:2], port_config=config)
         elif cell == "diffmix_25px_0":
-            block = solid2.background(solid2.color("orange", alpha=0.75)(solid2.cube(width)))
+            block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.sphere(width//2)))
             # block = mixer.block_mixer(*ports[0:3], port_config=config)
         elif cell == "$_wire":
-            block = solid2.background(solid2.color("yellow", alpha=0.75)(solid2.cube(width)))
+            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.sphere(width//2)))
         elif cell == "$_input":
-            block = solid2.background(solid2.color("green", alpha=0.75)(solid2.cube(width)))
+            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.sphere(width//2)))
         elif cell == "$_dummy":
             continue
         else:
-            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.cube(width)))
-        s = solid2.translate([width*p for p in position])(block)
+            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.sphere(width)))
+        s = solid2.translate([width*(p+0.5) for p in position])(block)
 
         yield scad_comment(f"Node {cell} {node}")(s)
-
-def scad_render_nodes_flat(G,nodes):
-    for node in nodes:
-        dimensions = G.nodes[node].get("dimensions", [100, 100, 100])
-        position = G.nodes[node]["coordinates"]
-        s = solid2.translate(position)(solid2.cube(dimensions))
-        yield scad_comment(f"Node {node}")(s)
-
-def scad_render_edges_flat(G, edges):
-    for edge in edges:
-        start, end = edge
-        end_orig = G.nodes[end]["coordinates"]
-        start_orig = G.nodes[start]["coordinates"]
-        channel_dim = G.edges[edge].get("dimensions", (10,10,10))
-        start_pin = G.edges[edge].get("start_pin", (0.5, 0.5, 0.5))
-        end_pin = G.edges[edge].get("end_pin", (0.5, 0.5, 0.5))
-        front = [i + j for i, j in zip(start_orig, start_pin)]
-        back = [i + j for i, j in zip(end_orig, end_pin)]
-        bit = G.edges[edge]["bit"]
-        yield scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
 
 def scad_render_edges(G, edges):
     for edge in edges:
         start, end = edge
         if "coordinates" not in G.nodes[end] or "coordinates" not in G.nodes[start]:
             continue
-        end_orig = G.nodes[end]["coordinates"]
-        if len(end_orig) == 2:
-            end_orig = [G.nodes[end]["shell"]] + end_orig
+        start_orig = [width*p for p in G.nodes[start]["coordinates"]]
+        end_orig = [width*p for p in G.nodes[end]["coordinates"]]
 
-        end_dim = G.nodes[end].get("dimensions", [1,1,1])
-        start_orig = G.nodes[start]["coordinates"]
-        if len(start_orig) == 2:
-            start_orig = [G.nodes[start]["shell"]] + start_orig
-        start_dim = G.nodes[start].get("dimensions", [1,1,1])
-        channel_dim = G.edges[edge].get("dimensions", (0.125,0.125, 0.125))
-        start_pin = G.edges[edge].get("start_pin", (0.5, 0.5, 0.5))
-        end_pin = G.edges[edge].get("end_pin", (0.5, 0.5, 0.5))
+        channel_dim = G.edges[edge].get("dimensions", (width/10, width/10, width/10))
+        start_pin = G.edges[edge].get("start_pin", (width/2, width/2, width/2))
+        end_pin = G.edges[edge].get("end_pin", (width/2, width/2, width/2))
 #        log.debug("edge from %s %s to %s %s", start, start_orig, end, end_orig)
         front = [i + j for i, j in zip(start_orig, start_pin)]
         back = [i + j for i, j in zip(end_orig, end_pin)]
@@ -100,14 +74,10 @@ def scad_render_edges(G, edges):
 
 def render_shell(G, shell):
     nodes = [n for n, d in G.nodes.items() if d["shell"] == shell]
-    # edges = [(s, e) for s, e in G.edges
-            # if max(G.nodes[s]["shell"], G.nodes[e]["shell"]) == shell+1 and
-            #    min(G.nodes[s]["shell"], G.nodes[e]["shell"]) == shell]
-    scad_nodes = solid2.union()(*scad_render_nodes(G, nodes))
-    # scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes)))
-    # scad_edges = scad_comment(f"Edges shell {shell}")(solid2.union()(*scad_render_edges(G, edges)))
-    # return scad_comment(f"Shell {shell}")(solid2.union()(solid2.background()(scad_nodes),scad_edge)
-    return scad_comment(f"Shell {shell}")(solid2.union()(scad_nodes))
+    edges = [(s, e) for s, e in G.edges ]
+    scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes)))
+    scad_edges = scad_comment(f"Edges shell {shell}")(solid2.union()(*scad_render_edges(G, edges)))
+    return scad_comment(f"Shell {shell}")(solid2.union()(scad_nodes, scad_edges))
 
 def render_flat(G):
     nodes = [n for n, d in G.nodes.items()]

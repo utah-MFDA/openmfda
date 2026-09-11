@@ -197,7 +197,7 @@ class Vector():
         return Vector(min(xu-1, max(self.x, xl)), min(yu-1, max(self.y, yl)))
 
     def round(self):
-        return Vector(round(self.x), round(self.y))
+        return Vector(int(round(self.x)), int(round(self.y)))
 
 def vector_angle(angle):
     radians = 2*math.pi*angle/360

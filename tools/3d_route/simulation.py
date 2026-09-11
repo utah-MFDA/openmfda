@@ -1,15 +1,15 @@
+import pyvista as pv
 import itertools
 import random
-from time import sleep
 import time
+from math import sqrt, atan2, acos, pi, log
 from vector import Vector, random_unit_vector, zero_vector
 from fastquadtree import QuadTree
 import networkx as nx
 from networkx_helpers import *
-from render import *
 import logging
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def run_everything_redux(G, outfile, width = 40, height = 25, depth = 25, timeout=30):
     start = lambda G, n: (is_input_port(G, n) or is_output_port(G, n) or is_inout_port(G, n)) and is_flow(G, n)
@@ -17,31 +17,111 @@ def run_everything_redux(G, outfile, width = 40, height = 25, depth = 25, timeou
     skip = lambda G, n: is_control_cell(G,n) or is_flush_cell(G,n) or is_control(G, n) or is_flush(G, n)
     shells = find_center(G, start, buffer)
     tree = Tree(G, skip, width, height, depth, timeout)
-    print("\033[2J")
     start_t = time.time_ns()
     last = start_t
     potential = tree.tick()
+    render_terminal_setup()
+    plot = setup_render_pv(g, outfile)
     sample = time.time_ns()
-    while tree.elapsed() < timeout:
+    while potential > 100 and tree.elapsed() < timeout:
         potential = tree.tick()
         if tree.elapsed() % 60 == 0:
             last = sample
             sample = time.time_ns()
-        test = "resist0"
-        test_x = G.nodes[test]["position"]
-        test_p = G.nodes[test]["last_potential"]
-        test_f = G.nodes[test]["last_force"]
-        test_v = G.nodes[test]["velocity"]
-        print(f"\033[;H\033[2K{potential:0.1f}", tree.elapsed(),
-               f"pos: ({test_x.x:0.2f} {test_x.y:0.2f})",
-               f"vel: ({test_v.x:0.2f} {test_v.y:0.2f})",
-               f"force: ({test_f.x:0.2f} {test_f.y:0.2f})",
-               f"potent: {test_p:0.1f}",
-               f"frame: {(sample-last)/60/1e6:.1f}",
-               sep="\t", end="", flush=True)
+        render_terminal_stats(G, tree, potential, sample, last)
+        render_update_pv(plot, G)
+        # if tree.elapsed() % 240 == 0:
+        #     render_scad(G, outfile, shells)
+    plot.close()
     end_t = time.time_ns()
-    print("\033[2J")
+    render_terminal_cleanup()
     return G, shells, end_t-start_t, tree.elapsed()
+
+def render_component_pv(g, node):
+    coordinates = g.nodes[node]["coordinates"]
+    return pv.Cube(center = coordinates, x_length=1, y_length=1, z_length=1)
+
+def render_edge_pv(G, edge):
+    start, end = edge
+    ex, ey, ez = G.nodes[end]["coordinates"]
+    end_orig = [ex, ey, ez]
+    sx, sy, sz = G.nodes[start]["coordinates"]
+    start_orig = [sx, sy, sz]
+    channel_dim = G.edges[edge].get("dimensions", (0.1,0.1,0.1))
+    start_pin = G.edges[edge].get("start_pin", (0, 0, 0))
+    end_pin = G.edges[edge].get("end_pin", (0, 0, 0))
+    front = [i + j for i, j in zip(start_orig, start_pin)]
+    back = [i + j for i, j in zip(end_orig, end_pin)]
+
+    v = [i - j for i, j in zip(front, back)]
+    c = [(i + j)/2 for i, j in zip(front, back)]
+    length = sqrt(sum((i-j)**2 for i, j in zip(front, back)))
+    bounds = channel_dim[0], channel_dim[1], length
+    if length == 0.0:
+        length += 0.000001
+    angle = [0,180*acos(v[2]/length)/pi, 180*atan2(v[1], v[0])/pi]
+    mesh = pv.Cube(x_length=bounds[0], y_length=bounds[1], z_length=bounds[2])
+    return mesh.rotate_x(angle[0]).rotate_y(angle[1]) .rotate_z(angle[2]).translate(c)
+
+def setup_render_pv(g, outfile):
+    plot = pv.Plotter(notebook=False, off_screen=False)
+    # plot.open_movie(outfile, quality=10)
+    plot.open_gif(outfile)
+    for node in g.nodes:
+        mesh = render_component_pv(g, node)
+        g.nodes[node]["mesh"] = mesh
+        plot.add_mesh(mesh)
+    for edge in g.edges:
+        mesh = render_edge_pv(g, edge)
+        g.edges[edge]["mesh"] = mesh
+        plot.add_mesh(mesh)
+    # plot.show(interactive_update=True, auto_close=False)
+    return plot
+
+def render_update_pv(p, g):
+    for node, props in g.nodes.items():
+        if "mesh" in props:
+            mesh = props["mesh"]
+            update = render_component_pv(g, node)
+            mesh.points = update.points
+            # mesh.points = props["coordinates"]
+    for edge, props in g.edges.items():
+        if "mesh" in props:
+            mesh = props["mesh"]
+            update = render_edge_pv(g, edge)
+            mesh.points = update.points
+    # p.update(force_redraw=True)
+    p.write_frame()
+
+def render_terminal_stats(G, tree, potential, sample_t, last_t):
+    test = "resist0"
+    test_x = G.nodes[test]["position"]
+    test_p = G.nodes[test]["last_potential"]
+    test_f = G.nodes[test]["last_force"]
+    test_v = G.nodes[test]["velocity"]
+    print(f"\033[;H\033[2K{potential:0.1f}", tree.elapsed(),
+           f"pos: ({test_x.x:0.2f} {test_x.y:0.2f})",
+           f"vel: ({test_v.x:0.4f} {test_v.y:0.4f})",
+           f"force: ({test_f.x:0.4f} {test_f.y:0.4f})",
+           f"potent: {test_p:0.1f}",
+           f"frame: {(sample_t-last_t)/60/1e6:.1f}",
+           sep="\t", end="", flush=True)
+
+def render_terminal_setup():
+    print("\033[2J")
+
+def render_terminal_cleanup():
+    print("\033[2J")
+
+def render_terminal_point(id, position, next, bounds):
+    xl, yl, xu, yu = bounds
+    i, j = int((position.x-xl))+3, int((position.y-yl))+2
+    k, l = int((next.x-xl))+3, int((next.y-yl))+2
+    label = chr(id%(126-33)+33)
+    print(f"\033[{i};{j}H", " ", f"\033[{k};{l}H",label, end="", sep="")
+
+def render_terminal_collision(collisions):
+    print(f"\033[2;H\033[2Kcollision checks {collisions}",end="")
 
 class Tree():
     """Tree structure to track near- and far-field interactions"""
@@ -54,22 +134,27 @@ class Tree():
         self.depth = depth
         self.timeout = timeout
         self.gravity = 0
-        self.friction = 0.95
-        self.delta_t = 0.00001
-        self.near = 2
+        self.friction = 0.98
+        self.delta_t = 0.01
+        self.near = 4
+        self.potential = 1e6
         self.bounds = (-width//2, -height//2, width//2, height//2)
         self.speed_limit = (-width//8, -height//8, width//8, height//8)
         self.nodes = sorted([node for node in G.nodes if not skip(G, node)], key=lambda node: G.nodes[node]["shell"] )
-        self.shells = {shell: QuadTree(self.bounds, len(list(members)))
-                        for shell, members in itertools.groupby(self.nodes, lambda node: G.nodes[node]["shell"])}
+        self.shell_nodes = {shell: list(members)
+                            for shell, members
+                            in itertools.groupby(self.nodes, lambda node: G.nodes[node]["shell"])}
+        self.shells = {shell: QuadTree(self.bounds, len(members))
+                        for shell, members in self.shell_nodes.items()}
         self.collisions = {shell: 0 for shell in self.shells}
         for i, node in enumerate(self.nodes):
             shell = G.nodes[node]["shell"]
             G.nodes[node]["index"] = i
-            G.nodes[node]["position"] = Vector(width*(random.random()-0.5),height*(random.random()-0.5))
+            G.nodes[node]["position"] = Vector(3/4*width*(random.random()-0.5),
+                                               3/4*height*(random.random()-0.5))
             G.nodes[node]["velocity"] = zero_vector
             G.nodes[node]["force"]  = zero_vector
-            self.shells[shell].insert(G.nodes[node]["position"].tuple(), id_=i)
+            self.shells[shell].insert(G.nodes[node]["position"].round().tuple(), id_=i)
             G.nodes[node]["potential"] = 0.0
 
     def update_collision(self, a, b):
@@ -83,8 +168,10 @@ class Tree():
         else:
             dv = d.unit()
         if n < self.near:
-            p = (n-self.near)**3
-            f = (n-self.near)**2*(0.5 + self.elapsed()/self.timeout/2)
+            f = 1/(n**2)
+            p = 1/(n)
+            # f = (n-self.near)*(1 + self.elapsed()/self.timeout)**4
+            # p = (n-self.near)**2
         else:
             p = 0
             f = 0
@@ -107,16 +194,21 @@ class Tree():
             dv = d.unit()
         # on shell
         if s_a == s_b:
-            p = (n-1)**4
-            f = -(n-1)**3
-        # off shell far
-        elif n > 1:
-            p = (n-1)**4
-            f = -(n-1)**3*(1 + self.elapsed()/self.timeout)
-        # off shell near
+            if n < 1:
+                p = 1/10*(n**-2+n**2 -2)
+                f = 1/10*(3*n**-3+2*n)
+            else:
+                p = (n-1)**4
+                f = -(n-1)**3
         else:
-            p = 0
-            f = 0
+            # off shell far
+            if n > 1:
+                p = (n-1)**4
+                f = -(n-1)**3
+            # off shell near
+            else:
+                p = 0
+                f = 0
         self.G.nodes[a]["force"] += dv*f
         self.G.nodes[b]["force"] -= dv*f
         self.G.nodes[a]["potential"] += p
@@ -125,9 +217,16 @@ class Tree():
     def update_gravity(self, a):
         d = self.G.nodes[a]["position"]
         dv = -d.unit()
-        f = self.gravity*(1-self.elapsed()/self.timeout)
+        f = self.gravity
         p = d.norm()
         self.G.nodes[a]["force"] += dv*f
+        self.G.nodes[a]["potential"] += p
+
+    def update_discretize(self, a):
+        d = self.G.nodes[a]["position"]
+        dv = d.round()-d
+        p = d.norm()
+        self.G.nodes[a]["force"] += dv*log(self.elapsed())
         self.G.nodes[a]["potential"] += p
 
     def update_positions(self):
@@ -140,9 +239,10 @@ class Tree():
             force = self.G.nodes[node]["force"]
 
             # apply acceleration
-            velocity += force*self.delta_t
+            velocity += force*self.delta_t*min(1,(log(self.elapsed())/min(1e5, max(self.potential, 1))))
+
             velocity = velocity.clamp(self.speed_limit)
-            # velocity = velocity.clamp((-2, -2, 2, 2))
+
             # bounce off walls
             bounds = position + velocity
             xl, yl, xu, yu = self.bounds
@@ -155,15 +255,14 @@ class Tree():
             next = position + velocity
 
             # update render
-            i, j = int((position.x-xl))+3, int((position.y-yl))+2
-            k, l = int((next.x-xl))+3, int((next.y-yl))+2
-            label = chr(id%(126-33)+33)
-            print(f"\033[{i};{j}H", " ", f"\033[{k};{l}H",label, end="", sep="")
-
+            render_terminal_point(id, position, next, self.bounds)
+            #
             # update records
             self.G.nodes[node]["position"] = next
             self.G.nodes[node]["coordinates"] = (shell, next.x, next.y)
-            self.shells[shell].update(id, int(position.x), int(position.y), int(next.x), int(next.y))
+            rounded_last = position.round()
+            rounded_next = next.round()
+            self.shells[shell].update(id, rounded_last.x, rounded_last.y, rounded_next.x, rounded_next.y)
             self.G.nodes[node]["velocity"] = velocity*self.friction
             # check potential
             potential += self.G.nodes[node]["potential"]
@@ -172,23 +271,27 @@ class Tree():
             self.G.nodes[node]["force"] = zero_vector
             self.G.nodes[node]["last_potential"] = self.G.nodes[node]["potential"]
             self.G.nodes[node]["potential"] = 0
-        print(f"\033[2;H\033[2Kcollision checks {self.collisions}",end="")
+        render_terminal_collision(self.collisions)
         self.collisions = {shell: 0 for shell in self.shells}
+        self.potential = potential
         return potential
 
     def calculate_forces(self):
         for node in self.nodes:
             shell = self.G.nodes[node]["shell"]
             index = self.G.nodes[node]["index"]
-            # pull to center
-            if self.gravity > 0:
-                self.update_gravity(node)
-
-            # calculate near field collisions
-            p = self.G.nodes[node]["position"]
-            bounds = (p.x-self.near, p.x+self.near, p.y-self.near, p.y+self.near)
-            for other_index, _, _ in self.shells[shell].query(bounds):
-                neighbor = self.nodes[other_index]
+            # # pull to center
+            # if self.gravity > 0:
+              # self.update_gravity(node)
+            # pull to integer value
+            self.update_discretize(node)
+            # # calculate near field collisions
+            # p = self.G.nodes[node]["position"].round()
+            # bounds = (p.x-self.near, p.x+self.near, p.y-self.near, p.y+self.near)
+            # for other_index, _, _ in self.shells[shell].query(bounds):
+                # neighbor = self.nodes[other_index]
+            for neighbor in self.shell_nodes[shell]:
+                other_index = self.G.nodes[neighbor]["index"]
                 # updates are symmetric, only calculate once
                 if index < other_index and neighbor not in self.G.adj[node]:
                     self.collisions[shell] += 1
@@ -209,7 +312,7 @@ class Tree():
 ################# Main #########################
 
 if __name__ == "__main__":
-    log.info("**************** Starting ****************")
+    logger.info("**************** Starting ****************")
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file")
@@ -229,10 +332,27 @@ if __name__ == "__main__":
 
     g = read_yosys_json(args.input_file,args.top)
     g = collapse_edges(g)
-    log.info("Loaded %s", g)
+    logger.info("Loaded %s", g)
 
     g, shells, duration, elapsed = run_everything_redux(g, args.output, args.width, args.height, args.depth, args.timeout)
-    # horizontal does only two dimensionals and has implicit x dimension of the shell
+    col = 0
+    ncol = 0
+    fail = 0
+    for left in g.nodes:
+        s = g.nodes[left].get("shell", -1)
+        l_pos = g.nodes[left].get("position", Vector(0,0))
+        g.nodes[left]["coordinates"] = (s, round(l_pos.x), round(l_pos.y))
+        for right in g.nodes:
+            l_idx = g.nodes[left].get("index", -1)
+            r_idx = g.nodes[right].get("index", -1)
+            if l_idx > 0 and r_idx > 0 and l_idx < r_idx and right not in g.adj[left]:
+                r_pos = g.nodes[right].get("position", Vector(0,0))
+                d_pos = (l_pos - r_pos)
+                col += d_pos.norm()
+                if d_pos.norm() < 1:
+                    print(f"collision {left} {right} {d_pos.x:0.2f}, {d_pos.y:0.2f}")
+                    fail += 1
+                ncol += 1
     on_disp = 0
     on = 0
     off_disp = 0
@@ -243,7 +363,8 @@ if __name__ == "__main__":
         r_shell = g.nodes[right].get("shell", Vector(0,0))
         l_pos = g.nodes[left].get("position", Vector(0,0))
         r_pos = g.nodes[right].get("position", Vector(0,0))
-        d_pos = (l_pos - r_pos).round()
+        d_pos = (l_pos - r_pos)
+        print(f"edge {left} {right} {d_pos.x:0.2f}, {d_pos.y:0.2f}")
         if l_shell == r_shell:
             on += 1
             on_disp += d_pos.norm()
@@ -253,20 +374,6 @@ if __name__ == "__main__":
     print(f"duration {duration/1e9:.3f} s.")
     print(f"avg frame {duration/1e6/elapsed:.1f} ms")
     print(f"average connection displacement on {on_disp/on}, off {off_disp/off}")
-    col = 0
-    ncol = 0
-    fail = 0
-    for left in g.nodes:
-        for right in g.nodes:
-            l_idx = g.nodes[left].get("index", -1)
-            r_idx = g.nodes[right].get("index", -1)
-            if l_idx > 0 and r_idx > 0 and l_idx < r_idx and right not in g.adj[left]:
-                l_pos = g.nodes[left].get("position", Vector(0,0))
-                r_pos = g.nodes[right].get("position", Vector(0,0))
-                d_pos = (l_pos - r_pos).round()
-                col += d_pos.norm()
-                if d_pos.norm() < 1:
-                    fail += 1
-                ncol += 1
-    print("average collision displacement", col/ncol, fail/ncol)
-    render_scad(g, args.output, shells)
+    print(f"average collision displacement {col/ncol:0.2f}")
+    print(f"collision failures {fail/ncol*100:0.1f}")
+    # render_scad(g, args.output, shells)
