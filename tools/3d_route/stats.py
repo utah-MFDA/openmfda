@@ -8,28 +8,29 @@ import networkx as nx
 from numpy.testing._private.utils import break_cycles
 import pyscipopt as scip
 from networkx_helpers import *
-from render import *
 import logging
 import pandas as pd
 
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cache")
-    parser.add_argument("--graph")
-    parser.add_argument("--top", default="thing")
-    args = parser.parse_args()
+# if __name__ == "__main__":
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--cache")
+parser.add_argument("--graph")
+parser.add_argument("--top", default="thing")
+args = parser.parse_args()
 
-    g = read_yosys_json(args.graph,args.top)
-    data = pd.read_csv(args.cache, index_col="node")
-    for node, props in data.iterrows():
-        if node in g.nodes:
-            g.nodes[node]["coordinates"] = (int(props["x"]), int(props["y"]), int(props["z"]))
-            g.nodes[node]["shell"] = int(props["shell"])
-        else:
-            log.warning("missing node %s", node)
-    for node in g.nodes:
-        if "coordinates" not in g.nodes[node]:
-            log.warning("No coordinates for %s", node)
-    data = extract_stats(g)
-    data.to_csv(f"{args.cache[:-4]}.dist.csv")
+G = read_yosys_json(args.graph, args.top)
+read_cache(G, args.cache)
+coords = extract_dataframe(G)
+edges = extract_edges(G)
+pairs = extract_pairs(G)
+adj = nx.to_pandas_adjacency(G)
+lapl= extract_graph_laplacian(adj)
+p = extract_all_pairs_shortest_path(G)
+dist = calculate_distances(coords)
+q = (adj*dist).fillna(0)
+nq = ((adj < 1)*1).fillna(0)
+err = dist/p
+errm = err.fillna(0).mean()
+errm.describe()
+errh = np.histogram(errm)

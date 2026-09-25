@@ -32,10 +32,10 @@ def reduce_dimension(adj: pd.DataFrame) -> pd.DataFrame:
         impacts, best = find_least_impactful(nexts)
         print(best, nexts.shape[1], nexts.duplicated().sum())
         nexts = squash(nexts, impacts, best)
-        nexts.to_csv(f"benchmarks/kinase_1.dimension_{nexts.shape[1]}.csv")
+        nexts.to_csv(f"benchmarks/kinase_1.dimension_{nexts.shape[1]}.csv", index_label="node")
     return nexts
 
-from render import *
+# from render import *
 import numpy as np
 
 def pca_reduce(name, p):
@@ -49,9 +49,9 @@ def pca_reduce(name, p):
     print(d)
     for node, coord in d.iterrows():
         G.nodes[node]["coordinates"] = coord.array
-    s = render_flat(G)
-    d.to_csv(f"{name}.pca.csv")
-    s.save_as_scad(f"{name}.pca.scad")
+#     s = render_flat(G)
+    d.to_csv(f"{name}.pca.csv", index_label="node")
+    # s.save_as_scad(f"{name}.pca.scad")
 
 def increment_pca_reduce(name, p):
     from sklearn.decomposition import IncrementalPCA
@@ -64,9 +64,9 @@ def increment_pca_reduce(name, p):
     print(d)
     for node, coord in d.iterrows():
         G.nodes[node]["coordinates"] = coord.array
-    s = render_flat(G)
-    d.to_csv(f"{name}.incremental.csv")
-    s.save_as_scad(f"{name}.incremental.scad")
+#     s = render_flat(G)
+    d.to_csv(f"{name}.incremental.csv", index_label="node")
+    # s.save_as_scad(f"{name}.incremental.scad")
 
 def mds_reduce(name, p, metric):
     from sklearn.manifold import MDS
@@ -83,13 +83,13 @@ def mds_reduce(name, p, metric):
     for edge in G.edges:
 
         G.edges[edge]["dimensions"] = [1, 1, 1]
-    s = render_flat(G)
+#     s = render_flat(G)
     if metric:
         suffix = "mds_metric"
     else:
         suffix = "mds"
-    d.to_csv(f"{name}.{suffix}.csv")
-    s.save_as_scad(f"{name}.{suffix}.scad")
+    d.to_csv(f"{name}.{suffix}.csv", index_label="node")
+    # s.save_as_scad(f"{name}.{suffix}.scad")
 
 def smacof_reduce(name, p, metric=True):
     from sklearn.manifold import smacof
@@ -107,13 +107,13 @@ def smacof_reduce(name, p, metric=True):
         G.nodes[node]["dimensions"] = [20, 20, 20]
     for edge in G.edges:
         G.edges[edge]["dimensions"] = [5, 5, 5]
-    s = render_flat(G)
+#     s = render_flat(G)
     if metric:
         suffix = "smacof_metric"
     else:
         suffix = "smacof"
-    d.to_csv(f"{name}.{suffix}.csv")
-    s.save_as_scad(f"{name}.{suffix}.scad")
+    d.to_csv(f"{name}.{suffix}.csv", index_label="node")
+    # s.save_as_scad(f"{name}.{suffix}.scad")
 
 
 def spectral_reduce(name, q):
@@ -131,9 +131,9 @@ def spectral_reduce(name, q):
     for edge in G.edges:
 
         G.edges[edge]["dimensions"] = [5, 5, 5]
-    s = solid2.scale((1,0.05,1))(render_flat(G))
-    d.to_csv(f"{name}.spectral.csv")
-    s.save_as_scad(f"{name}.spectral.scad")
+#     s = solid2.scale((1,0.05,1))(render_flat(G))
+    d.to_csv(f"{name}.spectral.csv", index_label="node")
+    # s.save_as_scad(f"{name}.spectral.scad")
 
 def isomap_reduce(name, q):
     from sklearn.manifold import Isomap
@@ -151,9 +151,9 @@ def isomap_reduce(name, q):
     for edge in G.edges:
 
         G.edges[edge]["dimensions"] = [10, 10, 10]
-    s = render_flat(G)
-    d.to_csv(f"{name}.isomap.csv")
-    s.save_as_scad(f"{name}.isomap.scad")
+#     s = render_flat(G)
+    d.to_csv(f"{name}.isomap.csv", index_label="node")
+    # s.save_as_scad(f"{name}.isomap.scad")
 
 def grp_reduce(name, p):
     from sklearn.random_projection import GaussianRandomProjection
@@ -170,9 +170,9 @@ def grp_reduce(name, p):
     for edge in G.edges:
 
         G.edges[edge]["dimensions"] = [5, 5, 5]
-    s = render_flat(G)
-    d.to_csv(f"{name}.grp.csv")
-    s.save_as_scad(f"{name}.grp.scad")
+#     s = render_flat(G)
+    d.to_csv(f"{name}.grp.csv", index_label="node")
+    # s.save_as_scad(f"{name}.grp.scad")
 
 def ica_reduce(name, p):
     from sklearn.decomposition import FastICA
@@ -189,9 +189,9 @@ def ica_reduce(name, p):
     for edge in G.edges:
 
         G.edges[edge]["dimensions"] = [1, 1, 1]
-    s = render_flat(G)
-    d.to_csv(f"{name}.ica.csv")
-    s.save_as_scad(f"{name}.ica.scad")
+#     s = render_flat(G)
+    d.to_csv(f"{name}.ica.csv", index_label="node")
+    # s.save_as_scad(f"{name}.ica.scad")
 
 import sys
 name = sys.argv[1]
@@ -208,7 +208,7 @@ q = nx.to_pandas_adjacency(G)
 print(datetime.now().isoformat(), "Adjacency generated")
 p = pd.DataFrame(dict(nx.all_pairs_shortest_path_length(G)), index=G.nodes, columns=G.nodes)
 print(datetime.now().isoformat(), "Distances calculated")
-p.to_csv(f"{name}.csv")
+p.to_csv(f"{name}.csv", index_label="node")
 print(datetime.now().isoformat(), "spectral")
 spectral_reduce(name, q)
 print(datetime.now().isoformat(), "mds metric")

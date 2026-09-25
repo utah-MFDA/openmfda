@@ -428,10 +428,10 @@ def run_backwards(G, skip, outfile, cache, start_condition, buffer_condition,
                         reversed = True
                 highwater = max(highwater, relax)
                 if cache:
-                    write_cache(g, cache, {"highwater":highwater,"reversed":reversed,"relax":relax})
+                    write_cache(G, cache, {"highwater":highwater,"reversed":reversed,"relax":relax})
                 break
             if cache:
-                data = extract_stats(g)
+                data = extract_edges(G)
                 log.info("Got error histogram %s", ", ".join(f"{i}:{j}" for i, j in data["dist"].value_counts(sort=True, ascending=True).items()))
                 write_cache(G, cache, {"highwater":highwater,"reversed":reversed,"relax":relax})
     return shells
@@ -601,54 +601,7 @@ def colorful(G, node):
             return "red"
         else:
             return "black"
-########## Cache #################
-def read_cache(g, filename):
-    data = pd.read_csv(filename, index_col="node")
-    for node, props in data.iterrows():
-        g.nodes[node]["coordinates"] = (int(props["x"]), int(props["y"]), int(props["z"]))
-        g.nodes[node]["shell"] = int(props["shell"])
-    meta = None
-    try:
-        with open(f"{filename}.json") as j:
-            meta = json.load(j)
-    except FileNotFoundError:
-        log.warning("Requested cache, but json metadata missing.")
-    return int(data["shell"].max() + 1), meta
 
-def extract_coord(coordinates, shell):
-    if len(coordinates) == 2:
-        y, z = coordinates
-        return [shell, y, z]
-    else:
-        return coordinates
-
-def write_cache(g, filename, meta=None):
-    # I love how pandas is the defacto csv reader
-    data = ((node, *extract_coord(props["coordinates"], props["shell"]), props["shell"])
-            for node, props in g.nodes.items() if "coordinates" in props)
-    node, x, y, z, shell = zip(*data)
-
-    df = pd.DataFrame({"node": node, "x": x, "y": y, "z": z, "shell": shell})
-    df.to_csv(filename)
-    if meta:
-
-        meta_file = f"{filename}.json"
-        log.info("Writing meta to %s", meta_file)
-        with open(meta_file, "+w") as j:
-            json.dump(meta, j)
-def extract_stats(g):
-    # for node in g.nodes:
-        # if "coordinates" not in g.nodes[node]:
-            # log.warning("No coordinates for %s", node)
-    data = ([start, end, *extract_coord(g.nodes[start]["coordinates"], g.nodes[start]["shell"]), *extract_coord(g.nodes[end]["coordinates"], g.nodes[start]["shell"])]
-        for start, end in g.edges
-        if "coordinates" in g.nodes[start] and "coordinates" in g.nodes[end] and not g.edges[(start, end)].get("dummy", False))
-    data = pd.DataFrame(data, columns=["start", "end", "sx", "sy", "sz", "ex", "ey", "ez"])
-    data["dx"] = (data["sx"] - data["ex"]).abs()
-    data["dy"] = (data["sy"] - data["ey"]).abs()
-    data["dz"] = (data["sz"] - data["ez"]).abs()
-    data["dist"] = data[["dx", "dy", "dz"]].max(axis=1)
-    return data
 ################# Main #########################
 
 if __name__ == "__main__":
@@ -682,10 +635,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.basicConfig(filename=args.logfile, level=args.log)
 
-    g = read_yosys_json(args.input_file,args.top)
+    G = read_yosys_json(args.input_file,args.top)
     if args.collapse_hyperedge:
-        g = collapse_edges(g)
-    log.info("Loaded %s", g)
+        G = collapse_edges(G)
+    log.info("Loaded %s", G)
 
     bound = bounded
     start = lambda G, n: (is_input_port(G, n) or is_output_port(G, n) or is_inout_port(G, n)) and is_flow(G, n)
@@ -724,26 +677,26 @@ if __name__ == "__main__":
         bound = bounded_noop
     else:
         runner = run_by_dimension
-    shells = runner(g, skip, args.output, args.cache, start, buffer,
+    shells = runner(G, skip, args.output, args.cache, start, buffer,
                                  not_overlap, orientation, bound, attach_to_side, noop, attach_to_side,
                                  shell_bound,
                                  args.width, args.height, args.depth,
                                  args.offset, args.relax, args.timeout, args.minimize)
     # horizontal does only two dimensionals and has implicit x dimension of the shell
     if args.orientation == "horizontal":
-        for node, props in g.nodes.items():
+        for node, props in G.nodes.items():
             if not "coordinates" in props:
                 continue
             if len(props["coordinates"]) == 2:
                 y, z = props["coordinates"]
                 props["coordinates"] = [props["shell"], y, z]
 
-    for x in g.nodes:
-        print("Final solution %s %s", x, g.nodes[x].get("coordinates", "none"))
-    render_scad(g, args.output, shells)
+    for x in G.nodes:
+        print("Final solution %s %s", x, G.nodes[x].get("coordinates", "none"))
+    render_scad(G, args.output, shells)
     if args.cache:
-        write_cache(g, args.cache)
-        data = extract_stats(g)
+        write_cache(G, args.cache)
+        data = extract_edges(G)
         data.to_csv(f"{args.cache[:-4]}.dist.csv")
         log.info("Got error histogram %s", ", ".join(f"{i}:{j}" for i, j in data["dist"].value_counts(sort=True).items()))
         print(data["dist"].value_counts())

@@ -2,6 +2,14 @@ import operator
 import math
 import random
 
+def sign(a):
+    if a > 0:
+        return 1
+    elif a < 0:
+        return -1
+    else:
+        return 0
+
 class MultiVectorR2():
     def __init__(self, s, x, y, xy):
         self.s = s
@@ -132,8 +140,8 @@ class Vector():
     def __xor__(self, other):
         return self.x * other.x + self.y*other.y
 
-    def __matmul__(self, other):
-        return Vector(self.__or__(other), self.__xor__(other))
+    # def __matmul__(self, other):
+    #     return Vector(self.__or__(other), self.__xor__(other))
 
     def __add__(self, other):
         return self.combine(other, operator.add)
@@ -199,6 +207,120 @@ class Vector():
     def round(self):
         return Vector(int(round(self.x)), int(round(self.y)))
 
+class DiscreteVector():
+    def __init__(self, x, y):
+        self.x = int(x)
+        self.y = int(y)
+
+    def apply(self, func):
+        return DiscreteVector(func(self.x), func(self.y))
+
+    def combine(self, other, func):
+        if type(other) == type(self):
+            return DiscreteVector(func(self.x, other.x), func(self.y, other.y))
+        else:
+            return DiscreteVector(func(self.x, other), func(self.y, other))
+
+    def __mul__(self, other):
+        return self.combine(other, operator.mul)
+
+    # Inner product
+    def __or__(self, other):
+        return self.x * other.x + self.y*other.y
+
+    # outer product
+    def __xor__(self, other):
+        return self.x * other.x + self.y*other.y
+
+    def __matmul__(self, other):
+        return DiscreteVector(self.__or__(other), self.__xor__(other))
+
+    def __add__(self, other):
+        return self.combine(other, operator.add)
+
+    def __mod__(self, other):
+        return self.combine(other, operator.mod)
+
+    def __abs__(self):
+        return self.norm()
+
+    def __neg__(self):
+        return self.apply(operator.neg)
+
+    def __sub__(self, b):
+        return self.combine(b, operator.sub)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __neq__(self, other):
+        return self != other
+
+    def __le__(self, other):
+        return other.norm() < self.norm()
+
+    def __leq__(self, other):
+        return other.norm() <= self.norm()
+
+    def __ge__(self, other):
+        return other.norm() > self.norm()
+
+    def __geq__(self, other):
+        return other.norm() >= self.norm()
+
+    def norm(self):
+        return max(abs(self.x), abs(self.y))
+
+    def __truth__(self):
+        return self.norm() > 0
+
+    def unit(self):
+        x, y = self.x, self.y
+        if x == 0 or y == 0:
+            return DiscreteVector(sign(x), sign(y))
+        elif x > 0:
+            if y > 0:
+                if y >= x:
+                    return DiscreteVector(1,1)
+                else:
+                    return DiscreteVector(1,0)
+            else:
+                if -y >= x:
+                    return DiscreteVector(1,-1)
+                else:
+                    return DiscreteVector(0,-1)
+        elif x < 0:
+            if y > 0:
+                if y > -x:
+                    return DiscreteVector(0,1)
+                else:
+                    return DiscreteVector(-1,1)
+            else:
+                if -y >= -x:
+                    return DiscreteVector(-1,-1)
+                else:
+                    return DiscreteVector(-1,0)
+        else:
+            raise
+
+    def tuple(self):
+        return (self.x, self.y)
+
+    def __repr__(self):
+        return f"({self.x}, {self.y})"
+
+    def __getitem__(a, k):
+        if k == 0:
+            return a.x
+        elif k == 1:
+            return a.y
+        else:
+            raise IndexError
+
+    def clamp(self, bounds):
+        xl, yl, xu, yu = bounds
+        return DiscreteVector(min(xu-1, max(self.x, xl)), min(yu-1, max(self.y, yl)))
+
 def vector_angle(angle):
     radians = 2*math.pi*angle/360
     return Vector(math.cos(radians), math.sin(radians))
@@ -208,3 +330,7 @@ def random_unit_vector():
     return Vector(math.cos(angle), math.sin(angle))
 
 zero_vector = Vector(0.0, 0.0)
+discrete_zero_vector = DiscreteVector(0, 0)
+
+def discrete_random_unit_vector():
+    return DiscreteVector(random.randint(-1, 1), random.randint(-1,1))

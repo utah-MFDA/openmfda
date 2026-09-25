@@ -1,6 +1,9 @@
 import networkx as nx
 import json
 from collections import deque
+import logging
+
+logger = logging.getLogger(__name__)
 
 def read_yosys_json(input_file, top):
     G = nx.Graph()
@@ -130,27 +133,27 @@ def is_older(G, n, shell):
 def add_shell(G, starts):
     assert(len(starts) > 0)
     for start in starts:
-        # log.debug("Starting %s", start)
+        logger.debug("Starting %s", start)
 
         G.nodes[start]["shell"] = 0
     frontier = starts
     shell = 0
     while frontier:
         nexts = deque()
-        # log.info("Traversing %d nodes in shell %d", len(frontier), shell)
+        logger.info("Traversing %d nodes in shell %d", len(frontier), shell)
         for leaf in frontier:
             for neighbor in G.adj[leaf]:
                 if "shell" in G.nodes[neighbor]:
                     continue
                 else:
-                    # log.debug("Found %s", neighbor)
+                    logger.debug("Found %s", neighbor)
                     G.nodes[neighbor]["shell"] = shell + 1
                     nexts.append(neighbor)
         frontier = nexts
         shell += 1
-    # for node in G.nodes:
-        # if "shell" not in G.nodes[node]:
-            # log.error("Shell missing %s", node)
+    for node in G.nodes:
+      if "shell" not in G.nodes[node]:
+            logger.error("Shell missing %s", node)
     for node in G.nodes:
         assert("shell" in G.nodes[node])
         G.nodes[node]["shell"] = shell - G.nodes[node]["shell"] - 1
@@ -175,7 +178,7 @@ def report_stats(G):
     num_inout = sum(1 for i in G.nodes if is_inout_port(G, i))
     num_wire = sum(1 for i in G.nodes if is_net(G, i))
     num_cells = len(G.nodes) - num_wire
-    # log.info("Starting with %d ports (%d input %d output %d inout) %d nets and %d cells", num_port, num_input, num_output, num_inout, num_wire, num_cells)
+    logger.info("Starting with %d ports (%d input %d output %d inout) %d nets and %d cells", num_port, num_input, num_output, num_inout, num_wire, num_cells)
 
 def find_center(G, start_condition, buffer_condition):
     report_stats(G)
@@ -191,9 +194,9 @@ def find_center(G, start_condition, buffer_condition):
 
     unreachable = [_ for _, p in G.nodes.items() if "shell" not in p]
     if unreachable:
-        # for u in unreachable:
-            # log.error(u)
-        # log.error("Total %d Unreachable %d", len(G.nodes), len(unreachable))
+        for u in unreachable:
+            logger.error(u)
+        logger.error("Total %d Unreachable %d", len(G.nodes), len(unreachable))
         assert(len(unreachable) == 0)
     precalc_dist(G)
     return shell
@@ -245,7 +248,7 @@ def gather_children(G, n):
                 continue
         props["diverges"] = children > 1
         props["descendents"] = desc
-        # log.debug("Descendents %s: %s", n, ", ".join(desc))
+        logger.debug("Descendents %s: %s", n, ", ".join(desc))
     return props["descendents"] | set([n])
 
 def gather_ancestors(G, n):
@@ -262,7 +265,7 @@ def gather_ancestors(G, n):
                 continue
         props["diverges_ancestor"] = children > 1
         props["ancestors"] = desc
-        # log.debug("ancestors %s: %s", n, ", ".join(desc))
+        logger.debug("ancestors %s: %s", n, ", ".join(desc))
     return props["ancestors"] | set([n])
 
 def precalc_dist(G):
@@ -273,4 +276,116 @@ def precalc_dist(G):
     # for node, props in G.nodes.items():
         # if not props["diverges"]:
             # del props["descendents"]
+
+import pandas as pd
+import numpy as np
+def read_cache(g, filename):
+    data = pd.read_csv(filename, index_col="node")
+    for node, props in data.iterrows():
+        g.nodes[node]["coordinates"] = (props["x"], props["y"], props["z"])
+        if "shell" in props:
+            g.nodes[node]["shell"] = int(props["shell"])
+    meta = None
+    try:
+        with open(f"{filename}.json") as j:
+            meta = json.load(j)
+    except FileNotFoundError:
+        logger.warning("Requested cache, but json metadata missing.")
+    if "shell" in data:
+        return int(data["shell"].max() + 1), meta
+    else:
+        return -1, meta
+
+def extract_coord(coordinates, shell):
+    if len(coordinates) == 2:
+        y, z = coordinates
+        return [shell, y, z]
+    else:
+        return coordinates
+
+def write_cache(g, filename, meta=None):
+    # I love how pandas is the defacto csv reader
+    data = ((node, *extract_coord(props["coordinates"], props["shell"]), props["shell"])
+            for node, props in g.nodes.items() if "coordinates" in props)
+    node, x, y, z, shell = zip(*data)
+
+    df = pd.DataFrame({"node": node, "x": x, "y": y, "z": z, "shell": shell})
+    df.to_csv(filename)
+    if meta:
+
+        meta_file = f"{filename}.json"
+        logger.info("Writing meta to %s", meta_file)
+        with open(meta_file, "+w") as j:
+            json.dump(meta, j)
+
+def extract_dataframe(g):
+    data = [[node,
+             *extract_coord(g.nodes[node].get("coordinates", (np.nan, np.nan, np.nan)),
+                            g.nodes[node].get("shell", -1)),
+             g.nodes[node].get("shell", -1)]
+             for node in g.nodes]
+
+    return pd.DataFrame(data, index=g.nodes, columns=["node", "x", "y", "z", "shell"])
+
+def extract_edges(g):
+    for node in g.nodes:
+        if "coordinates" not in g.nodes[node]:
+            logger.warning("No coordinates for %s", node)
+    data = ([start, end,
+             *extract_coord(g.nodes[start]["coordinates"], g.nodes[start].get("shell", -1)),
+             *extract_coord(g.nodes[end]["coordinates"], g.nodes[end].get("shell", -1))]
+            for start, end in g.edges
+                if "coordinates" in g.nodes[start]
+                 and "coordinates" in g.nodes[end]
+                 and not g.edges[(start, end)].get("dummy", False))
+    data = pd.DataFrame(data, columns=["start", "end", "sx", "sy", "sz", "ex", "ey", "ez"])
+    data["dx"] = (data["sx"] - data["ex"]).abs()
+    data["dy"] = (data["sy"] - data["ey"]).abs()
+    data["dz"] = (data["sz"] - data["ez"]).abs()
+    data["eucl_dist"] = data[["dx", "dy", "dz"]].pow(2).sum(axis=1)
+    data["dist"] = data[["dx", "dy", "dz"]].max(axis=1)
+    return data
+
+def extract_pairs(g):
+    data = ([start, end,
+             *extract_coord(g.nodes[start]["coordinates"], g.nodes[start].get("shell", -1)),
+             *extract_coord(g.nodes[end]["coordinates"], g.nodes[end].get("shell", -1))]
+                for start in g.nodes
+                for end in g.nodes
+                    if "coordinates" in g.nodes[start]
+                     and "coordinates" in g.nodes[end])
+    data = pd.DataFrame(data, columns=["start", "end", "sx", "sy", "sz", "ex", "ey", "ez"])
+    data["dx"] = (data["sx"] - data["ex"]).abs()
+    data["dy"] = (data["sy"] - data["ey"]).abs()
+    data["dz"] = (data["sz"] - data["ez"]).abs()
+    data["eucl_dist"] = data[["dx", "dy", "dz"]].pow(2).sum(axis=1)
+    data["dist"] = data[["dx", "dy", "dz"]].max(axis=1)
+    return data
+
+def extract_shell_collision(G):
+    data = {
+        start: {
+            end: 1 if G.nodes[start]["shell"] == G.nodes[end]["shell"] and start != end else 0
+            for end in G.nodes
+            if "shell" in G.nodes[end]
+        }
+        for start in G.nodes
+        if "shell" in G.nodes[start]
+    }
+    return pd.DataFrame(data,
+                         index=G.nodes, columns=G.nodes)
+
+def extract_graph_laplacian(adj):
+    lapl= np.identity(len(adj))*adj.sum().to_numpy() - adj
+    return lapl
+
+def extract_all_pairs_shortest_path(G):
+    return pd.DataFrame(dict(nx.all_pairs_shortest_path_length(G)),
+                         index=G.nodes, columns=G.nodes)
+
+def calculate_distances(coords):
+    dx = coords["x"].to_numpy()[:, None] - coords["x"].to_numpy()
+    dy = coords["y"].to_numpy()[:, None] - coords["y"].to_numpy()
+    dz = coords["z"].to_numpy()[:, None] - coords["z"].to_numpy()
+    return (dx**2 + dy**2 + dz**2)**0.5
 
