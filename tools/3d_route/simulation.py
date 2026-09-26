@@ -1,4 +1,3 @@
-import pyvista as pv
 import itertools
 import random
 import time
@@ -8,102 +7,37 @@ from fastquadtree import QuadTree
 import networkx as nx
 from networkx_helpers import *
 import logging
-from render import render_scad
+
 logger = logging.getLogger(__name__)
 
-def run_everything_redux(G, outfile, width = 40, height = 25, depth = 25, timeout=30, render=False):
+def run_everything_redux(G, outfile, width = 40, height = 25, depth = 25, timeout=30, intermediate=None):
     start = lambda G, n: (is_input_port(G, n) or is_output_port(G, n) or is_inout_port(G, n)) and is_flow(G, n)
     buffer = lambda G, n: False
     skip = lambda G, n: is_control_cell(G,n) or is_flush_cell(G,n) or is_control(G, n) or is_flush(G, n)
     shells = find_center(G, start, buffer)
-    tree = Tree(G, skip, width, height, depth, timeout)
+    tree = Tree(G, skip, width, height, depth, timeout, intermediate)
     start_t = time.time_ns()
     last = start_t
     potential = tree.tick()
     render_terminal_setup()
-    if render:
-        plot = setup_render_pv(g, outfile)
     sample = time.time_ns()
     render_rate = 1
     render_terminal_setup()
+    if intermediate and os.path.exists(intermediate):
+        os.remove(intermediate)
     while potential > 0 and tree.elapsed() < timeout:
         potential = tree.tick()
         if tree.elapsed() % render_rate == 0:
             last = sample
             sample = time.time_ns()
-            render_terminal_stats(G, tree, potential, sample, last, render_rate)
-            # for node in tree.nodes:
-                # props = tree.G.nodes[node]
-                # render_terminal_point(props["index"], props["position"], tree.bounds)
-            if render:
-                render_update_pv(plot, G)
-    if render:
-        plot.close()
+            render_terminal_stats(G, tree, potential, sample, last, render_rate,tree.nodes[0])
+            if intermediate:
+                write_iteration(tree.G, tree.elapsed(), intermediate)
     end_t = time.time_ns()
     render_terminal_cleanup()
-    render_scad(G, outfile[:-4] + ".scad", shells)
     return G, shells, end_t-start_t, tree.elapsed()
 
-def render_component_pv(g, node):
-    coordinates = g.nodes[node]["coordinates"]
-    return pv.Cube(center = coordinates, x_length=1, y_length=1, z_length=1)
-
-def render_edge_pv(G, edge):
-    start, end = edge
-    ex, ey, ez = G.nodes[end]["coordinates"]
-    end_orig = [ex, ey, ez]
-    sx, sy, sz = G.nodes[start]["coordinates"]
-    start_orig = [sx, sy, sz]
-    mesh = pv.Line(start_orig, end_orig)
-    return mesh
-    # channel_dim = G.edges[edge].get("dimensions", (1,1,1))
-    # start_pin = G.edges[edge].get("start_pin", (0, 0, 0))
-    # end_pin = G.edges[edge].get("end_pin", (0, 0, 0))
-    # front = [i + j for i, j in zip(start_orig, start_pin)]
-    # back = [i + j for i, j in zip(end_orig, end_pin)]
-
-    # v = [i - j for i, j in zip(front, back)]
-    # c = [(i + j)/2 for i, j in zip(front, back)]
-    # length = sqrt(sum((i-j)**2 for i, j in zip(front, back)))
-    # bounds = channel_dim[0], channel_dim[1], length
-    # if length == 0.0:
-    #     length += 0.000001
-    # angle = [0,180*acos(v[2]/length)/pi, 180*atan2(v[1], v[0])/pi]
-    # mesh = pv.Cube(x_length=bounds[0], y_length=bounds[1], z_length=bounds[2])
-    # return mesh.rotate_x(angle[0]).rotate_y(angle[1]) .rotate_z(angle[2]).translate(c)
-
-def setup_render_pv(g, outfile):
-    plot = pv.Plotter(notebook=False, off_screen=False)
-    # plot.open_movie(outfile, quality=10)
-    # plot.open_gif(outfile)
-    for node in g.nodes:
-        mesh = render_component_pv(g, node)
-        g.nodes[node]["mesh"] = mesh
-        plot.add_mesh(mesh)
-    for edge in g.edges:
-        mesh = render_edge_pv(g, edge)
-        g.edges[edge]["mesh"] = mesh
-        plot.add_mesh(mesh)
-    plot.show(auto_close=False, interactive_update=True)
-    return plot
-
-def render_update_pv(p, g):
-    for node, props in g.nodes.items():
-        if "mesh" in props:
-            mesh = props["mesh"]
-            update = render_component_pv(g, node)
-            mesh.points = update.points
-            # mesh.points = props["coordinates"]
-    for edge, props in g.edges.items():
-        if "mesh" in props:
-            mesh = props["mesh"]
-            update = render_edge_pv(g, edge)
-            mesh.points = update.points
-    p.update(force_redraw=True)
-    # p.write_frame()
-
-def render_terminal_stats(G, tree, global_potential, sample_t, last_t, rate):
-    test = "resist0"
+def render_terminal_stats(G, tree, global_potential, sample_t, last_t, rate, test):
     position = G.nodes[test]["position"]
     potential = G.nodes[test]["last_potential"]
     force = G.nodes[test]["last_force"]
@@ -134,7 +68,7 @@ def render_terminal_collision(collisions):
 
 class Tree():
     """Tree structure to track near- and far-field interactions"""
-    def __init__(self, G, skip, width, height, depth, timeout):
+    def __init__(self, G, skip, width, height, depth, timeout, intermediate):
         self.G = G
         self.ticks = 0
         self.dimensions = [width, height, depth]
@@ -360,7 +294,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file")
-    parser.add_argument("-o", "--output", required=True)
+    parser.add_argument("-o", "--output")
     parser.add_argument("--timeout", default=30, type=int)
     # 1600/64 = 25, 2560/64 = 40
     # parser.add_argument("--width", default=1600/40, type=int)
@@ -380,7 +314,7 @@ if __name__ == "__main__":
     g = collapse_edges(g)
     logger.info("Loaded %s", g)
 
-    g, shells, duration, elapsed = run_everything_redux(g, args.output, args.width, args.height, args.depth, args.timeout)
+    g, shells, duration, elapsed = run_everything_redux(g, args.output, args.width, args.height, args.depth, args.timeout, intermediate=args.cache)
     col = 0
     ncol = 0
     fail = 0
@@ -422,5 +356,5 @@ if __name__ == "__main__":
     print(f"average connection displacement on {on_disp/on}, off {off_disp/off}")
     print(f"average collision displacement {col/ncol:0.2f}")
     print(f"collision failures {fail/ncol*100:0.1f}")
-    write_cache(g, args.cache)
+    # write_cache(g, args.cache)
     # render_scad(g, args.output, shells)

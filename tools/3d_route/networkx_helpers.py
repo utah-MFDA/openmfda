@@ -2,6 +2,7 @@ import networkx as nx
 import json
 from collections import deque
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -317,6 +318,21 @@ def write_cache(g, filename, meta=None):
         logger.info("Writing meta to %s", meta_file)
         with open(meta_file, "+w") as j:
             json.dump(meta, j)
+
+def write_iteration(g, i, filename):
+    data = ((node,
+             props["coordinates"][0],
+             props["coordinates"][1],
+             props["shell"],
+             props["force"][0],
+             props["force"][1],
+             props["potential"],
+             i)
+            for node, props in g.nodes.items()
+            if "coordinates" in props)
+    df = pd.DataFrame(data, columns=["node", "x", "y", "z", "ux", "uy", "u", "iter"])
+    df.set_index("node")
+    df.to_csv(filename, mode='a', header=not os.path.exists(filename))
 
 def extract_dataframe(g):
     data = [[node,
