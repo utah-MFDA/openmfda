@@ -27,7 +27,11 @@ init = steps[0]
 scatter = ax.scatter(init["x"], init["y"], init["z"], c=init["z"])
 def update(i):
     step = steps[i][["x", "y", "z"]]
+    maxim = step.max()
+    minim = step.min()
     scatter._offsets3d = (step["x"], step["y"], step["z"])
+    ax.set_xbound(minim["x"], maxim["x"])
+    ax.set_ybound(minim["y"], maxim["y"])
     return scatter,
 ani = anime.FuncAnimation(fig, update,
                            frames=len(steps)-1, interval=1.0/60)
