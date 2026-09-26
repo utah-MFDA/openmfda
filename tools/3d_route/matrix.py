@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--intermediate")
 parser.add_argument("--results", default="results.csv")
 parser.add_argument("--cutoff", default=0.1, type=float)
-parser.add_argument("--iterations", default=5000, type=int)
+parser.add_argument("--iterations", default=400, type=int)
 parser.add_argument("--graph")
 parser.add_argument("--top", default="thing")
 args = parser.parse_args()
@@ -44,7 +44,8 @@ shell_nodes = {shell: list(members)
 shell_splits = np.cumsum([len(m) for m in shell_nodes.values()]).tolist()[:-1]
 
 # adjency list for all edges
-pd_adjacency = pd.DataFrame(np.zeros((len(nodes), len(nodes)), dtype=np.float32), index=nodes, columns=nodes)
+pd_adjacency = pd.DataFrame(np.zeros((len(nodes), len(nodes)), dtype=np.float32),
+                             index=nodes, columns=nodes)
 for start, end in G.edges:
     pd_adjacency.loc[start, end] = 1
     pd_adjacency.loc[end, start] = 1
@@ -55,56 +56,99 @@ logging.info("Extracted circuit")
 def pairwise_distance(a,b):
     return a[:,None,:]- b[None,:,:]
 
-def magnitude(a):
-    return (a[:,:,0]**2 + a[:,:,1]**2)**0.5
+def equidistant(a):
+    return torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1]))
 
-def matrix_vector(m, v):
+def euclidean(a):
+    return (a[:,:,0]**2 + a[:,:,1]**2)
+
+def potential(a):
+    return (a-1)**2
+
+def matrix_coord_mult(m, v):
     return m[:,:,None]*v[:,None,:]
+
+def interaction(dists, magnitude, kernel, direction):
+    norms = [magnitude(dist) for dist in dists]
+    potentials = [
+        torch.where(direction(norm),
+                    kernel(norm),
+                    torch.zeros(norm.shape))
+        for norm in norms]
+    for shell in potentials:
+        shell.diagonal().zero_()
+    vectors = [
+        torch.where(direction(norm)[:,:,None],
+                    dist,
+                    torch.zeros(dist.shape))
+        for dist, norm in zip(dists, norms)]
+    for shell in vectors:
+        shell.diagonal().zero_()
+    total_potentials = torch.concat([shell.sum(dim=1) for shell in potentials])
+    total_force = torch.concat([shell.sum(dim=1) for shell in vectors])
+    return total_force, total_potentials
 
 def loss(adjacency, coords):
     shell_coords = torch.tensor_split(coords, shell_splits)
-    # repel overlaps - if less than one, (x-1)**2
     repellor_dists = [pairwise_distance(shell, shell) for shell in shell_coords]
-    repellors = [torch.where((magnitude(dist) <= 1)[:,:,None], dist, torch.zeros(dist.shape))
-                            for dist in repellor_dists]
+    # repel overlaps - if less than one, (x-1)**2
+    repellor_force, repellor_potentials = \
+        interaction(repellor_dists,
+                   euclidean,
+                    lambda x: (x-1)**2,
+                    lambda x: x <= 1)
 
     # attract connected if greater than one, (x-1)**2
     # TODO split and calculate by shell, using shell and adjacent.
-    connected_distance = matrix_vector(adjacency, coords)
-    attractors = torch.where((magnitude(connected_distance) >= 1)[:,:,None],
-                       connected_distance,
-                       torch.zeros(connected_distance.shape))
+    attractor_dists = [matrix_coord_mult(adjacency, coords)]
+    attractor_force, attractor_potentials = \
+        interaction(attractor_dists,
+                    euclidean,
+                    lambda x: (x-1)**2,
+                    lambda x: x >= 1)
 
-    for shell in repellors:
-        shell.diagonal().zero_()
-    repel_vectors = torch.concat([shell.sum(dim=1) for shell in repellors])
-    attractors.diagonal().zero_()
-    attract_vectors = attractors.sum(dim=1)
-    potential_vectors = attract_vectors+repel_vectors
-    potential = magnitude(potential_vectors[None,:,:])**2
+    potential = attractor_potentials + repellor_potentials
     total_potential = potential.sum()
-    return potential_vectors, potential, total_potential
+    return attractor_force, repellor_force, attractor_potentials, repellor_potentials, total_potential
 
-lr = 0.0001
+def df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, grad, rate, iter):
+    data_points = (coords,
+                    shell_list,
+                    attractor_forces,
+                    attractor_potential[:,None],
+                    repellor_forces,
+                    repellor_potential[:,None],
+                    grad,
+                    torch.full((coords.shape[0], 1), rate),
+                    torch.full((coords.shape[0], 1), iter))
+    columns = ["x", "y", "z", "afx", "afy", "au", "rfx", "rfy", "ru", "gx", "gy", "rate", "iter"]
+    data = torch.concat(data_points, dim=1)
+    df = pd.DataFrame(data.cpu().numpy(), index=nodes, columns=columns)
+    df.index.name = "node"
+    return df
+
+rate = 0.01
 coords = torch.randn(len(nodes), 2, requires_grad=True)
 start_t = time.time_ns()
+torch.autograd.set_detect_anomaly(True)
 i = 0
 while True:
-    potential_vectors, potential, total_potential = loss(adjacency, coords)
+    repellor_forces, attractor_forces, repellor_potential, attractor_potential, total_potential = loss(adjacency, coords)
     total_potential.backward()
     with torch.no_grad():
-        data = torch.concat((coords, shell_list, potential_vectors, potential.T, torch.full((coords.shape[0], 1), i)), dim=1)
+        logger.info("%d %f", i, total_potential.item())
         if args.intermediate:
-            df = pd.DataFrame(data.cpu().numpy(), index=nodes, columns=["x", "y", "z", "ux", "uy", "u", "iter"])
-            df.index.name = "node"
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, coords.grad, rate, i)
+            # Append iteration to rolling log
             df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
-        logger.debug("%d %f", i, total_potential.item())
-        coords += -coords.grad * lr
+        coords += -coords.grad * rate
         coords.grad.zero_()
         if total_potential < args.cutoff or i > args.iterations - 1:
-            data = torch.concat((coords, potential_vectors, potential.T, torch.full((coords.shape[0], 1), i)), dim=1)
-            df = pd.DataFrame(data.cpu().numpy(), index=nodes, columns=["x", "y", "ux", "uy", "u", "iter"])
-            df.index.name = "node"
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, coords.grad, rate, i)
+            if args.intermediate:
+                # Append iteration to rolling log
+                df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
+            # write out results
             df.to_csv(args.results, header=True)
             elapsed = (time.time_ns()-start_t)/1e6
             logging.info("\t".join([f"elapsed {elapsed/1e3:0.3f}s", f"iterations {i}",

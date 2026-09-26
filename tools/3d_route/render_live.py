@@ -90,37 +90,38 @@ elif args.output and args.output[-3:] == "gif":
 else:
     plot = pv.Plotter(notebook=False, off_screen=False)
 
-particles = {node: pv.Cube(center = data.loc[node, 2][["x","y","z"]],
-                x_length=0.5, y_length=0.5, z_length=0.5)
-                for node in G.nodes
-            if node in data.index}
-for mesh in particles.values():
-    plot.add_mesh(mesh)
-edges = {(start, end): pv.Line(data.loc[start, 2][["x", "y", "z"]], data.loc[end, 2][["x", "y", "z"]])
-         for start, end in G.edges
-         if start in data.index and end in data.index}
-for mesh in edges.values():
-    plot.add_mesh(mesh)
+length = 0.2
+render_edges = True
+particles = dict()
+edges = dict()
 
 if not args.output:
     plot.show(auto_close=False, interactive_update=True)
 for iter, step in steps:
     logger.info("Iteration %d", iter)
+
     for (node, iter), row in step.iterrows():
-        if node in particles:
+        coord = row[["x", "y", 'z']]
+        update = pv.Cube(center=coord,
+            x_length=length, y_length=length, z_length=length)
+        if iter == 0:
+            particles[node] = update
+            plot.add_mesh(update)
+        else:
             mesh = particles[node]
-            coord = row[["x", "y", 'z']]
-            up = pv.Cube(center=coord,
-                x_length=0.5, y_length=0.5, z_length=0.5)
-            mesh.points = up.points
-    for start, end in G.edges:
-        if start in step and end in step:
-            mesh = edges[(start,end)]
+            mesh.points = update.points
+    if render_edges:
+        for start, end in G.edges:
             s = step.loc[start][["x", "y", "z"]]
             e = step.loc[end][["x", "y", "z"]]
-            update = pv.Line(s, e)
-            mesh.points = update.points
+            update = pv.Line(s.to_numpy(), e.to_numpy())
+            if iter == 0:
+                edges[(start, end)] = update
+                plot.add_mesh(update)
+            else:
+                mesh = edges[(start,end)]
+                mesh.points = update.points
     if args.output:
         plot.write_frame()
     else:
-        plot.update(force_redraw=True)
+        plot.update()
