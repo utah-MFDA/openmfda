@@ -1,8 +1,6 @@
 import logging
-import math
 import sys
 import os
-from collections import deque
 print("\033[2J")
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s\t%(message)s')
@@ -15,8 +13,6 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import torch
-import pyvista as pv
-from torch._inductor.config import coordinate_descent_tuning
 from networkx_helpers import *
 
 import argparse
@@ -97,7 +93,7 @@ def loss(adjacency, coords, iter):
     shell_coords = torch.tensor_split(coords, shell_splits)
     repellor_dists = [pairwise_distance(shell, shell) for shell in shell_coords]
     # repel overlaps - if less than one, (x-1)**2
-    repellor_force, repellor_potentials = \
+    repellor_forces, repellor_potentials = \
         interaction(repellor_dists,
                     euclidean,
                     hookes,
@@ -106,7 +102,7 @@ def loss(adjacency, coords, iter):
     # attract connected if greater than one, (x-1)**2
     # TODO split and calculate by shell, using shell and adjacent.
     attractor_dists = [matrix_coord_mult(adjacency, coords)]
-    attractor_force, attractor_potentials = \
+    attractor_forces, attractor_potentials = \
         interaction(attractor_dists,
                     euclidean,
                     hookes,
@@ -115,7 +111,7 @@ def loss(adjacency, coords, iter):
     potential = attractor_potentials + repellor_potentials
     # potential = math.log(iter+1)*attractor_potentials + (1 + iter/args.iterations/2)*repellor_potentials
     total_potential = potential.sum()
-    return attractor_force, repellor_force, attractor_potentials, repellor_potentials, total_potential
+    return attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential
 
 def df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, iter):
     data_points = (coords,
@@ -146,12 +142,12 @@ velocity = torch.randn((len(nodes), 2), dtype=torch.float32, requires_grad=autog
 # torch.autograd.set_detect_anomaly(True)
 start_t = time.time_ns()
 i = 0
-roll = deque(maxlen=32)
 while True:
-    repellor_forces, attractor_forces, repellor_potential, attractor_potential, total_potential = loss(adjacency, coords, i)
+    attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential = loss(adjacency, coords, i)
     if autograde:
         total_potential.backward()
     with torch.no_grad():
+        d = i/args.iterations
         if autograde:
             grad = -coords.grad
         else:
@@ -161,16 +157,15 @@ while True:
         # rate = 1e-4 * avg
         logger.info("%d %f %f %f", i, rate, avg, total_potential.item())
         if args.intermediate:
-            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, i)
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, rate, i)
             # Append iteration to rolling log
             df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
         velocity += grad * rate
-        damping = 1-i/args.iterations/1000
         velocity *= damping
         coords += velocity * rate
 
         if total_potential < args.cutoff or i > args.iterations - 1:
-            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, i)
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, rate, i)
             if args.intermediate:
                 # Append iteration to rolling log
                 df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
