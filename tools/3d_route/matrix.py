@@ -2,6 +2,7 @@ import logging
 import math
 import sys
 import os
+from collections import deque
 print("\033[2J")
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s\t%(message)s')
@@ -23,8 +24,8 @@ logger.info("Loading graph")
 parser = argparse.ArgumentParser()
 parser.add_argument("--intermediate")
 parser.add_argument("--results", default="results.csv")
-parser.add_argument("--cutoff", default=-1, type=float)
-parser.add_argument("--iterations", default=1000, type=int)
+parser.add_argument("--cutoff", default=10, type=float)
+parser.add_argument("--iterations", default=10000, type=int)
 parser.add_argument("--graph")
 parser.add_argument("--top", default="thing")
 args = parser.parse_args()
@@ -61,10 +62,7 @@ def equidistant(a):
     return torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1]))
 
 def euclidean(a):
-    return (a[:,:,0]**2 + a[:,:,1]**2)
-
-def potential(a):
-    return (a-1)**2
+    return (a[:,:,0]**2 + a[:,:,1]**2)**0.5
 
 def matrix_coord_mult(m, v):
     return m[:,:,None]*v[:,None,:]
@@ -115,10 +113,11 @@ def loss(adjacency, coords, iter):
                     lambda x: x >= 1)
 
     potential = attractor_potentials + repellor_potentials
+    # potential = math.log(iter+1)*attractor_potentials + (1 + iter/args.iterations/2)*repellor_potentials
     total_potential = potential.sum()
     return attractor_force, repellor_force, attractor_potentials, repellor_potentials, total_potential
 
-def df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, grad, rate, iter):
+def df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, iter):
     data_points = (coords,
                     shell_list,
                     attractor_forces,
@@ -126,24 +125,28 @@ def df_extract(coords, shell_list, repellor_forces, repellor_potential, attracto
                     repellor_forces,
                     repellor_potential[:,None],
                     grad,
+                    velocity,
                     torch.full((coords.shape[0], 1), rate),
                     torch.full((coords.shape[0], 1), iter))
-    columns = ["x", "y", "z", "afx", "afy", "au", "rfx", "rfy", "ru", "gx", "gy", "rate", "iter"]
+    columns = ["x", "y", "z", "afx", "afy", "au", "rfx", "rfy", "ru", "gx", "gy", "dx", "dy", "rate", "iter"]
     data = torch.concat(data_points, dim=1)
     df = pd.DataFrame(data.cpu().numpy(), index=nodes, columns=columns)
     df.index.name = "node"
     return df
 
-rate = 5e-6
+rate = 5e-2
+damping = 0.995
 # autograde = False
-autograde = True
+autograde = False
 # coords = torch.rand((len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
 # init = torch.rand((len(nodes), 2), dtype=torch.float32)/100
-# coords = torch.tensor(init, requires_grad=True)
-coords = torch.randint(-10, 10, (len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
+# coords = torch.tensor(init, requires_grad=autograde)
+coords = torch.randint(-5, 5, (len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
+velocity = torch.randn((len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
 # torch.autograd.set_detect_anomaly(True)
 start_t = time.time_ns()
 i = 0
+roll = deque(maxlen=32)
 while True:
     repellor_forces, attractor_forces, repellor_potential, attractor_potential, total_potential = loss(adjacency, coords, i)
     if autograde:
@@ -152,18 +155,22 @@ while True:
         if autograde:
             grad = -coords.grad
         else:
-            grad = -repellor_forces + attractor_forces
-        logger.info("%d %f %f", i, rate, total_potential.item())
+            grad = -(i/args.iterations)*repellor_forces + (1+(i/args.iterations))*attractor_forces
+        roll.append(total_potential.item())
+        avg = sum(roll)/len(roll)
+        # rate = 1e-4 * avg
+        logger.info("%d %f %f %f", i, rate, avg, total_potential.item())
         if args.intermediate:
-            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, grad, rate, i)
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, i)
             # Append iteration to rolling log
             df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
-        coords += grad * rate
-        if autograde:
-            coords.grad.zero_()
+        velocity += grad * rate
+        damping = 1-i/args.iterations/1000
+        velocity *= damping
+        coords += velocity * rate
 
         if total_potential < args.cutoff or i > args.iterations - 1:
-            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, grad, rate, i)
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, i)
             if args.intermediate:
                 # Append iteration to rolling log
                 df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
@@ -174,4 +181,6 @@ while True:
                           f"average iteration {elapsed/i:0.3f}ms",
                           f"final potential {total_potential:0.3f}"]))
             break
+        if autograde:
+            coords.grad.zero_()
         i += 1
