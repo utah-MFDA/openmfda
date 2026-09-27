@@ -20,8 +20,8 @@ logger.info("Loading graph")
 parser = argparse.ArgumentParser()
 parser.add_argument("--intermediate")
 parser.add_argument("--results", default="results.csv")
-parser.add_argument("--cutoff", default=10, type=float)
-parser.add_argument("--iterations", default=10000, type=int)
+parser.add_argument("--cutoff", default=0, type=float)
+parser.add_argument("--iterations", default=2000, type=int)
 parser.add_argument("--graph")
 parser.add_argument("--top", default="thing")
 args = parser.parse_args()
@@ -34,6 +34,10 @@ start = lambda G, n: (is_input_port(G, n) or is_output_port(G, n) or is_inout_po
 buffer = lambda G, n: False
 skip = lambda G, n: is_control_cell(G,n) or is_flush_cell(G,n) or is_control(G, n) or is_flush(G, n)
 shells = find_center(G, start, buffer)
+
+# for node in G.nodes:
+#     G.nodes[node]["shell"] = 0
+
 nodes = sorted((node for node in G.nodes if not skip(G, node)), key=lambda node: G.nodes[node]["shell"] )
 shell_list = torch.tensor([[G.nodes[node]["shell"] for node in nodes]]).mT
 shell_nodes = {shell: list(members)
@@ -63,13 +67,22 @@ def euclidean(a):
 def matrix_coord_mult(m, v):
     return m[:,:,None]*v[:,None,:]
 
-def hookes(x):
-    return (x-1)**2
+def hookes_potential(x):
+    return 0.5*(x-1)**2
+
+def hookes_force(x, v, n):
+    return -v*(n-1)
 
 def mine(x):
     return 1/((2*x)**2+0.05) + (2*x)**2 - 2
 
-def interaction(dists, magnitude, kernel, direction):
+def unit(x):
+    angle = torch.atan2(x[:,:,1], x[:,:,0])
+    cos = torch.cos(angle)[:,:,None]
+    sin = torch.sin(angle)[:,:,None]
+    return torch.concat([cos, sin], 2)
+
+def interaction(dists, magnitude, kernel, force, direction):
     norms = [magnitude(dist) for dist in dists]
     potentials = [
         torch.where(direction(norm),
@@ -80,24 +93,27 @@ def interaction(dists, magnitude, kernel, direction):
         shell.diagonal().zero_()
     vectors = [
         torch.where(direction(norm)[:,:,None],
-                    dist,
+                    force(dist, unit(dist), norm[:,:,None]),
                     torch.zeros(dist.shape))
         for dist, norm in zip(dists, norms)]
     for shell in vectors:
         shell.diagonal().zero_()
+
     total_potentials = torch.concat([shell.sum(dim=1) for shell in potentials])
     total_force = torch.concat([shell.sum(dim=1) for shell in vectors])
     return total_force, total_potentials
 
 def loss(adjacency, coords, iter):
     shell_coords = torch.tensor_split(coords, shell_splits)
-    repellor_dists = [pairwise_distance(shell, shell) for shell in shell_coords]
+    repellor_dists = [pairwise_distance(shell, shell)
+                      for shell in shell_coords]
     # repel overlaps - if less than one, (x-1)**2
     repellor_forces, repellor_potentials = \
         interaction(repellor_dists,
                     euclidean,
-                    hookes,
-                    lambda x: x <= 1)
+                    hookes_potential,
+                    hookes_force,
+                    lambda n: n <= 1)
 
     # attract connected if greater than one, (x-1)**2
     # TODO split and calculate by shell, using shell and adjacent.
@@ -105,11 +121,11 @@ def loss(adjacency, coords, iter):
     attractor_forces, attractor_potentials = \
         interaction(attractor_dists,
                     euclidean,
-                    hookes,
-                    lambda x: x >= 1)
+                    hookes_potential,
+                    hookes_force,
+                    lambda n: n >= 1)
 
     potential = attractor_potentials + repellor_potentials
-    # potential = math.log(iter+1)*attractor_potentials + (1 + iter/args.iterations/2)*repellor_potentials
     total_potential = potential.sum()
     return attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential
 
@@ -134,11 +150,9 @@ rate = 5e-2
 damping = 0.995
 # autograde = False
 autograde = False
-# coords = torch.rand((len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
-# init = torch.rand((len(nodes), 2), dtype=torch.float32)/100
-# coords = torch.tensor(init, requires_grad=autograde)
-coords = torch.randint(-5, 5, (len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
-velocity = torch.randn((len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
+coords = torch.randint(-4, 4, (len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
+velocity = torch.zeros(coords.shape)
+# velocity = (torch.rand((coords.shape)) - 0.5)
 # torch.autograd.set_detect_anomaly(True)
 start_t = time.time_ns()
 i = 0
@@ -147,15 +161,12 @@ while True:
     if autograde:
         total_potential.backward()
     with torch.no_grad():
-        d = i/args.iterations
+        damping = 1 - i/args.iterations/10
         if autograde:
             grad = -coords.grad
         else:
-            grad = -(i/args.iterations)*repellor_forces + (1+(i/args.iterations))*attractor_forces
-        roll.append(total_potential.item())
-        avg = sum(roll)/len(roll)
-        # rate = 1e-4 * avg
-        logger.info("%d %f %f %f", i, rate, avg, total_potential.item())
+            grad = repellor_forces + attractor_forces
+        logger.info("%d %f %f", i, rate, total_potential.item())
         if args.intermediate:
             df = df_extract(coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, rate, i)
             # Append iteration to rolling log
