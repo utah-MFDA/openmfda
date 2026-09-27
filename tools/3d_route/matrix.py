@@ -1,4 +1,5 @@
 import logging
+import math
 import sys
 import os
 print("\033[2J")
@@ -22,8 +23,8 @@ logger.info("Loading graph")
 parser = argparse.ArgumentParser()
 parser.add_argument("--intermediate")
 parser.add_argument("--results", default="results.csv")
-parser.add_argument("--cutoff", default=0.1, type=float)
-parser.add_argument("--iterations", default=400, type=int)
+parser.add_argument("--cutoff", default=-1, type=float)
+parser.add_argument("--iterations", default=1000, type=int)
 parser.add_argument("--graph")
 parser.add_argument("--top", default="thing")
 args = parser.parse_args()
@@ -68,6 +69,12 @@ def potential(a):
 def matrix_coord_mult(m, v):
     return m[:,:,None]*v[:,None,:]
 
+def hookes(x):
+    return (x-1)**2
+
+def mine(x):
+    return 1/((2*x)**2+0.05) + (2*x)**2 - 2
+
 def interaction(dists, magnitude, kernel, direction):
     norms = [magnitude(dist) for dist in dists]
     potentials = [
@@ -88,14 +95,14 @@ def interaction(dists, magnitude, kernel, direction):
     total_force = torch.concat([shell.sum(dim=1) for shell in vectors])
     return total_force, total_potentials
 
-def loss(adjacency, coords):
+def loss(adjacency, coords, iter):
     shell_coords = torch.tensor_split(coords, shell_splits)
     repellor_dists = [pairwise_distance(shell, shell) for shell in shell_coords]
     # repel overlaps - if less than one, (x-1)**2
     repellor_force, repellor_potentials = \
         interaction(repellor_dists,
-                   euclidean,
-                    lambda x: (x-1)**2,
+                    euclidean,
+                    hookes,
                     lambda x: x <= 1)
 
     # attract connected if greater than one, (x-1)**2
@@ -104,7 +111,7 @@ def loss(adjacency, coords):
     attractor_force, attractor_potentials = \
         interaction(attractor_dists,
                     euclidean,
-                    lambda x: (x-1)**2,
+                    hookes,
                     lambda x: x >= 1)
 
     potential = attractor_potentials + repellor_potentials
@@ -127,24 +134,36 @@ def df_extract(coords, shell_list, repellor_forces, repellor_potential, attracto
     df.index.name = "node"
     return df
 
-rate = 0.01
-coords = torch.randn(len(nodes), 2, requires_grad=True)
+rate = 5e-6
+# autograde = False
+autograde = True
+# coords = torch.rand((len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
+# init = torch.rand((len(nodes), 2), dtype=torch.float32)/100
+# coords = torch.tensor(init, requires_grad=True)
+coords = torch.randint(-10, 10, (len(nodes), 2), dtype=torch.float32, requires_grad=autograde)
+# torch.autograd.set_detect_anomaly(True)
 start_t = time.time_ns()
-torch.autograd.set_detect_anomaly(True)
 i = 0
 while True:
-    repellor_forces, attractor_forces, repellor_potential, attractor_potential, total_potential = loss(adjacency, coords)
-    total_potential.backward()
+    repellor_forces, attractor_forces, repellor_potential, attractor_potential, total_potential = loss(adjacency, coords, i)
+    if autograde:
+        total_potential.backward()
     with torch.no_grad():
-        logger.info("%d %f", i, total_potential.item())
+        if autograde:
+            grad = -coords.grad
+        else:
+            grad = -repellor_forces + attractor_forces
+        logger.info("%d %f %f", i, rate, total_potential.item())
         if args.intermediate:
-            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, coords.grad, rate, i)
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, grad, rate, i)
             # Append iteration to rolling log
             df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
-        coords += -coords.grad * rate
-        coords.grad.zero_()
+        coords += grad * rate
+        if autograde:
+            coords.grad.zero_()
+
         if total_potential < args.cutoff or i > args.iterations - 1:
-            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, coords.grad, rate, i)
+            df = df_extract(coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, grad, rate, i)
             if args.intermediate:
                 # Append iteration to rolling log
                 df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
