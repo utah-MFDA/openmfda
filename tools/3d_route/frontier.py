@@ -271,7 +271,7 @@ def noop(G, M, neighbor, node, shell, offset, relax, minimize):
     return []
 
 ################### Runnning ###################
-def run_by_dimension(G, skip, outfile, cache, start_condition, buffer_condition,
+def run_by_dimension(G, skip, cache, start_condition, buffer_condition,
                  overlap, inside, distance, proximate, ahead, attach,
                  bounding, width = 40, height = 25, depth = 25,
                  offset=0, limit=10, timeout=60, minimize=False):
@@ -296,19 +296,18 @@ def run_by_dimension(G, skip, outfile, cache, start_condition, buffer_condition,
         while True:
             M = scip.Model()
             models.append(M)
-            success = solve_shell(G, M, outfile[:-5], skip, overlap, inside, distance, proximate, ahead, attach,
+            success = solve_shell(G, M, cache[:-5], skip, overlap, inside, distance, proximate, ahead, attach,
                                  current, shell, width, height, depth, bounds, offset, shells, relax, limit, timeout, minimize)
             if success:
                 break
             if relax > limit:
                 raise
             relax += 1
-        render_scad(G, f"{outfile[:-5]}.tmp.scad", shells, colorful)
         if cache:
             write_cache(G, cache)
     return shells
 
-def run_everything_redux(G, skip, outfile, cache, start_condition, buffer_condition,
+def run_everything_redux(G, skip, cache, start_condition, buffer_condition,
                  overlap, inside, distance, proximate, ahead, attach,
                  bounding, width = 40, height = 25, depth = 25,
                  offset=0, limit=10, timeout=60, minimize=False):
@@ -335,7 +334,7 @@ def run_everything_redux(G, skip, outfile, cache, start_condition, buffer_condit
         props["coordinates"] = [int(M.getVal(i)) for i in props["coordinates"]]
     return shells
 
-def run_everything(G, skip, outfile, cache, start_condition, buffer_condition,
+def run_everything(G, skip, cache, start_condition, buffer_condition,
                  overlap, inside, distance, proximate, ahead, attach,
                  bounding, width = 40, height = 25, depth = 25,
                  offset=0, limit=10, timeout=60, minimize=False):
@@ -365,7 +364,7 @@ def run_everything(G, skip, outfile, cache, start_condition, buffer_condition,
         props["coordinates"] = [int(M.getVal(i)) for i in props["coordinates"]]
     return shells
 
-def run_backwards(G, skip, outfile, cache, start_condition, buffer_condition,
+def run_backwards(G, skip, cache, start_condition, buffer_condition,
                  overlap, inside, distance, proximate, ahead, attach,
                  bounding, width = 40, height = 25, depth = 25,
                  offset=0, limit=10, timeout=60, minimize=False):
@@ -404,11 +403,10 @@ def run_backwards(G, skip, outfile, cache, start_condition, buffer_condition,
                 b, a= ahead, attach
             M = scip.Model()
             models.append(M)
-            success = solve_shell(G, M, outfile, skip, overlap, inside, distance, proximate, a, b,
+            success = solve_shell(G, M, skip, overlap, inside, distance, proximate, a, b,
                                      latest, shell, width, height, depth, bounds, offset, shells, relax, limit, timeout, minimize)
 
             if success:
-                render_scad(G, f"{outfile[:-5]}.tmp.scad", shells, colorful)
                 if not reversed or (working == shell and reversed):
                     working = shell + 1
                 if reversed and shell == 0:
@@ -677,7 +675,7 @@ if __name__ == "__main__":
         bound = bounded_noop
     else:
         runner = run_by_dimension
-    shells = runner(G, skip, args.output, args.cache, start, buffer,
+    shells = runner(G, skip, args.cache, start, buffer,
                                  not_overlap, orientation, bound, attach_to_side, noop, attach_to_side,
                                  shell_bound,
                                  args.width, args.height, args.depth,
@@ -691,13 +689,11 @@ if __name__ == "__main__":
                 y, z = props["coordinates"]
                 props["coordinates"] = [props["shell"], y, z]
 
-    for x in G.nodes:
-        print("Final solution %s %s", x, G.nodes[x].get("coordinates", "none"))
-    render_scad(G, args.output, shells)
     if args.cache:
         write_cache(G, args.cache)
         data = extract_edges(G)
         data.to_csv(f"{args.cache[:-4]}.dist.csv")
         log.info("Got error histogram %s", ", ".join(f"{i}:{j}" for i, j in data["dist"].value_counts(sort=True).items()))
         print(data["dist"].value_counts())
+    write_results(G, args.output)
     log.info("Done")

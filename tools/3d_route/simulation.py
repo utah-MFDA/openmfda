@@ -293,68 +293,23 @@ if __name__ == "__main__":
     logger.info("**************** Starting ****************")
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_file")
+    parser.add_argument("--graph")
     parser.add_argument("-o", "--output")
     parser.add_argument("--timeout", default=30, type=int)
-    # 1600/64 = 25, 2560/64 = 40
-    # parser.add_argument("--width", default=1600/40, type=int)
-    # parser.add_argument("--height", default=2560/40, type=int)
     parser.add_argument("--width", default=50, type=int)
     parser.add_argument("--height", default=50, type=int)
     parser.add_argument("--depth", default=32, type=int)
     parser.add_argument("--top", default="thing")
+    parser.add_argument("--intermediate")
     parser.add_argument("--log", default="INFO")
-    parser.add_argument("--cache")
     parser.add_argument("--logfile", default="3d_route.log")
 
     args = parser.parse_args()
     logging.basicConfig(filename=args.logfile, level=args.log)
 
-    g = read_yosys_json(args.input_file,args.top)
+    g = read_yosys_json(args.graph, args.top)
     g = collapse_edges(g)
     logger.info("Loaded %s", g)
 
-    g, shells, duration, elapsed = run_everything_redux(g, args.output, args.width, args.height, args.depth, args.timeout, intermediate=args.cache)
-    col = 0
-    ncol = 0
-    fail = 0
-    for left in g.nodes:
-        s = g.nodes[left].get("shell", -1)
-        l_pos = g.nodes[left].get("position", Vector(0,0))
-        g.nodes[left]["coordinates"] = (s, round(l_pos.x), round(l_pos.y))
-        for right in g.nodes:
-            l_idx = g.nodes[left].get("index", -1)
-            r_idx = g.nodes[right].get("index", -1)
-            if l_idx > 0 and r_idx > 0 and l_idx < r_idx and right not in g.adj[left]:
-                r_pos = g.nodes[right].get("position", Vector(0,0))
-                d_pos = (l_pos - r_pos)
-                col += d_pos.norm()
-                if d_pos.norm() < 1:
-                    print(f"collision {left} {right} {d_pos.x:0.2f}, {d_pos.y:0.2f}")
-                    fail += 1
-                ncol += 1
-    on_disp = 0
-    on = 0
-    off_disp = 0
-    off = 0
-    efail = 0
-    for left, right in g.edges:
-        l_shell = g.nodes[left].get("shell", Vector(0,0))
-        r_shell = g.nodes[right].get("shell", Vector(0,0))
-        l_pos = g.nodes[left].get("position", Vector(0,0))
-        r_pos = g.nodes[right].get("position", Vector(0,0))
-        d_pos = (l_pos - r_pos)
-        print(f"edge {left} {right} {d_pos.x:0.2f}, {d_pos.y:0.2f}")
-        if l_shell == r_shell:
-            on += 1
-            on_disp += d_pos.norm()
-        else:
-            off += 1
-            off_disp += d_pos.norm()
-    print(f"duration {duration/1e9:.3f} s.")
-    print(f"avg frame {duration/1e6/elapsed:.1f} ms")
-    print(f"average connection displacement on {on_disp/on}, off {off_disp/off}")
-    print(f"average collision displacement {col/ncol:0.2f}")
-    print(f"collision failures {fail/ncol*100:0.1f}")
-    # write_cache(g, args.cache)
-    # render_scad(g, args.output, shells)
+    g, shells, duration, elapsed = run_everything_redux(g, args.output, args.width, args.height, args.depth, args.timeout, intermediate=args.intermediate)
+    write_results(g, args.output)

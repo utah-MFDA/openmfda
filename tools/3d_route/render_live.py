@@ -89,9 +89,9 @@ elif args.output and args.output[-3:] == "gif":
     plot.open_gif(args.output)
 else:
     plot = pv.Plotter(notebook=False, off_screen=False)
-
-length = 0.2
-render_edges = True
+    plot.camera_position = [-20, -20, 10]
+length = 1
+render_edges = False
 particles = dict()
 edges = dict()
 
@@ -103,7 +103,7 @@ for iter, step in steps:
     for (node, iter), row in step.iterrows():
         coord = row[["x", "y", 'z']]
         update = pv.Cube(center=coord,
-            x_length=length, y_length=length, z_length=length)
+            x_length=length, y_length=length, z_length=0.5)
         if iter == 0:
             particles[node] = update
             plot.add_mesh(update)

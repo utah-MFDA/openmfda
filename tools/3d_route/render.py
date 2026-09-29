@@ -10,7 +10,7 @@ resistor = solid2.import_scad("3d_blocks/block_resistor.scad")
 cells = {
     "$_wire"
 }
-width=40
+width=1
 config = solid2.ScadVariable("port_config", ports.create_port_config(width=width))
 
 def draw_channel(a, b, d):
@@ -36,21 +36,21 @@ def scad_render_nodes(G,nodes):
         cell = G.nodes[node]["cell"]
         alpha = 0.5
         if cell == "$_output":
-            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.sphere(width//2)))
+            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.cube(width,center=True)))
         elif cell == "p_resistor_0":
-            block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.sphere(width//2)))
+            block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.cube(width,center=True)))
             # block = resistor.block_resistor(*ports[0:2], port_config=config)
         elif cell == "diffmix_25px_0":
-            block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.sphere(width//2)))
+            block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.cube(width,center=True)))
             # block = mixer.block_mixer(*ports[0:3], port_config=config)
         elif cell == "$_wire":
-            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.sphere(width//2)))
+            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(width,center=True)))
         elif cell == "$_input":
-            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.sphere(width//2)))
+            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.cube(width,center=True)))
         elif cell == "$_dummy":
             continue
         else:
-            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.sphere(width)))
+            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.cube(width,center=True)))
         s = solid2.translate([width*(p+0.5) for p in position])(block)
 
         yield scad_comment(f"Node {cell} {node}")(s)

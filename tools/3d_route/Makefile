@@ -31,40 +31,129 @@ COMMON_ARGS ?= --log ${LEVEL} --timeout 240 --relax ${LIMIT}
 PYTHON3 = python3
 # PYTHON3 ?= retry -attempts 100 -max-time 600m python3
 
+%.mp4 %.gif: %.iter.csv %.json
+	${PYTHON3} render_flat.py $< --graph $*.json --output $@
+
+%.scad: %.csv %.json
+	${PYTHON3} render.py $< --graph $*.json --output $@
+
 benchmarks/picorv32.json: benchmarks/picorv32.v
 	yosys -p "read_verilog $<; synth -top picorv32; write_json $@"
 
 %.json: %.v benchmarks/library.v
 	yosys -p "read_verilog benchmarks/library.v; read_verilog $<; hierarchy -top thing; proc; flatten; clean -purge; write_json $@" $(TEE) $*.log
 
-%.cylinder.scad: %.json frontier.py
-	date --iso-8601=seconds >> $*.cylinder.timer
-	${PYTHON3} frontier.py $< --orientation cylinder --output $@ --offset 2  ${COMMON_ARGS} --cache $*.cylinder.csv --add_buffers --minimize --logfile $*.cylinder.log --backtrack 2>&1 >> $*.cylinder.err.log
-	date --iso-8601=seconds >> $*.cylinder.timer
+%.torch.json: %.json
+	cp $< $@
 
-%.horizontal.scad: %.json frontier.py
+%.simulation.json: %.json
+	cp $< $@
+
+%.horizontal.json: %.json
+	cp $< $@
+
+%.exact.json: %.json
+	cp $< $@
+DIM_ALGS=spectral mds smacof ica pca isomap incpca mds_nm smacof_nm grp
+define DIMENSION =
+%.${1}.json: %.json
+	cp $$< $$@
+
+%.${1}.csv %.${1}.timer %.${1}.log: %.${1}.json dimension.py
+	date --iso-8601=seconds >> $$*.${1}.timer
+	$${PYTHON3} dimension.py \
+		--graph $$*.${1}.json \
+		--alg ${1} \
+		--output $$*.${1}.csv \
+		--logfile $$*.${1}.log 2>&1 >> $$*.${1}.err.log
+	date --iso-8601=seconds >> $$*.${1}.timer
+endef
+$(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
+
+%.torch.csv %.torch.timer %.torch.log %.torch.iter.csv: %.torch.json matrix.py
+	date --iso-8601=seconds >> $*.torch.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output $*.torch.csv \
+		--intermediate $*.torch.iter.csv \
+		--logfile $*.torch.log 2>&1 >> $*.torch.err.log
+	date --iso-8601=seconds >> $*.torch.timer
+
+%.simulation.csv %.simulation.timer %.simulation.log %.simulation.iter.csv: %.simulation.json simulation.py
+	date --iso-8601=seconds >> $*.simulation.timer
+	${PYTHON3} simulation.py --graph $< \
+		--output $*.simulation.csv \
+		--intermediate $*.simulation.iter.csv \
+		--logfile $*.simulation.log 2>&1 >> $*.simulation.err.log
+	date --iso-8601=seconds >> $*.simulation.timer
+
+%.horizontal.csv %.horizontal.timer %.horizontal.log: %.json frontier.py
 	date --iso-8601=seconds >> $*.horizontal.timer
-	${PYTHON3} frontier.py $< --orientation horizontal --output $@ ${COMMON_ARGS} --logfile $*.horizontal.log --cache $*.horizontal.csv  --add_buffers --backtrack --minimize 2>&1 >> $*.horizontal.err.log
+	${PYTHON3} frontier.py $< \
+		--orientation horizontal \
+		--output $*.horizontal.csv ${COMMON_ARGS} \
+		--logfile $*.horizontal.log \
+		--cache $*.horizontal.cache.csv  \
+		--add_buffers \
+		--backtrack \
+		--minimize 2>&1 >> $*.horizontal.err.log
 	date --iso-8601=seconds >> $*.horizontal.timer
 
-%.everything.scad: %.json frontier.py
+%.exact.csv %.exact.timer %.exact.log: %.json frontier.py
 	date --iso-8601=seconds >> $*.everything.timer
-	${PYTHON3} frontier.py $< --orientation horizontal --output $@ --log ${LEVEL} --timeout 86400 --add_buffer --everything --cache $*.everything.csv --logfile $*.everything.log 2>&1 >> $*.everything.err.log
+	${PYTHON3} frontier.py $< \
+		--orientation horizontal \
+		--output $@ \
+		--log ${LEVEL} \
+		--timeout 86400 \
+		--add_buffer \
+		--everything \
+		--cache $*.everything.csv \
+		--logfile $*.everything.log 2>&1 >> $*.everything.err.log
 	date --iso-8601=seconds >> $*.everything.timer
 
-%.everything_cylinder.scad: %.json frontier.py
+%.cylinder.csv %.cylinder.timer %.cylinder.log: %.json frontier.py
+	date --iso-8601=seconds >> $*.cylinder.timer
+	${PYTHON3} frontier.py $< \
+		--orientation cylinder \
+		--output $@ \
+		--offset 2  ${COMMON_ARGS} \
+		--cache $*.cylinder.csv \
+		--add_buffers \
+		--minimize \
+		--logfile $*.cylinder.log \
+		--backtrack 2>&1 >> $*.cylinder.err.log
+	date --iso-8601=seconds >> $*.cylinder.timer
+
+%.exact_cylinder.csv %.exact_cylinder.timer %.exact_cylinder.log: %.json frontier.py
 	date --iso-8601=seconds >> $*.everything_cylinder.timer
-	${PYTHON3} frontier.py $< --orientation cylinder --output $@ --log ${LEVEL} --timeout 3600 --add_buffer --everything --logfile $*.everything_cylinder.log --cache $*.everything_cylinder.csv 2>&1 >> $*.everything_cylinder.err.log
+	${PYTHON3} frontier.py $< \
+		--orientation cylinder \
+		--output $@ \
+		--log ${LEVEL} \
+		--timeout 3600 \
+		--add_buffer \
+		--everything \
+		--logfile $*.everything_cylinder.log \
+		--cache $*.everything_cylinder.csv 2>&1 >> $*.everything_cylinder.err.log
 	date --iso-8601=seconds >> $*.everything_cylinder.timer
 
 %.cube.scad: %.json frontier.py
 	date --iso-8601=seconds >> $*.cube.timer
-	${PYTHON3} frontier.py $< --orientation cube --output $@ --offset 1 ${COMMON_ARGS} --cache $*.cube.csv --logfile $*.cube.log 2>&1 >> $*.cube.err.log
+	${PYTHON3} frontier.py $< \
+		--orientation cube \
+		--output $@ \
+		--offset 1 ${COMMON_ARGS} \
+		--cache $*.cube.csv \
+		--logfile $*.cube.log 2>&1 >> $*.cube.err.log
 	date --iso-8601=seconds >> $*.cube.timer
 
 %.pdf: %.dot
 	dot -Tpdf -o $@ $<
+
 clean:
+	rm -f benchmarks/multiplex_toilet*.json
+	rm -f benchmarks/multiplex_toilet*.csv
+	rm -f benchmarks/multiplex_toilet*.scad
 	rm -f benchmarks/*.timer
 	rm -f benchmarks/mnacidpro*.json
 	rm -f benchmarks/mnacidpro*.csv

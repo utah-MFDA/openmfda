@@ -54,7 +54,7 @@ def read_yosys_json(input_file, top):
             if net in m["ports"]:
                 direction = m["ports"][net]["direction"]
                 G.nodes[bit]["cell"] = f"$_{direction}"
-    return G
+    return _collapse_edges(G)
 
 def is_net(G, node):
     return G.nodes[node].get("cell", "unknown") in {"$_output", "$_inout", "$_wire", "$_input"}
@@ -101,6 +101,9 @@ def is_control_edge(G, edge):
     return G.edges[edge].get("type") == "ctrl"
 
 def collapse_edges(G: nx.Graph):
+    return G
+
+def _collapse_edges(G: nx.Graph):
     rm = []
     for node in G.nodes:
         if G.nodes[node]["hyperedge"] and G.degree(node) == 2:
@@ -318,6 +321,15 @@ def write_cache(g, filename, meta=None):
         logger.info("Writing meta to %s", meta_file)
         with open(meta_file, "+w") as j:
             json.dump(meta, j)
+
+def write_results(g, filename):
+    # I love how pandas is the defacto csv reader
+    data = ((node, *extract_coord(props["coordinates"], props.get("shell", -1)), props.get("shell", -1))
+            for node, props in g.nodes.items() if "coordinates" in props)
+    node, x, y, z, shell = zip(*data)
+
+    df = pd.DataFrame({"node": node, "x": x, "y": y, "z": z, "shell": shell})
+    df.to_csv(filename)
 
 def write_iteration(g, i, filename):
     data = ((node,
