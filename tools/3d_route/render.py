@@ -1,3 +1,5 @@
+import itertools
+
 import networkx as nx
 from math import ceil, sqrt, acos, atan2, pi
 import solid2
@@ -72,19 +74,14 @@ def scad_render_edges(G, edges):
         bit = G.edges[edge]["bit"]
         yield scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
 
-def render_shell(G, shell):
-    nodes = [n for n, d in G.nodes.items() if d["shell"] == shell]
-    edges = [(s, e) for s, e in G.edges ]
+def render_shell(G, shell, nodes):
+    edges = [(start, end)
+                for start in nodes
+                for end in G.adj[start]
+                if start < end]
     scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes)))
     scad_edges = scad_comment(f"Edges shell {shell}")(solid2.union()(*scad_render_edges(G, edges)))
     return scad_comment(f"Shell {shell}")(solid2.union()(scad_nodes, scad_edges))
-
-def render_flat(G):
-    nodes = [n for n, d in G.nodes.items()]
-    edges = [(s, e) for s, e in G.edges]
-    scad_nodes = scad_comment(f"Nodes")(solid2.union()(*scad_render_nodes_flat(G, nodes)))
-    scad_edges = scad_comment(f"Edges")(solid2.union()(*scad_render_edges_flat(G, edges)))
-    return solid2.union()(solid2.background()(scad_nodes),scad_edges)
 
 @solid2.register_access_syntax
 class scad_comment(solid2.object_base.ObjectBase, solid2.object_base.AccessSyntaxMixin, solid2.object_base.OperatorMixin):
@@ -94,7 +91,32 @@ class scad_comment(solid2.object_base.ObjectBase, solid2.object_base.AccessSynta
     def _render(self):
         return f"/*{self.comment}*/\n" + super()._render()
 
-def render_scad(G,outfile,shells):
-    final = (render_shell(G, shell) for shell in range(0, shells))
+def render_scad(G, data, outfile):
+    if "shell" in data:
+        final = [render_shell(G, shell, members.index.tolist())
+                    for shell, members in
+                    data.groupby("shell")]
+    else:
+        final = [render_shell(G, -1, data.index.tolist())]
     scad = solid2.translate([-0.5, -0.5, 0])(*final)
     scad.save_as_scad(outfile)
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_file")
+    parser.add_argument("-o", "--output", required=True)
+    parser.add_argument("--graph")
+    parser.add_argument("--top", default="thing")
+    args = parser.parse_args()
+
+    G = read_yosys_json(args.graph, args.top)
+    df = pd.read_csv(args.input_file,
+                     usecols=["node", "x", "y", "z"],
+                     index_col="node",
+                     dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
+    for node, props in df.iterrows():
+        G.nodes[node]["coordinates"] = (props["x"], props["y"], props["z"])
+        if "shell" in props:
+            G.nodes[node]["shell"] = int(props["shell"])
+    render_scad(G, df, args.output)
