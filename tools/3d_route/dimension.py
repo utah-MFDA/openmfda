@@ -13,9 +13,7 @@ def pca_reduce(G, p):
     pca.fit(p)
     cmp = pca.components_
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 def increment_pca_reduce(G, p):
     from sklearn.decomposition import IncrementalPCA
@@ -23,9 +21,7 @@ def increment_pca_reduce(G, p):
     pca.fit(p)
     cmp = pca.components_
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 def mds_reduce(G, p, metric):
     from sklearn.manifold import MDS
@@ -33,20 +29,14 @@ def mds_reduce(G, p, metric):
     mds.fit(p)
     cmp = mds.embedding_.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 def smacof_reduce(G, p, metric=True):
     from sklearn.manifold import smacof
     cmp, stress = smacof(n_components=3, dissimilarities=p,  metric=metric)
     cmp = cmp.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    # d *= 200
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
-
+    return d
 
 def spectral_reduce(G, q):
     from sklearn.manifold import SpectralEmbedding
@@ -54,9 +44,7 @@ def spectral_reduce(G, q):
     spectral.fit(q)
     cmp = spectral.embedding_.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=q.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 def isomap_reduce(G, q):
     from sklearn.manifold import Isomap
@@ -64,9 +52,7 @@ def isomap_reduce(G, q):
     spectral.fit(q)
     cmp = spectral.embedding_.T
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=q.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 def grp_reduce(G, p):
     from sklearn.random_projection import GaussianRandomProjection
@@ -74,9 +60,7 @@ def grp_reduce(G, p):
     grp.fit(p)
     cmp = grp.components_
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 def ica_reduce(G, p):
     from sklearn.decomposition import FastICA
@@ -84,9 +68,7 @@ def ica_reduce(G, p):
     ica.fit(p)
     cmp = ica.components_
     d = pd.DataFrame({"x":cmp[0], "y":cmp[1], "z":cmp[2]}, index=p.index)
-    d /= d.abs().min()
-    for node, coord in d.iterrows():
-        G.nodes[node]["coordinates"] = coord.array
+    return d
 
 if __name__ == "__main__":
     import sys
@@ -112,27 +94,29 @@ if __name__ == "__main__":
         p = nx.to_pandas_adjacency(G)
     logger.info("Distances calculated")
     if args.alg == "spectral":
-        spectral_reduce(G, p)
+        d = spectral_reduce(G, p)
     elif args.alg == "mds":
-        mds_reduce(G, p, True)
+        d = mds_reduce(G, p, True)
     elif args.alg == "smacof":
-        smacof_reduce(G, p)
+        d = smacof_reduce(G, p)
     elif args.alg == "ica":
-        ica_reduce(G, p)
+        d = ica_reduce(G, p)
     elif args.alg == "isomap":
-        isomap_reduce(G, p)
+        d = isomap_reduce(G, p)
     elif args.alg == "pca":
-        pca_reduce(G, p)
+        d = pca_reduce(G, p)
     elif args.alg == "incpca":
-        increment_pca_reduce(G, p)
+        d = increment_pca_reduce(G, p)
     elif args.alg == "mds_nm":
-        mds_reduce(G, p, False)
+        d = mds_reduce(G, p, False)
     elif args.alg == "smacof_nm":
-        smacof_reduce(G, p, metric=False)
+        d = smacof_reduce(G, p, metric=False)
     elif args.alg == "grp":
-        grp_reduce(G, p)
+        d = grp_reduce(G, p)
     else:
         raise
     logger.info("Optimized")
-    write_results(G, args.output)
+    d.index.name=("node")
+
+    d.to_csv(args.output)
     logger.info("finished")
