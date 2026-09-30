@@ -1,10 +1,8 @@
+import scipy
 import logging
 import sys
 import os
-print("\033[2J")
-# TODO setup log file arg
 logger = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s\t%(message)s')
 logger.info("Starting up")
 
 import itertools
@@ -17,12 +15,9 @@ import torch
 from networkx_helpers import *
 
 def prep_graph(G):
-    start = lambda G, n: (is_input_port(G, n) or is_output_port(G, n) or is_inout_port(G, n)) and is_flow(G, n)
-    buffer = lambda G, n: False
-    skip = lambda G, n: is_control_cell(G,n) or is_flush_cell(G,n) or is_control(G, n) or is_flush(G, n)
-    shells = find_center(G, start, buffer)
-
-    nodes = sorted((node for node in G.nodes if not skip(G, node)), key=lambda node: G.nodes[node]["shell"] )
+    shells = find_center(G, standard_start, lambda G, n: False)
+    keep = (node for node in G.nodes if not standard_skip(G, node))
+    nodes = sorted(keep, key=lambda node: G.nodes[node]["shell"] )
     shell_list = torch.tensor([[G.nodes[node]["shell"] for node in nodes]]).mT
     shell_nodes = {shell: list(members)
                     for shell, members
@@ -30,10 +25,11 @@ def prep_graph(G):
     shell_splits = np.cumsum([len(m) for m in shell_nodes.values()]).tolist()[:-1]
 
     logging.info("Extracted circuit")
-    return G, nodes, shell_list, shell_splits, adjacency
+    return G, nodes, shell_list, shell_splits
+
 def extract_adjacency(G, nodes):
     # adjency list for all edges
-    check = set(nodes.tolist())
+    check = set(nodes)
     pd_adjacency = pd.DataFrame(np.zeros((len(nodes), len(nodes)), dtype=np.float32),
                                  index=nodes, columns=nodes)
     for start, end in G.edges:
@@ -49,14 +45,14 @@ def pairwise_distance(a,b):
 def equidistant(a):
     return torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1]))
 
+def equidistant3d(a):
+    return torch.max(torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1])), torch.abs(a[:,:,2]))
+
 def euclidean(a):
-    return (a[:,:,0]**2 + a[:,:,1]**2)**0.5
+    return (a[:,:,0]**2 + a[:,:,1]**2)
 
 def euclidean3d(a):
-    return (a[:,:,0]**2 + a[:,:,1]**2 + a[:,:,2]**2)**0.5
-
-def matrix_coord_mult(m, v):
-    return m[:,:,None]*v[:,None,:]
+    return (a[:,:,0]**2 + a[:,:,1]**2 + a[:,:,2]**2)
 
 def hookes_potential(x):
     return 0.5*(x-1)**2
@@ -91,12 +87,14 @@ def unit(x):
 
 def partial_interaction(dist, magnitude, kernel, force, direction):
     norm = magnitude(dist)
-    potentials = torch.where(direction(norm),
+    conditional = direction(norm)
+    potentials = torch.where(conditional,
                     kernel(norm),
                     torch.zeros(norm.shape))
     potentials.diagonal().zero_()
+    pd.DataFrame(norm.cpu().numpy()).to_csv("test.csv")
 
-    vectors = torch.where(direction(norm)[:,:,None],
+    vectors = torch.where(conditional[:,:,None],
                     force(dist, norm[:,:,None]),
                     torch.zeros(dist.shape))
     vectors.diagonal().zero_()
@@ -125,7 +123,7 @@ def loss(adjacency, shell_splits, coords, iter):
 
     # attract connected
     # TODO split and calculate by shell, using shell and adjacent.
-    attractor_dists = [matrix_coord_mult(adjacency, coords)]
+    attractor_dists = [adjacency[:,:,None]*pairwise_distance(coords, coords)]
     attractor_forces, attractor_potentials = \
         interaction(attractor_dists,
                     euclidean,
@@ -151,7 +149,7 @@ def loss_brute(distance, collision_potential, collision_force, repel_potential, 
                         lambda n: n <= 1)
 
         # attract connected
-        attractor_dists = matrix_coord_mult(adjacency, coords)
+        attractor_dists = adjacency[:,:,None]*pairwise_distance(coords, coords)
         attractor_forces, attractor_potentials = \
             partial_interaction(attractor_dists,
                                 distance,
@@ -179,8 +177,10 @@ def df_extract(nodes, coords, shell_list, repellor_forces, repellor_potential, a
     df.index.name = "node"
     return df
 
+def neg_symmetric(rows):
+    return np.tri(rows).T - np.tri(rows)
+
 if __name__ == "__main__":
-    print("\033[2J")
     import argparse
     logger.info("Loading graph")
     parser = argparse.ArgumentParser()
@@ -193,6 +193,8 @@ if __name__ == "__main__":
     parser.add_argument("--graph")
     parser.add_argument("--top", default="thing")
     args = parser.parse_args()
+
+    logging.basicConfig(filename=args.logfile, level=args.log)
 
     if args.intermediate and os.path.exists(args.intermediate):
         os.remove(args.intermediate)

@@ -56,6 +56,12 @@ def read_yosys_json(input_file, top):
                 G.nodes[bit]["cell"] = f"$_{direction}"
     return _collapse_edges(G)
 
+def standard_start(G, n):
+    return (is_input_port(G, n) or is_output_port(G, n) or is_inout_port(G, n)) and is_flow(G, n)
+
+def standard_skip(G, n):
+    return is_control_cell(G,n) or is_flush_cell(G,n) or is_control(G, n) or is_flush(G, n)
+
 def is_net(G, node):
     return G.nodes[node].get("cell", "unknown") in {"$_output", "$_inout", "$_wire", "$_input"}
 
