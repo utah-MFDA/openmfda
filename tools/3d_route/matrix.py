@@ -116,15 +116,9 @@ def unit(x):
 def partial_interaction(dist, magnitude, kernel, force, direction):
     norm = magnitude(dist)
     conditional = direction(norm)
-    potentials = torch.where(conditional,
-                    kernel(norm),
-                    torch.zeros(norm.shape))
-    potentials.diagonal().zero_()
-
-    vectors = torch.where(conditional[:,:,None],
-                    force(dist, norm[:,:,None]),
-                    torch.zeros(dist.shape))
-    vectors.diagonal().zero_()
+    conditional.diagonal().zero_()
+    potentials = kernel(norm)*conditional
+    vectors = force(dist, norm[:,:,None])*conditional[:,:,None]
     return vectors, potentials
 
 def interaction(dists, magnitude, kernel,force, direction):
@@ -139,7 +133,7 @@ def adjacency_pairwise(adjacency, shell_coords):
         coords = torch.concat(neighbors(shell_coords, i))
         dist = pairwise_distance(shell, coords)
         connected = adjacency[i][:,:,None] == 1
-        yield torch.where(connected, dist, torch.zeros(dist.shape))
+        yield dist*connected
 
 def loss(adjacency, shell_splits, coords, norm, potential, force):
     shell_coords = torch.tensor_split(coords, shell_splits)
