@@ -1,53 +1,58 @@
-TEE=>
 INPUTS = \
-benchmarks/multiplex_toilet.v \
-benchmarks/mnacidpro_pads_1.v \
-benchmarks/mnacidpro_pads_2.v \
-benchmarks/mnacidpro_pads_3.v \
-benchmarks/mnacidpro_pads_4.v \
-benchmarks/mRNAiso_pads_1.v \
-benchmarks/mRNAiso_pads_2.v \
-benchmarks/mRNAiso_pads_3.v \
-benchmarks/mRNAiso_pads_4.v \
-benchmarks/kinase_1.v \
-benchmarks/kinase_2.v \
-benchmarks/kinase_3.v \
-benchmarks/kinase_4.v
+	benchmarks/multiplex_toilet/multiplex_toilet.v \
+	benchmarks/ChIP/ChIP_pads_4.v \
+	benchmarks/mnacidpro/mnacidpro_pads_1.v \
+	benchmarks/mnacidpro/mnacidpro_pads_2.v \
+	benchmarks/mnacidpro/mnacidpro_pads_3.v \
+	benchmarks/mnacidpro/mnacidpro_pads_4.v \
+	benchmarks/mrnaiso/mRNAiso_pads_1.v \
+	benchmarks/mrnaiso/mRNAiso_pads_2.v \
+	benchmarks/mrnaiso/mRNAiso_pads_3.v \
+	benchmarks/mrnaiso/mRNAiso_pads_4.v \
+	benchmarks/kinase/kinase_1.v \
+	benchmarks/kinase/kinase_2.v \
+	benchmarks/kinase/kinase_3.v \
+	benchmarks/kinase/kinase_4.v
+	# benchmarks/ChIP/ChIP_pads_10.v \
 
-# poor results for: ica incpca mds_nm pca smacof_nm spectral
-DIM_ALGS=spectral mds smacof ica pca isomap incpca mds_nm smacof_nm grp
-RUNS = exact ilp torch simulation ${DIM_ALGS}
-RESULTS = $(foreach RUN,${RUNS},$(INPUTS:%.v=%.${RUN}.scad))
+# poor results for: ica incpca mds_nm pca grp smacof_nm spectral
+DIM_ALGS=mds smacof isomap
+RUNS = exact ilp torch ${DIM_ALGS}
+RESULTS = $(INPUTS:%.v=%.pdf)
+RENDERED = $(foreach RUN,${RUNS},$(INPUTS:%.v=%.${RUN}.scad))
 
-all: $(RESULTS)
+all: $(RESULTS) $(RENDERED)
 
 benchmarks/library.v: benchmarks/kinase_activity.v benchmarks/kinase_pads.v benchmarks/mnacidpro.v benchmarks/mRNAiso.v benchmarks/mnacidpro_pads.v benchmarks/mRNAiso_pads.v benchmarks/ChIP.v benchmarks/ChIP_pads.v
 	cat $^ > $@
-.PRECIOUS: %.cylinder.scad %.horizontal.scad %.json %.cube.scad
-force:
 
-LEVEL ?= INFO
-LIMIT ?= 24
-COMMON_ARGS ?= --log ${LEVEL} --timeout 240 --relax ${LIMIT}
+.PRECIOUS: %.json %.torch.csv %.torch_eq.csv %.exact.csv %.mds.csv %.ilp.csv %.smacof.csv %.isomap.csv
+
 PYTHON3 = python3
-# PYTHON3 ?= retry -attempts 100 -max-time 600m python3
 
 %.mp4 %.gif: %.iter.csv %.json render_flat.py
-	${PYTHON3} render_flat.py $< --graph $*.json --output $@
+	${PYTHON3} render_flat.py $< --graph $*.json --output $@ \
+		--logfile $*.render_flat.log 2>&1 >> $*.render_flat.err.log
 
 %.scad: %.csv %.json render.py
-	${PYTHON3} render.py $< --graph $*.json --output $@
+	${PYTHON3} render.py $< --graph $*.json --output $@ \
+		--logfile $*.render.log 2>&1 >> $*.render.err.log
 
 benchmarks/picorv32.json: benchmarks/picorv32.v
 	yosys -p "read_verilog $<; synth -top picorv32; write_json $@"
 
 %.json: %.v benchmarks/library.v
-	yosys -p "read_verilog benchmarks/library.v; read_verilog $<; hierarchy -top thing; proc; flatten; clean -purge; write_json $@" $(TEE) $*.log
+	yosys -p "read_verilog benchmarks/library.v; read_verilog $<; hierarchy -top thing; proc; flatten; clean -purge; write_json $@" > $*.log
 
-%.pdf: %.json stats.py %.exact.csv %.torch.csv %.grp.csv %.mds.csv %.isomap.csv %.smacof.csv %.pca.csv %.spectral.csv
+%.pdf: %.json stats.py %.torch_eq.csv %.exact.csv %.ilp.csv %.torch.csv %.mds.csv %.isomap.csv %.smacof.csv
 	${PYTHON3} stats.py --graph $*.json --output $@ \
-		$(filter %.csv, $^)
+		--logfile $*.stats.log 2>&1 >> $*.stats.err.log \
+ 		$(filter %.csv, $^)
+
 %.torch.json: %.json
+	cp $< $@
+
+%.torch_eq.json: %.json
 	cp $< $@
 
 %.simulation.json: %.json
@@ -81,10 +86,20 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	date --iso-8601=seconds >> $*.torch.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch.csv \
-		--intermediate $*.torch.iter.csv \
-		--autograde --dynamic --cutoff 1
-		# --logfile $*.torch.log 2>&1 >> $*.torch.err.log
+		--autograde --dynamic --cutoff 1 \
+		--logfile $*.torch.log 2>&1 >> $*.torch.err.log
+		# --intermediate $*.torch.iter.csv \
 	date --iso-8601=seconds >> $*.torch.timer
+
+%.torch_eq.csv %.torch_eq.timer %.torch_eq.log %.torch_eq.iter.csv: %.torch_eq.json matrix.py
+	date --iso-8601=seconds >> $*.torch_eq.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output $*.torch_eq.csv \
+		--autograde --dynamic --cutoff 1 \
+		--distance equidistant \
+		--logfile $*.torch_eq.log 2>&1 >> $*.torch_eq.err.log
+		# --intermediate $*.torch_eq.iter.csv \
+	date --iso-8601=seconds >> $*.torch_eq.timer
 
 %.simulation.csv %.simulation.timer %.simulation.log %.simulation.iter.csv: %.simulation.json simulation.py
 	date --iso-8601=seconds >> $*.simulation.timer
@@ -94,24 +109,10 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 		--logfile $*.simulation.log 2>&1 >> $*.simulation.err.log
 	date --iso-8601=seconds >> $*.simulation.timer
 
-%.horizontal.csv %.horizontal.timer %.horizontal.log: %.json frontier.py
-	date --iso-8601=seconds >> $*.horizontal.timer
-	${PYTHON3} frontier.py $< \
-		--orientation horizontal \
-		--output $*.horizontal.csv ${COMMON_ARGS} \
-		--logfile $*.horizontal.log \
-		--cache $*.horizontal.cache.csv  \
-		--flow_only \
-		--add_buffers \
-		--backtrack \
-		--minimize 2>&1 >> $*.horizontal.err.log
-	date --iso-8601=seconds >> $*.horizontal.timer
-
 %.exact.csv %.exact.timer %.exact.log: %.json exact.py
 	date --iso-8601=seconds >> $*.exact.timer
 	${PYTHON3} exact.py $< \
 		--output $@ \
-		--log ${LEVEL} \
 		--timeout 86400 \
 		--cache $*.exact.cip \
 		--logfile $*.exact.log 2>&1 >> $*.exact.err.log
@@ -121,63 +122,46 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	date --iso-8601=seconds >> $*.ilp.timer
 	${PYTHON3} exact.py $< \
 		--output $@ \
-		--log ${LEVEL} \
 		--timeout 86400 \
 		--minimize \
 		--cache $*.ilp.cip \
 		--logfile $*.ilp.log 2>&1 >> $*.ilp.err.log
 	date --iso-8601=seconds >> $*.ilp.timer
 
-%.cylinder.csv %.cylinder.timer %.cylinder.log: %.json frontier.py
-	date --iso-8601=seconds >> $*.cylinder.timer
-	${PYTHON3} frontier.py $< \
-		--orientation cylinder \
-		--output $@ \
-		--offset 2  ${COMMON_ARGS} \
-		--cache $*.cylinder.csv \
-		--add_buffers \
-		--minimize \
-		--logfile $*.cylinder.log \
-		--backtrack 2>&1 >> $*.cylinder.err.log
-	date --iso-8601=seconds >> $*.cylinder.timer
-
-%.exact_cylinder.csv %.exact_cylinder.timer %.exact_cylinder.log: %.json frontier.py
-	date --iso-8601=seconds >> $*.everything_cylinder.timer
-	${PYTHON3} frontier.py $< \
-		--orientation cylinder \
-		--output $@ \
-		--log ${LEVEL} \
-		--timeout 3600 \
-		--add_buffer \
-		--everything \
-		--logfile $*.everything_cylinder.log \
-		--cache $*.everything_cylinder.csv 2>&1 >> $*.everything_cylinder.err.log
-	date --iso-8601=seconds >> $*.everything_cylinder.timer
-
-%.cube.scad: %.json frontier.py
-	date --iso-8601=seconds >> $*.cube.timer
-	${PYTHON3} frontier.py $< \
-		--orientation cube \
-		--output $@ \
-		--offset 1 ${COMMON_ARGS} \
-		--cache $*.cube.csv \
-		--logfile $*.cube.log 2>&1 >> $*.cube.err.log
-	date --iso-8601=seconds >> $*.cube.timer
-
 %.pdf: %.dot
 	dot -Tpdf -o $@ $<
 
-clean:
-	rm -f benchmarks/multiplex_toilet*.json
-	rm -f benchmarks/multiplex_toilet*.csv
-	rm -f benchmarks/multiplex_toilet*.scad
-	rm -f benchmarks/*.timer
-	rm -f benchmarks/mnacidpro*.json
-	rm -f benchmarks/mnacidpro*.csv
-	rm -f benchmarks/mnacidpro*.scad
-	rm -f benchmarks/kinase*.json
-	rm -f benchmarks/kinase*.csv
-	rm -f benchmarks/kinase*.scad
-	rm -f benchmarks/mRNAiso*.json
-	rm -f benchmarks/mRNAiso*.csv
-	rm -f benchmarks/mRNAiso*.scad
+clean_stats:
+	rm -f benchmarks/kinase/*.pdf
+	rm -f benchmarks/mrnaiso/*.pdf
+	rm -f benchmarks/multiplex_toilet/*.pdf
+	rm -f benchmarks/mnacidpro/*.pdf
+	rm -f benchmarks/ChIP/*.pdf
+
+clean_render:
+	rm -f benchmarks/kinase/*.scad
+	rm -f benchmarks/mrnaiso/*.scad
+	rm -f benchmarks/multiplex_toilet/*.scad
+	rm -f benchmarks/mnacidpro/*.scad
+	rm -f benchmarks/ChIP/*.scad
+
+clean_data:
+	rm -f benchmarks/kinase/*.csv
+	rm -f benchmarks/mrnaiso/*.csv
+	rm -f benchmarks/multiplex_toilet/*.csv
+	rm -f benchmarks/mnacidpro/*.csv
+	rm -f benchmarks/ChIP/*.csv
+
+clean_logs:
+	rm -f benchmarks/kinase/*.log
+	rm -f benchmarks/mrnaiso/*.log
+	rm -f benchmarks/multiplex_toilet/*.log
+	rm -f benchmarks/mnacidpro/*.log
+	rm -f benchmarks/ChIP/*.log
+	rm -f benchmarks/kinase/*.timer
+	rm -f benchmarks/mrnaiso/*.timer
+	rm -f benchmarks/multiplex_toilet/*.timer
+	rm -f benchmarks/mnacidpro/*.timer
+	rm -f benchmarks/ChIP/*.timer
+
+clean: clean_stats clean_render clean_data clean_logs
