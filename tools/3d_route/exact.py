@@ -107,9 +107,9 @@ if __name__ == "__main__":
     parser.add_argument("--height", default=1600/80, type=int)
     parser.add_argument("--depth", default=25, type=int)
     parser.add_argument("--top", default="thing")
+    parser.add_argument("--minimize", action="store_true")
     parser.add_argument("--log", default="INFO")
     parser.add_argument("--logfile", default="3d_route.log")
-    parser.add_argument("--minimize", action="store_true")
 
     args = parser.parse_args()
     logging.basicConfig(filename=args.logfile, level=args.log)

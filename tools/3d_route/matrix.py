@@ -4,7 +4,6 @@ import sys
 import os
 logger = logging.getLogger(__name__)
 logger.info("Starting up")
-from collections import deque
 import itertools
 import time
 

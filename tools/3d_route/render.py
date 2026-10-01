@@ -120,7 +120,11 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", required=True)
     parser.add_argument("--graph")
     parser.add_argument("--top", default="thing")
+    parser.add_argument("--log", default="INFO")
+    parser.add_argument("--logfile", default="3d_route.log")
+
     args = parser.parse_args()
+    logging.basicConfig(filename=args.logfile, level=args.log)
 
     G = read_yosys_json(args.graph, args.top)
     df = pd.read_csv(args.input_file,
@@ -131,7 +135,7 @@ if __name__ == "__main__":
 
     edges = edge_lengths(G, df)
     typical = edges.mean()+edges.std()
-    print(f"Scaling by {typical:03f}")
+    logger.info(f"Scaling by {1/typical:03f}")
     df /= typical
     # Render
     for node, props in df.iterrows():

@@ -4,17 +4,19 @@ import pandas as pd
 from networkx_helpers import *
 
 import argparse
-import sys
 import logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s\t%(message)s')
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file")
 parser.add_argument("--graph", required=True)
 parser.add_argument("--output")
 parser.add_argument("--top", default="thing")
+parser.add_argument("--log", default="INFO")
+parser.add_argument("--logfile", default="3d_route.log")
+
 args = parser.parse_args()
+logging.basicConfig(filename=args.logfile, level=args.log)
 
 G = read_yosys_json(args.graph, args.top)
 
@@ -51,7 +53,6 @@ def update3d(i):
     # return [scatter, *[line for line, _, _ in edges]]
 
 def update2d(i):
-    print(i)
     step = steps[i][["x", "y"]]
     scatter.set_offsets(step)
     for line, start, end in edges:

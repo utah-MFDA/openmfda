@@ -14,7 +14,11 @@ parser.add_argument("results", nargs="+")
 parser.add_argument("--graph")
 parser.add_argument("--top", default="thing")
 parser.add_argument("--output")
+parser.add_argument("--log", default="INFO")
+parser.add_argument("--logfile", default="3d_route.log")
+
 args = parser.parse_args()
+logging.basicConfig(filename=args.logfile, level=args.log)
 
 G = read_yosys_json(args.graph, args.top)
 skipped = [node for node in G.nodes if standard_skip(G, node)]
@@ -54,7 +58,7 @@ def force(x, u):
 loss_f = loss_brute(magnitude, hookes_potential, force, hookes_potential, force)
 
 def read_results(filename):
-    print(filename)
+    logger.info("Reading file %s", filename)
     df = pd.read_csv(filename,
                      index_col="node",
                      usecols=["node", "x", "y", "z"],
@@ -62,10 +66,10 @@ def read_results(filename):
     coords = torch.tensor(df[["x", "y", "z"]].to_numpy())
     distance = magnitude(pairwise_distance(coords, coords))
     pd_distance = pd.DataFrame(distance.cpu().numpy(), index=df.index, columns=df.index.tolist())
-    # print(pd_distance)
-    edges = np.array([pd_distance.loc[e] for e in G.edges])
+    edges = np.array([pd_distance.loc[(s, e)] for s, e in G.edges])
+
     typical = edges.mean()
-    print(f"scaling by {1/typical:0.3f}")
+    logger.info(f"scaling by {1/typical:0.3f}")
     velocity = torch.zeros(coords.shape)
     coords /= typical
     attractor_dist, attractor_forces, attractor_potentials, repellor_dist, repellor_forces, repellor_potentials = \
