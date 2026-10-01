@@ -17,18 +17,17 @@ parser.add_argument("--output")
 args = parser.parse_args()
 
 G = read_yosys_json(args.graph, args.top)
-nodes = [node for node in G.nodes if not standard_skip(G, node)]
-pd_adjacency = extract_adjacency(G, nodes)
+skipped = [node for node in G.nodes if standard_skip(G, node)]
+G.remove_nodes_from(skipped)
+pd_adjacency = extract_adjacency(G, G.nodes)
 adjacency = torch.tensor(pd_adjacency.to_numpy())
 
-pd_expected = pd.DataFrame({k: v
-                             for k, v in nx.all_pairs_shortest_path_length(G)
-                             if k in nodes},
-                           index=nodes, columns=nodes) * neg_symmetric(len(nodes))
+pd_expected = pd.DataFrame(dict(nx.all_pairs_shortest_path_length(G)),
+                           index=G.nodes, columns=G.nodes) * neg_symmetric(len(G.nodes))
 expected = torch.tensor(pd_expected.to_numpy())
 
 pd_antiadjacency = -1*pd_adjacency + 1
-for node in nodes:
+for node in G.nodes:
     pd_antiadjacency.loc[node, node] = 0
 antiadjacency = torch.tensor(pd_antiadjacency.to_numpy())
 antiadjacency.diagonal().zero_()
@@ -93,19 +92,19 @@ def read_results(filename):
             attractor_potentials)
     return [pd.DataFrame(d.cpu().numpy(), index=df.index, columns=df.index.tolist())
             for d in data]
-
-data = [read_results(result) for result in args.results]
+results = sorted(args.results)
+data = [read_results(result) for result in sorted(results)]
 
 c = 3
-r = math.ceil(len(args.results)//c) + 1
+r = math.ceil(len(results)//c) + 1
 # fig, ax = plt.subplots(ncols=2*c, nrows=r, sharey=False, sharex=True)
-fig, (ay, az, ax)= plt.subplots(ncols=3)
+fig, (ax, ay, az)= plt.subplots(ncols=3)
 plt.rcParams['font.size'] = '9'
 plt.style.use('tableau-colorblind10')
 plt.rcParams['font.family'] = 'serif'
 
-for i, (f, d) in enumerate(zip(args.results, data)):
-    title = args.results[i][28:-4]
+for i, (f, d) in enumerate(zip(results, data)):
+    _, title, _ = results[i].split(".")
     r_dist, r_force, r_potentials, a_dist, a_force, a_potentials = d
     potentials = r_potentials + a_potentials
     # row x col
@@ -114,21 +113,23 @@ for i, (f, d) in enumerate(zip(args.results, data)):
 
     edges = np.array([r_dist.loc[e] for e in G.edges])
     edges.sort()
-    ay.plot(np.arange(edges.shape[0])/edges.shape[0], edges, label=title)
+    ax.plot(np.arange(edges.shape[0])/edges.shape[0], edges, label=title)
+
+    potent = (r_potentials.sum(axis=1).sort_values())
+    ay.plot(np.arange(potent.shape[0])/potent.shape[0], potent, label=title)
+
     error = (r_dist/pd_expected).to_numpy().ravel()
     error.sort()
     error = error[error >= 0]
-    ax.plot(np.arange(error.shape[0])/error.shape[0], error, label=title)
+    az.plot(np.arange(error.shape[0])/error.shape[0], error, label=title)
 
-    potent = (potentials.sum(axis=1).sort_values())
-    az.plot(np.arange(potent.shape[0])/potent.shape[0], potent, label=title)
-ay.set_title("edge lengths")
-ay.set_ybound((0,2))
-ay.legend()
-az.set_title("total cell potential")
-az.legend()
-ax.set_title("expected distance error")
+ax.set_title("edge lengths")
 ax.legend()
+ay.set_title("total cell potential")
+# ay.set_ybound((0,2))
+ay.legend()
+az.set_title("expected distance error")
+az.legend()
 
 if args.output:
     fig.set_figheight(6)

@@ -20,23 +20,25 @@ def neighbors(group, i):
     return group[start:end]
 
 def prep_graph(G):
-    num_shells = find_center(G, standard_start, lambda G, n: False)
-    keep = (node for node in G.nodes if not standard_skip(G, node))
-    nodes = sorted(keep, key=lambda node: G.nodes[node]["shell"] )
-    shell_list = torch.tensor([[G.nodes[node]["shell"] for node in nodes]]).mT
+    skipped = [node for node in G.nodes if standard_skip(G, node)]
+    G.remove_nodes_from(skipped)
+    num_shells = find_center(G, standard_start)
+    sort_nodes = sorted(G.nodes, key=lambda node: G.nodes[node]["shell"] )
+    shell_list = torch.tensor([[G.nodes[node]["shell"] for node in sort_nodes]]).mT
     shell_nodes = {shell: list(members)
                     for shell, members
-                    in itertools.groupby(nodes, lambda node: G.nodes[node]["shell"])}
+                    in itertools.groupby(sort_nodes, lambda node: G.nodes[node]["shell"])}
     # I'm being paranoid about ordering
-    shell_node_lists = [shell_nodes[m] for m in range(0,num_shells)]
+    # vindicated later, the skip list caused empty shells
+    shell_node_lists = [shell_nodes.get(m, []) for m in range(0,num_shells)]
     shell_splits = np.cumsum([len(m) for m in shell_node_lists]).tolist()[:-1]
 
     connectivity_splits = [
         extract_shell_connectivity(G, shell,
                                 [n for ns in neighbors(shell_node_lists, i) for n in ns])
         for i, shell in enumerate(shell_node_lists)]
-    logging.info("Extracted circuit")
-    return G, nodes, shell_list, shell_splits, connectivity_splits
+    logger.info("Extracted circuit")
+    return G, sort_nodes, shell_list, shell_splits, connectivity_splits
 
 def extract_shell_connectivity(G, left, right):
     # irregular adjacency list for two sets
@@ -52,15 +54,14 @@ def extract_shell_connectivity(G, left, right):
     pd_adjacency.fillna(0)
     return torch.tensor(pd_adjacency.to_numpy())
 
-def extract_adjacency(G, nodes):
+def extract_adjacency(G, sort_nodes):
+    shape = (len(sort_nodes), len(sort_nodes))
     # adjency list for all edges
-    check = set(nodes)
-    pd_adjacency = pd.DataFrame(np.zeros((len(nodes), len(nodes)), dtype=np.float32),
-                                 index=nodes, columns=nodes)
+    pd_adjacency = pd.DataFrame(np.zeros(shape, dtype=np.int32),
+                                 index=sort_nodes, columns=sort_nodes)
     for start, end in G.edges:
-        if start in check and end in check:
-            pd_adjacency.loc[start, end] = 1
-            pd_adjacency.loc[end, start] = 1
+        pd_adjacency.loc[start, end] = 1
+        pd_adjacency.loc[end, start] = 1
     pd_adjacency.fillna(0)
     return pd_adjacency
 
@@ -230,10 +231,10 @@ if __name__ == "__main__":
     if args.intermediate and os.path.exists(args.intermediate):
         os.remove(args.intermediate)
     G = read_yosys_json(args.graph, args.top)
-    G, nodes, shell_list, shell_splits, adjacency_splits = prep_graph(G)
-    pd_adjacency = extract_adjacency(G, nodes)
+    G, sort_nodes, shell_list, shell_splits, adjacency_splits = prep_graph(G)
+    pd_adjacency = extract_adjacency(G, sort_nodes)
     adjacency = torch.tensor(pd_adjacency.to_numpy())
-    coords = torch.randint(-4, 4, (len(nodes), 2), dtype=torch.float32, requires_grad=args.autograde)
+    coords = torch.randint(-4, 4, (len(G.nodes), 2), dtype=torch.float32, requires_grad=args.autograde)
     velocity = args.initvel*(torch.rand((coords.shape)) - 0.5)
     # torch.autograd.set_detect_anomaly(True)
     start_t = time.time_ns()

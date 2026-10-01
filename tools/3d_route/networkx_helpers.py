@@ -31,13 +31,13 @@ def read_yosys_json(input_file, top):
                 if (cell, name) not in G.edges: # this would for a multigraph
                     G.add_edge(cell, name, hyperedge=True, bit=bit, port=port, direction=direction)
                 else:
-                    print(f"Duplicate edge {cell} {name}")
+                    logger.warn(f"Duplicate edge {cell} {name}")
     for net, details in m["netnames"].items():
         # Multiple named nets will be attached to the same bit, last one wins.
         for index, bit in enumerate(details["bits"]):
             bit = f"$_{bit}"
             if bit not in G.nodes:
-                print(f"Missing node for bit {bit}")
+                logger.warn(f"Missing node for bit {bit}")
                 continue
             if not details.get("hide_name", 0):
                 G.nodes[bit]["netnames"].add((net, details.get("index", 0)))
@@ -190,7 +190,7 @@ def report_stats(G):
     num_cells = len(G.nodes) - num_wire
     logger.info("Starting with %d ports (%d input %d output %d inout) %d nets and %d cells", num_port, num_input, num_output, num_inout, num_wire, num_cells)
 
-def find_center(G, start_condition, buffer_condition):
+def find_center(G, start_condition, buffer_condition=None):
     report_stats(G)
     # remove = [n for n in G if is_control(G, n) or is_flush(G, n) or is_flush_cell(G,n) or is_control_cell(G,n)]
     # G.remove_nodes_from(remove)
@@ -198,8 +198,9 @@ def find_center(G, start_condition, buffer_condition):
     assert(len(start) > 0)
     shell = add_shell(G, start)
     # render_dot(G, "shell.dot")
-    targets = {node for node in G.nodes if buffer_condition(G, node)}
-    add_buffers_output(G, shell, targets)
+    if buffer_condition:
+        targets = {node for node in G.nodes if buffer_condition(G, node)}
+        add_buffers_output(G, shell, targets)
     # render_dot(G, "buffer.dot")
 
     unreachable = [_ for _, p in G.nodes.items() if "shell" not in p]

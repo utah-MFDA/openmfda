@@ -86,6 +86,8 @@ if __name__ == "__main__":
 
     logger.info("Loading graph")
     G = read_yosys_json(args.graph, top=args.top)
+    skipped = [node for node in G.nodes if standard_skip(G, node)]
+    G.remove_nodes_from(skipped)
     logger.info("graph cleaned")
     if args.alg in ["mds", "smacof", "ica", "isomap", "pca", "incpca", "grp"]:
         dists = dict(nx.all_pairs_shortest_path_length(G))

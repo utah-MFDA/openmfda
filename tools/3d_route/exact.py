@@ -14,9 +14,11 @@ def run_everything_redux(G, cache=None,
                          width = 40, height = 25, depth = 25,
                          timeout=60, minimize=False):
     shells = find_center(G, standard_start, lambda G, n: False)
+    for node, props in G.nodes.items():
+        props["skip"] = standard_skip(G, node)
     M = scip.Model()
     M.setParam("limits/time", timeout)
-    setup_variables(G, M, standard_skip, width, height, depth)
+    setup_variables(G, M, width, height, depth)
     if minimize:
         minim = setup_constraints(G, M, setup_minim, width, height, depth)
     else:
@@ -35,15 +37,17 @@ def run_everything_redux(G, cache=None,
         raise
 
     for _, props in G.nodes.items():
+        if props["skip"]:
+            continue
         x, y = [int(M.getVal(i)) for i in props["coordinates"]]
         props["coordinates"] = [x, y, props["shell"]]
     return shells
 
-def setup_variables(G, M, skip, width, height, depth):
-    for node in G.nodes:
-        if skip(G, node):
+def setup_variables(G, M, width, height, depth):
+    for node, props in G.nodes.items():
+        if props["skip"]:
             continue
-        G.nodes[node]["coordinates"] = [
+        props["coordinates"] = [
             M.addVar(f"{node}_{i}", vtype="INTEGER", lb=lb, ub=ub)
             for i, (lb, ub)
             in [("x", (-width, width)),
@@ -52,15 +56,19 @@ def setup_variables(G, M, skip, width, height, depth):
 
 def setup_constraints(G, M, setup, width, height, depth):
     minim = []
-    for node in G.nodes:
-        shell = G.nodes[node]["shell"]
-        s_y, s_z = G.nodes[node]["coordinates"]
-        for other in G.nodes:
+    for node, props_node in G.nodes.items():
+        if props_node["skip"]:
+            continue
+        shell = props_node["shell"]
+        s_y, s_z = props_node["coordinates"]
+        for other, props_other in G.nodes.items():
+            if props_other["skip"]:
+                continue
             if node < other:
-                o_y, o_z = G.nodes[other]["coordinates"]
+                o_y, o_z = props_other["coordinates"]
                 dy = abs(s_y - o_y)
                 dz = abs(s_z - o_z)
-                other_shell = G.nodes[other]["shell"]
+                other_shell = props_other["shell"]
                 minim += setup(M, node, shell, other, other_shell, dy, dz, width, height, depth)
     return minim
 

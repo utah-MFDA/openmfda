@@ -127,6 +127,8 @@ if __name__ == "__main__":
                      usecols=["node", "x", "y", "z"],
                      index_col="node",
                      dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
+    G.remove_nodes_from(set(G.nodes) - set(df.index.tolist()))
+
     edges = edge_lengths(G, df)
     typical = edges.mean()+edges.std()
     print(f"Scaling by {typical:03f}")
