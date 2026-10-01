@@ -69,24 +69,27 @@ def pairwise_distance(a,b):
     return a[:,None,:]- b[None,:,:]
 
 def equidistant(a):
-    return torch.max(torch.abs(a), dim=2)
+    return torch.linalg.norm(a, ord=np.inf, dim=2)
+    # return torch.amax(torch.abs(a), dim=2)
 
 def equidistant3d(a):
-    return torch.max(torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1])), torch.abs(a[:,:,2]))
+    return torch.linalg.norm(a, ord=np.inf, dim=2)
+    # return torch.amax(torch.abs(a), dim=2)
+    # return torch.max(torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1])), torch.abs(a[:,:,2]))
 
 def euclidean(a):
-    return (a[:,:,0]**2 + a[:,:,1]**2)
+    return torch.linalg.norm(a, dim=2)
+    # return (a[:,:,0]**2 + a[:,:,1]**2)
 
 def euclidean3d(a):
-    return (a[:,:,0]**2 + a[:,:,1]**2 + a[:,:,2]**2)**0.5
+    return torch.linalg.norm(a, dim=2)
+    # return (a[:,:,0]**2 + a[:,:,1]**2 + a[:,:,2]**2)**0.5
 
 def hookes_potential(x):
     return 0.5*(x-1)**2
 
 def hookes_force(x, n):
-    # TODO this should simplify to x*(1-1/n)
-    v = unit(x)
-    return -v*(n-1)
+    return x*(1-1/n)
 
 def cubic_potential(x):
     return x**4-x**2+1
@@ -139,16 +142,16 @@ def adjacency_pairwise(adjacency, shell_coords):
         connected = adjacency[i][:,:,None] == 1
         yield torch.where(connected, dist, torch.zeros(dist.shape))
 
-def loss(adjacency, shell_splits, coords, iter):
+def loss(adjacency, shell_splits, coords, norm, potential, force):
     shell_coords = torch.tensor_split(coords, shell_splits)
     repellor_dists = [pairwise_distance(shell, shell)
                       for shell in shell_coords]
     # repel overlaps
     repellor_forces, repellor_potentials = \
         interaction(repellor_dists,
-                    euclidean,
-                    hookes_potential,
-                    hookes_force,
+                    norm,
+                    potential,
+                    force,
                     lambda n: n <= 1)
 
     # attract connected
@@ -156,9 +159,9 @@ def loss(adjacency, shell_splits, coords, iter):
     attractor_dists = list(adjacency_pairwise(adjacency, shell_coords))
     attractor_forces, attractor_potentials = \
         interaction(attractor_dists,
-                    euclidean,
-                    hookes_potential,
-                    hookes_force,
+                    norm,
+                    potential,
+                    force,
                     lambda n: n >= 1)
 
     potential = attractor_potentials + repellor_potentials
@@ -220,6 +223,7 @@ if __name__ == "__main__":
     parser.add_argument("--logfile")
     parser.add_argument("--graph")
     parser.add_argument("--top", default="thing")
+    parser.add_argument("--distance", choices=["equidistant", "euclidean"], default="euclidean")
     parser.add_argument("--tick", type=float, default=1e-3)
     parser.add_argument("--damping", type=float, default=0.995)
     parser.add_argument("--dynamic", action="store_true")
@@ -237,11 +241,21 @@ if __name__ == "__main__":
     coords = torch.randint(-4, 4, (len(G.nodes), 2), dtype=torch.float32, requires_grad=args.autograde)
     velocity = args.initvel*(torch.rand((coords.shape)) - 0.5)
     # torch.autograd.set_detect_anomaly(True)
+
+    if args.distance == "euclidean":
+        distance = euclidean
+    elif args.distance == "equidistant":
+        distance = equidistant
+    else:
+        raise
+    potential = hookes_potential
+    force = hookes_force
+
     start_t = time.time_ns()
     i = 0
     worst_total = -1
     while True:
-        attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential = loss(adjacency_splits, shell_splits, coords, i)
+        attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential = loss(adjacency_splits, shell_splits, coords, distance, potential, force)
         if args.autograde:
             total_potential.backward()
         with torch.no_grad():
@@ -260,7 +274,7 @@ if __name__ == "__main__":
             damping = args.damping
             logger.info("%d %f %f", i, tick, total)
             if args.intermediate:
-                df = df_extract(nodes, coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, tick, i)
+                df = df_extract(sort_nodes, coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, tick, i)
                 # Append iteration to rolling log
                 df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
             velocity += grad * tick
@@ -268,11 +282,11 @@ if __name__ == "__main__":
             coords += velocity * tick
 
             if total_potential < args.cutoff or i > args.iterations - 1:
-                df = df_extract(nodes, coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, tick, i)
+                df = df_extract(sort_nodes, coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, tick, i)
                 # write out results
                 df.to_csv(args.output, header=True)
                 elapsed = (time.time_ns()-start_t)/1e6
-                logging.info("\t".join([f"elapsed {elapsed/1e3:0.3f}s", f"iterations {i}",
+                logger.info("\t".join([f"elapsed {elapsed/1e3:0.3f}s", f"iterations {i}",
                               f"average iteration {elapsed/i:0.3f}ms",
                               f"final potential {total_potential:0.3f}"]))
                 break

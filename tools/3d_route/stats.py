@@ -92,7 +92,6 @@ def read_results(filename):
             attractor_potentials)
     return [pd.DataFrame(d.cpu().numpy(), index=df.index, columns=df.index.tolist())
             for d in data]
-results = sorted(args.results)
 data = [read_results(result) for result in sorted(results)]
 
 c = 3
