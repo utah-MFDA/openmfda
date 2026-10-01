@@ -216,6 +216,7 @@ def loss_brute(distance, collision_potential, collision_force, repel_potential, 
     return inner
 
 def df_extract(nodes, coords, shell_list, repellor_forces, repellor_potential, attractor_forces, attractor_potential, velocity, grad, rate, iter):
+
     data_points = (coords,
                     shell_list,
                     attractor_forces,
@@ -250,11 +251,19 @@ if __name__ == "__main__":
     parser.add_argument("--dynamic", action="store_true")
     parser.add_argument("--autograde", action="store_true")
     parser.add_argument("--initvel", type=float, default=10)
+    parser.add_argument("--device", default="cuda")
+
     args = parser.parse_args()
-    logging.basicConfig(filename=args.logfile, level=args.log)
+    if args.logfile:
+        logging.basicConfig(filename=args.logfile, level=args.log)
+    elif args.log:
+        logging.basicConfig(level=args.log)
 
     if args.intermediate and os.path.exists(args.intermediate):
         os.remove(args.intermediate)
+
+    torch.set_default_device(args.device)
+
     G = read_yosys_json(args.graph, args.top)
     G, sort_nodes, shell_list, shell_splits, adjacency_splits, edge_start, edge_end = prep_graph(G)
     pd_adjacency = extract_adjacency(G, sort_nodes)
@@ -305,7 +314,7 @@ if __name__ == "__main__":
             velocity *= damping
             coords += velocity * tick
 
-            if total_potential < args.cutoff or i > args.iterations - 1:
+            if total_potential < args.cutoff or (args.iterations > 0 and i > args.iterations - 1):
                 df = df_extract(sort_nodes, coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, tick, i)
                 # write out results
                 df.to_csv(args.output, header=True)
