@@ -680,7 +680,7 @@ flush_hole_0 cells_out_flush_hole(.connection(cells_out_flush), .pad(pad_cells_o
 .cells_in_flush(cells_in_flush),
 .cells_out_flush(cells_out_flush));
 endmodule
- module mux((* type="flow" *) input [SIZE-1:0] inlet,
+module mux((* type="flow" *) input [SIZE-1:0] inlet,
             (* type="flow" *) output outlet,
             (* type="ctrl" *) input [SIZE-1:0] ctrl,
             (* type="flush" *) output [SIZE-1:0] flush);
@@ -836,7 +836,6 @@ module ChIP((* type="flow" *) input [4:0] prep_inlet,
     for (i = 0; i < SIZE; i = i + 1) begin: chamber
       reaction_chamber first(.ctrl_ring_in(inter_stage_in[i]),
                                        .ctrl_ring_out(inter_stage_out[i]),
-
                                        .ctrl_sieve(inter_sieve[i]),
                                        .ctrl_collect(inter_collect[i]),
                                        .ctrl_inlet(inter_stage_inlet[i]),
