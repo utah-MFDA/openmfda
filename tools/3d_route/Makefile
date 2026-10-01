@@ -86,19 +86,19 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	date --iso-8601=seconds >> $*.torch.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch.csv \
-		--autograde --dynamic --cutoff 1 \
-		--logfile $*.torch.log 2>&1 >> $*.torch.err.log
-		# --intermediate $*.torch.iter.csv \
+		--autograde --dynamic --cutoff 1 --iterations 5000 \
+		--logfile $*.torch.log 2>&1 >> $*.torch.err.log \
+		--intermediate $*.torch.iter.csv
 	date --iso-8601=seconds >> $*.torch.timer
 
 %.torch_eq.csv %.torch_eq.timer %.torch_eq.log %.torch_eq.iter.csv: %.torch_eq.json matrix.py
 	date --iso-8601=seconds >> $*.torch_eq.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch_eq.csv \
-		--autograde --dynamic --cutoff 1 \
+		--autograde --dynamic --cutoff 1 --iterations 5000 \
 		--distance equidistant \
-		--logfile $*.torch_eq.log 2>&1 >> $*.torch_eq.err.log
-		# --intermediate $*.torch_eq.iter.csv \
+		--logfile $*.torch_eq.log 2>&1 >> $*.torch_eq.err.log \
+		--intermediate $*.torch_eq.iter.csv
 	date --iso-8601=seconds >> $*.torch_eq.timer
 
 %.simulation.csv %.simulation.timer %.simulation.log %.simulation.iter.csv: %.simulation.json simulation.py
