@@ -23,6 +23,10 @@ def prep_graph(G):
     G.remove_nodes_from(skipped)
     num_shells = find_center(G, standard_start)
     sort_nodes = sorted(G.nodes, key=lambda node: G.nodes[node]["shell"] )
+    for i, node in enumerate(sort_nodes):
+        G.nodes[node]["index"] = i
+    edge_start = torch.tensor([G.nodes[s]["index"] for s, _ in G.edges ])
+    edge_end = torch.tensor([G.nodes[e]["index"] for _, e in G.edges ])
     shell_list = torch.tensor([[G.nodes[node]["shell"] for node in sort_nodes]]).mT
     shell_nodes = {shell: list(members)
                     for shell, members
@@ -37,7 +41,7 @@ def prep_graph(G):
                                 [n for ns in neighbors(shell_node_lists, i) for n in ns])
         for i, shell in enumerate(shell_node_lists)]
     logger.info("Extracted circuit")
-    return G, sort_nodes, shell_list, shell_splits, connectivity_splits
+    return G, sort_nodes, shell_list, shell_splits, connectivity_splits, edge_start, edge_end
 
 def extract_shell_connectivity(G, left, right):
     # irregular adjacency list for two sets
@@ -77,41 +81,41 @@ def equidistant3d(a):
     # return torch.max(torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1])), torch.abs(a[:,:,2]))
 
 def euclidean(a):
-    return torch.linalg.norm(a, dim=2)
+    return torch.linalg.norm(a, dim=a.shape[-1])
+
     # return (a[:,:,0]**2 + a[:,:,1]**2)
 
 def euclidean3d(a):
-    return torch.linalg.norm(a, dim=2)
+    return torch.linalg.norm(a, dim=a.shape[-1])
     # return (a[:,:,0]**2 + a[:,:,1]**2 + a[:,:,2]**2)**0.5
 
-def hookes_potential(x):
-    return 0.5*(x-1)**2
+def hookes_potential(n):
+    return 0.5*(n-1)**2
 
 def hookes_force(x, n):
+    # n = ||x||
+    # v = x/n # unit vector
+    # f = v*(n-1) # force along unit vector
+    # f = x*(n-1)/n
     return x*(1-1/n)
 
-def cubic_potential(x):
-    return x**4-x**2+1
+def cubic_potential(n):
+    return n**4-n**2+1
 
 def cubic_force(x, n):
-    v = unit(x)
-    # TODO this should simplify to with v = x/n
-    return -v*4*(n**3-n)
+    # v = x/n
+    # f = v * (4*n**3 - 2*n)
+    return -2*x*(2*n**2-1)
 
-def charge_potential(x):
-    e = 0.01
-    return (x**4-2*x**2+1)/(x**2+e)
+e = 0.001
+
+def charge_potential(n):
+    return (n)**2 - 2 + 1/(n**2+e)
 
 def charge_force(x, n):
-    v = unit(x)
-    # TODO this should simplify to with v = x/n
-    return -v*4*(n**3-n)
-
-def unit(x):
-    angle = torch.atan2(x[:,:,1], x[:,:,0])
-    cos = torch.cos(angle)[:,:,None]
-    sin = torch.sin(angle)[:,:,None]
-    return torch.concat([cos, sin], 2)
+    # v = x/n
+    # f = du/dn = v * 2*n*(1 - 1/(n**2+e)**2)
+    return 2*x*(1 - 1/(n**2 + e)**2)
 
 def partial_interaction(dist, magnitude, kernel, force, direction):
     norm = magnitude(dist)
@@ -135,7 +139,37 @@ def adjacency_pairwise(adjacency, shell_coords):
         connected = adjacency[i][:,:,None] == 1
         yield dist*connected
 
-def loss(adjacency, shell_splits, coords, norm, potential, force):
+# split and calculate by shell, using shell and adjacent shell.
+def adjacency_interaction(G, adjacency, coords, shell_coords, norm, potential, force, direction):
+    attractor_dists = list(adjacency_pairwise(adjacency, shell_coords))
+    attractor_forces, attractor_potentials = \
+        interaction(attractor_dists,
+                    norm,
+                    potential,
+                    force,
+                    lambda n: n >= 1)
+    return attractor_forces, attractor_potentials
+
+# slice out edges and calculate only those distances
+def edge_interaction(G, start_i, end_i, coords, norm, potential, force, direction):
+    start = coords[start_i]
+    end = coords[end_i]
+    connected_dists = end-start
+    connected_norm = norm(connected_dists[:,None])
+    connected_active = direction(connected_norm)
+    potentials = potential(connected_norm) * connected_active
+    forces = force(connected_dists, connected_norm) * connected_active
+    buffered_potentials = torch.zeros(coords.shape[0], 1)
+    buffered_forces = torch.zeros((coords.shape[0], 2))
+
+    buffered_potentials[start_i] = potentials
+    buffered_potentials[end_i] = potentials
+    buffered_forces[start_i] = forces
+    buffered_forces[end_i] = -forces
+
+    return buffered_forces, buffered_potentials[:,0]
+
+def loss(adjacency, edge_start, edge_end, shell_splits, coords, norm, potential, force):
     shell_coords = torch.tensor_split(coords, shell_splits)
     repellor_dists = [pairwise_distance(shell, shell)
                       for shell in shell_coords]
@@ -148,14 +182,11 @@ def loss(adjacency, shell_splits, coords, norm, potential, force):
                     lambda n: n <= 1)
 
     # attract connected
-    # split and calculate by shell, using shell and adjacent.
-    attractor_dists = list(adjacency_pairwise(adjacency, shell_coords))
+    # calculating by edge experimentally is faster for larger designs
     attractor_forces, attractor_potentials = \
-        interaction(attractor_dists,
-                    norm,
-                    potential,
-                    force,
-                    lambda n: n >= 1)
+        edge_interaction(G, edge_start, edge_end, coords, norm, potential, force, lambda n: n>= 1)
+    # attractor_forces, attractor_potentials = \
+    #     adjacency_interaction(G, adjacency, coords, shell_coords, norm, potential, force, lambda n: n>= 1)
 
     potential = attractor_potentials + repellor_potentials
     total_potential = potential.sum()
@@ -201,9 +232,6 @@ def df_extract(nodes, coords, shell_list, repellor_forces, repellor_potential, a
     df.index.name = "node"
     return df
 
-def neg_symmetric(rows):
-    return np.tri(rows).T - np.tri(rows)
-
 if __name__ == "__main__":
     import argparse
     logger.info("Loading graph")
@@ -228,7 +256,7 @@ if __name__ == "__main__":
     if args.intermediate and os.path.exists(args.intermediate):
         os.remove(args.intermediate)
     G = read_yosys_json(args.graph, args.top)
-    G, sort_nodes, shell_list, shell_splits, adjacency_splits = prep_graph(G)
+    G, sort_nodes, shell_list, shell_splits, adjacency_splits, edge_start, edge_end = prep_graph(G)
     pd_adjacency = extract_adjacency(G, sort_nodes)
     adjacency = torch.tensor(pd_adjacency.to_numpy())
     coords = torch.randint(-4, 4, (len(G.nodes), 2), dtype=torch.float32, requires_grad=args.autograde)
@@ -248,9 +276,13 @@ if __name__ == "__main__":
     i = 0
     worst_total = -1
     while True:
-        attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential = loss(adjacency_splits, shell_splits, coords, distance, potential, force)
+        loop_t = time.time_ns()
+        attractor_forces, attractor_potentials, repellor_forces, repellor_potentials, total_potential = loss(adjacency_splits, edge_start, edge_end, shell_splits, coords, distance, potential, force)
+        setup_t = time.time_ns()
+
         if args.autograde:
             total_potential.backward()
+        backward_t = time.time_ns()
         with torch.no_grad():
             if args.autograde:
                 grad = -coords.grad
@@ -265,7 +297,6 @@ if __name__ == "__main__":
             else:
                 tick = args.tick
             damping = args.damping
-            logger.info("%d %f %f", i, tick, total)
             if args.intermediate:
                 df = df_extract(sort_nodes, coords, shell_list, repellor_forces, repellor_potentials, attractor_forces, attractor_potentials, velocity, grad, tick, i)
                 # Append iteration to rolling log
@@ -286,3 +317,5 @@ if __name__ == "__main__":
             if args.autograde:
                 coords.grad.zero_()
             i += 1
+            stream_t = time.time_ns()
+            logger.info("%d %f %f %f %f %f", i, tick, total, (setup_t-loop_t)/1e6, (backward_t-setup_t)/1e6, (stream_t-backward_t)/1e6)
