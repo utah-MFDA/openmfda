@@ -1,24 +1,25 @@
 TEE=>
 INPUTS = \
+benchmarks/multiplex_toilet.v \
 benchmarks/mnacidpro_pads_1.v \
 benchmarks/mnacidpro_pads_2.v \
 benchmarks/mnacidpro_pads_3.v \
-benchmarks/mnacidpro_pads_4.v
-# benchmarks/mRNAiso_pads_1.v \
-# benchmarks/mRNAiso_pads_2.v \
-# benchmarks/mRNAiso_pads_3.v \
-# benchmarks/mRNAiso_pads_4.v \
-# benchmarks/kinase_1.v \
-# benchmarks/kinase_2.v \
-# benchmarks/kinase_3.v \
-# benchmarks/kinase_4.v
-HORIZ_RESULTS = $(INPUTS:%.v=%.horizontal.scad)
-CYL_RESULTS = $(INPUTS:%.v=%.cylinder.scad)
-CUBE_RESULTS = $(INPUTS:%.v=%.cube.scad)
-EVERYTHING_RESULTS = $(INPUTS:%.v=%.everything.scad)
-EVERYTHING_CYLINDER_RESULTS = $(INPUTS:%.v=%.everything_cylinder.scad)
+benchmarks/mnacidpro_pads_4.v \
+benchmarks/mRNAiso_pads_1.v \
+benchmarks/mRNAiso_pads_2.v \
+benchmarks/mRNAiso_pads_3.v \
+benchmarks/mRNAiso_pads_4.v \
+benchmarks/kinase_1.v \
+benchmarks/kinase_2.v \
+benchmarks/kinase_3.v \
+benchmarks/kinase_4.v
 
-all: $(HORIZ_RESULTS) $(CYL_RESULTS) $(EVERYTHING_RESULTS)
+# poor results for: ica incpca mds_nm pca smacof_nm spectral
+DIM_ALGS=spectral mds smacof ica pca isomap incpca mds_nm smacof_nm grp
+RUNS = exact ilp torch simulation ${DIM_ALGS}
+RESULTS = $(foreach RUN,${RUNS},$(INPUTS:%.v=%.${RUN}.scad))
+
+all: $(RESULTS)
 
 benchmarks/library.v: benchmarks/kinase_activity.v benchmarks/kinase_pads.v benchmarks/mnacidpro.v benchmarks/mRNAiso.v benchmarks/mnacidpro_pads.v benchmarks/mRNAiso_pads.v benchmarks/ChIP.v benchmarks/ChIP_pads.v
 	cat $^ > $@
@@ -31,10 +32,10 @@ COMMON_ARGS ?= --log ${LEVEL} --timeout 240 --relax ${LIMIT}
 PYTHON3 = python3
 # PYTHON3 ?= retry -attempts 100 -max-time 600m python3
 
-%.mp4 %.gif: %.iter.csv %.json
+%.mp4 %.gif: %.iter.csv %.json render_flat.py
 	${PYTHON3} render_flat.py $< --graph $*.json --output $@
 
-%.scad: %.csv %.json
+%.scad: %.csv %.json render.py
 	${PYTHON3} render.py $< --graph $*.json --output $@
 
 benchmarks/picorv32.json: benchmarks/picorv32.v
@@ -43,6 +44,9 @@ benchmarks/picorv32.json: benchmarks/picorv32.v
 %.json: %.v benchmarks/library.v
 	yosys -p "read_verilog benchmarks/library.v; read_verilog $<; hierarchy -top thing; proc; flatten; clean -purge; write_json $@" $(TEE) $*.log
 
+%.pdf: %.json stats.py %.exact.csv %.torch.csv %.grp.csv %.mds.csv %.isomap.csv %.smacof.csv %.pca.csv %.spectral.csv
+	${PYTHON3} stats.py --graph $*.json --output $@ \
+		$(filter %.csv, $^)
 %.torch.json: %.json
 	cp $< $@
 
@@ -54,7 +58,10 @@ benchmarks/picorv32.json: benchmarks/picorv32.v
 
 %.exact.json: %.json
 	cp $< $@
-DIM_ALGS=spectral mds smacof ica pca isomap incpca mds_nm smacof_nm grp
+
+%.ilp.json: %.json
+	cp $< $@
+
 define DIMENSION =
 %.${1}.json: %.json
 	cp $$< $$@
@@ -75,7 +82,8 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch.csv \
 		--intermediate $*.torch.iter.csv \
-		--logfile $*.torch.log 2>&1 >> $*.torch.err.log
+		--autograde --dynamic --cutoff 1
+		# --logfile $*.torch.log 2>&1 >> $*.torch.err.log
 	date --iso-8601=seconds >> $*.torch.timer
 
 %.simulation.csv %.simulation.timer %.simulation.log %.simulation.iter.csv: %.simulation.json simulation.py
@@ -93,23 +101,32 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 		--output $*.horizontal.csv ${COMMON_ARGS} \
 		--logfile $*.horizontal.log \
 		--cache $*.horizontal.cache.csv  \
+		--flow_only \
 		--add_buffers \
 		--backtrack \
 		--minimize 2>&1 >> $*.horizontal.err.log
 	date --iso-8601=seconds >> $*.horizontal.timer
 
-%.exact.csv %.exact.timer %.exact.log: %.json frontier.py
-	date --iso-8601=seconds >> $*.everything.timer
-	${PYTHON3} frontier.py $< \
-		--orientation horizontal \
+%.exact.csv %.exact.timer %.exact.log: %.json exact.py
+	date --iso-8601=seconds >> $*.exact.timer
+	${PYTHON3} exact.py $< \
 		--output $@ \
 		--log ${LEVEL} \
 		--timeout 86400 \
-		--add_buffer \
-		--everything \
-		--cache $*.everything.csv \
-		--logfile $*.everything.log 2>&1 >> $*.everything.err.log
-	date --iso-8601=seconds >> $*.everything.timer
+		--cache $*.exact.cip \
+		--logfile $*.exact.log 2>&1 >> $*.exact.err.log
+	date --iso-8601=seconds >> $*.exact.timer
+
+%.ilp.csv %.ilp.timer %.ilp.log: %.json exact.py
+	date --iso-8601=seconds >> $*.ilp.timer
+	${PYTHON3} exact.py $< \
+		--output $@ \
+		--log ${LEVEL} \
+		--timeout 86400 \
+		--minimize \
+		--cache $*.ilp.cip \
+		--logfile $*.ilp.log 2>&1 >> $*.ilp.err.log
+	date --iso-8601=seconds >> $*.ilp.timer
 
 %.cylinder.csv %.cylinder.timer %.cylinder.log: %.json frontier.py
 	date --iso-8601=seconds >> $*.cylinder.timer
