@@ -13,6 +13,7 @@ cells = {
     "$_wire"
 }
 width=1
+c = 0.2
 config = solid2.ScadVariable("port_config", ports.create_port_config(width=width))
 
 def draw_channel(a, b, d):
@@ -37,22 +38,23 @@ def scad_render_nodes(G,nodes):
                 for n in G.neighbors(node)]
         cell = G.nodes[node]["cell"]
         alpha = 0.5
+        csize=0.5
         if cell == "$_output":
-            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.cube(width,center=True)))
+            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.cube(csize,center=True)))
         elif cell == "p_resistor_0":
-            block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.cube(width,center=True)))
+            block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.cube(csize,center=True)))
             # block = resistor.block_resistor(*ports[0:2], port_config=config)
         elif cell == "diffmix_25px_0":
-            block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.cube(width,center=True)))
+            block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.cube(csize,center=True)))
             # block = mixer.block_mixer(*ports[0:3], port_config=config)
         elif cell == "$_wire":
-            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(width,center=True)))
+            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(csize,center=True)))
         elif cell == "$_input":
-            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.cube(width,center=True)))
+            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.cube(csize,center=True)))
         elif cell == "$_dummy":
             continue
         else:
-            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.cube(width,center=True)))
+            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.cube(csize,center=True)))
         s = solid2.translate([width*(p+0.5) for p in position])(block)
 
         yield scad_comment(f"Node {cell} {node}")(s)
@@ -101,6 +103,16 @@ def render_scad(G, data, outfile):
     scad = solid2.translate([-0.5, -0.5, 0])(*final)
     scad.save_as_scad(outfile)
 
+# Normalize the distance based off mean edge length
+def edge_lengths(G, df):
+    na = df.to_numpy()
+    d = na[:,None,:] - na[None,:,:]
+    n = np.max(np.abs(d), axis=2)
+    # n = (d[:,:,0]**2 + d[:,:,1]**2 + d[:,:,2]**2)**0.5
+    m = pd.DataFrame(n, index=df.index, columns=df.index)
+    edges = np.array([m.loc[e] for e in G.edges])
+    return edges
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -115,6 +127,11 @@ if __name__ == "__main__":
                      usecols=["node", "x", "y", "z"],
                      index_col="node",
                      dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
+    edges = edge_lengths(G, df)
+    typical = edges.mean()+edges.std()
+    print(f"Scaling by {typical:03f}")
+    df /= typical
+    # Render
     for node, props in df.iterrows():
         G.nodes[node]["coordinates"] = (props["x"], props["y"], props["z"])
         if "shell" in props:

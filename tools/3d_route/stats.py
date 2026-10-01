@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("results", nargs="+")
 parser.add_argument("--graph")
 parser.add_argument("--top", default="thing")
+parser.add_argument("--output")
 args = parser.parse_args()
 
 G = read_yosys_json(args.graph, args.top)
@@ -47,8 +48,8 @@ assert(issymmetric(pd_adjacency.to_numpy()))
 assert(issymmetric(pd_antiadjacency.to_numpy()))
 assert(isnegsymmetric(pd_expected.to_numpy()))
 
-# magnitude = equidistant3d
-magnitude = euclidean3d
+magnitude = equidistant3d
+# magnitude = euclidean3d
 def force(x, u):
     return (x/u)*(u-1)
 loss_f = loss_brute(magnitude, hookes_potential, force, hookes_potential, force)
@@ -56,11 +57,18 @@ loss_f = loss_brute(magnitude, hookes_potential, force, hookes_potential, force)
 def read_results(filename):
     print(filename)
     df = pd.read_csv(filename,
+                     index_col="node",
                      usecols=["node", "x", "y", "z"],
                      dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
-    df.set_index("node")
     coords = torch.tensor(df[["x", "y", "z"]].to_numpy())
+    distance = magnitude(pairwise_distance(coords, coords))
+    pd_distance = pd.DataFrame(distance.cpu().numpy(), index=df.index, columns=df.index.tolist())
+    # print(pd_distance)
+    edges = np.array([pd_distance.loc[e] for e in G.edges])
+    typical = edges.mean()
+    print(f"scaling by {1/typical:0.3f}")
     velocity = torch.zeros(coords.shape)
+    coords /= typical
     attractor_dist, attractor_forces, attractor_potentials, repellor_dist, repellor_forces, repellor_potentials = \
         loss_f(adjacency, coords, 0)
     repellor_force_norm = magnitude(repellor_forces)
@@ -77,48 +85,58 @@ def read_results(filename):
     assert(isnegsymmetric3d(repellor_forces.cpu().numpy()))
     assert(issymmetric(repellor_force_norm.cpu().numpy()))
     assert(issymmetric(repellor_potentials.cpu().numpy()))
-    data = (repellor_force_norm,
-             repellor_dist_norm,
-             repellor_potentials,
-             attractor_force_norm,
-             attractor_dist_norm,
-             attractor_potentials)
+    data = (repellor_dist_norm,
+            repellor_force_norm,
+            repellor_potentials,
+            attractor_dist_norm,
+            attractor_force_norm,
+            attractor_potentials)
     return [pd.DataFrame(d.cpu().numpy(), index=df.index, columns=df.index.tolist())
             for d in data]
-
-    return (pd.DataFrame(repellor_force_norm.cpu().numpy(), index=df.index, columns=df.index.tolist()),
-             pd.DataFrame(repellor_dist_norm.cpu().numpy(), index=df.index, columns=df.index.tolist()),
-             pd.DataFrame(repellor_potentials.cpu().numpy(), index=df.index, columns=df.index.tolist()),
-             pd.DataFrame(attractor_force_norm.cpu().numpy(), index=df.index, columns=df.index.tolist()),
-             pd.DataFrame(attractor_dist_norm.cpu().numpy(), index=df.index, columns=df.index.tolist()),
-             pd.DataFrame(attractor_potentials.cpu().numpy(), index=df.index, columns=df.index.tolist()))
 
 data = [read_results(result) for result in args.results]
 
 c = 3
 r = math.ceil(len(args.results)//c) + 1
-fig, ax = plt.subplots(ncols=2*c, nrows=r, sharey=False, sharex=True)
+# fig, ax = plt.subplots(ncols=2*c, nrows=r, sharey=False, sharex=True)
+fig, (ay, az, ax)= plt.subplots(ncols=3)
+plt.rcParams['font.size'] = '9'
+plt.style.use('tableau-colorblind10')
+plt.rcParams['font.family'] = 'serif'
+
 for i, (f, d) in enumerate(zip(args.results, data)):
-    r_force, r_dist, r_potentials, a_force, a_dist, a_potentials = d
+    title = args.results[i][28:-4]
+    r_dist, r_force, r_potentials, a_dist, a_force, a_potentials = d
     potentials = r_potentials + a_potentials
     # row x col
-    ay = ax[i // c][2*(i % c)]
-    az = ax[i // c][2*(i % c)+1]
+    # ay = ax[i // c][2*(i % c)]
+    # az = ax[i // c][2*(i % c)+1]
 
-    p = potentials[pd_adjacency == 1]
+    edges = np.array([r_dist.loc[e] for e in G.edges])
+    edges.sort()
+    ay.plot(np.arange(edges.shape[0])/edges.shape[0], edges, label=title)
+    error = (r_dist/pd_expected).to_numpy().ravel()
+    error.sort()
+    error = error[error >= 0]
+    ax.plot(np.arange(error.shape[0])/error.shape[0], error, label=title)
 
-    # counts, bins = np.histogram((a_potentials).sum(axis=1), bins=20)
-    rcounts, rbins = np.histogram(potentials[pd_adjacency == 1].sum(axis=1), bins=16)
-    # ay.ecdf(a_potentials.sum(axis=1))
-    ay.stairs(rcounts, rbins)
+    potent = (potentials.sum(axis=1).sort_values())
+    az.plot(np.arange(potent.shape[0])/potent.shape[0], potent, label=title)
+ay.set_title("edge lengths")
+ay.set_ybound((0,2))
+ay.legend()
+az.set_title("total cell potential")
+az.legend()
+ax.set_title("expected distance error")
+ax.legend()
 
-    # anti = (r_dist[pd_antiadjacency == 1].sort_values())
-    # az.scatter(np.arange(anti.shape[0])/anti.shape[0], anti)
-    pcounts, pbins = np.histogram(potentials[pd_antiadjacency == 1].sum(axis=1), bins=16)
-    az.stairs(pcounts, pbins, color="orange")
-    # az.ecdf(r_potentials.sum(axis=1))
-    title = (args.results[i][28:-4])
-    ay.set_title(title + " connected")
-    az.set_title(title + " unconnected")
-plt.show()
+if args.output:
+    fig.set_figheight(6)
+    fig.set_figwidth(20)
+    fig.tight_layout()
+    plt.savefig(args.output)
+else:
+    mng = plt.get_current_fig_manager()
+    mng.full_screen_toggle()
+    plt.show()
 
