@@ -315,6 +315,7 @@ if __name__ == "__main__":
     parser.add_argument("--iterations", default=10000, type=int)
     parser.add_argument("--log", default="INFO")
     parser.add_argument("--logfile")
+    parser.add_argument("--loss")
     parser.add_argument("--graph")
     parser.add_argument("--top", default="thing")
     parser.add_argument("--distance", choices=["equidistant", "euclidean"], default="euclidean")
@@ -352,6 +353,8 @@ if __name__ == "__main__":
     start_t = time.time_ns()
     run_t = 0
     logger.info("Startup time %f", (start_t-init_t)/1e6)
+    if args.loss:
+        loss_log = open(args.loss, "w")
     while True:
         loop_t = time.time_ns()
         total_potential = model()
@@ -402,5 +405,8 @@ if __name__ == "__main__":
                 logger.info("\t".join(stats))
                 break
             report_t = time.time_ns()
-            logger.info("%d %f %f %f %f %f %f", i, tick, total, (setup_t-loop_t)/1e6, (backward_t-setup_t)/1e6, (stream_t-backward_t)/1e6, (report_t-stream_t)/1e6)
+            if args.loss:
+                print(i, tick, total, (setup_t-loop_t)/1e6, (backward_t-setup_t)/1e6, (stream_t-backward_t)/1e6, (report_t-stream_t)/1e6, sep=",", file=loss_log)
             i += 1
+    if args.loss:
+        loss_log.close()
