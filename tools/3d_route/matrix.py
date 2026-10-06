@@ -20,21 +20,12 @@ class SpringModel(torch.nn.Module):
     def force(self, distance, norm):
         raise NotImplementedError()
 
-    def __init__(self, H, init_velocity=1, init_coords=None):
+    def __init__(self, G, init_velocity, init_coords):
         super().__init__()
-        # Strip out skipped nodes from control lines
-        self.G = H.copy()
-        # skipped = [node for node in self.G.nodes if standard_skip(self.G, node)]
-        skipped = []
-        if skipped:
-            logger.warning("Skipping %d nodes from graph", len(skipped))
-        self.G.remove_nodes_from(skipped)
-        if init_coords is None:
-            init_coords = torch.randint(-4, 4, (len(self.G.nodes), 2), dtype=torch.float32)
-        else:
-            assert(init_coords.shape[0] == len(self.G.nodes))
+        self.G = G
         self.coords = torch.nn.Parameter(init_coords)
-        self.velocity = init_velocity*(torch.rand((self.coords.shape)) - 0.5)
+        self.velocity = init_velocity
+        self.heat_velocity = torch.zeros(self.velocity.shape)
         # Calculate shells
         num_shells = find_center(self.G, standard_start)
         # This is a fixed ordering for use as index
@@ -42,7 +33,6 @@ class SpringModel(torch.nn.Module):
         for i, node in enumerate(self.sort_nodes):
             self.G.nodes[node]["index"] = i
         self.shell_list = torch.tensor([[self.G.nodes[node]["shell"] for node in self.sort_nodes]]).mT
-        self.adjacency = torch.tensor(extract_adjacency(self.G, self.sort_nodes).to_numpy())
 
         # Create tensor for the coord indices for start and end points of edge.
         self.edge_start = torch.tensor([self.G.nodes[s]["index"]
@@ -71,22 +61,26 @@ class SpringModel(torch.nn.Module):
     def forward(self):
         self.repellor_dists = [pairwise_distance(shell, shell)
                               for shell in self.shell_coords]
-        self.repellor_norms = map(self.norm, self.repellor_dists)
+        self.repellor_norms = [self.norm(dist) for dist in self.repellor_dists]
         # repel overlaps
         self.repellor_forces, self.repellor_potentials = \
-            self.interaction(self.repellor_dists, self.repellor_norms, lambda n: n <= 1)
-
+            self.interaction(self.repellor_dists,
+                             self.repellor_norms,
+                             lambda n: n <= 1)
         # attract connected
         self.attractor_forces, self.attractor_potentials = \
             self.edge_interaction(lambda n: n >= 1)
 
         self.total_potential = self.attractor_potentials + self.repellor_potentials
+        self.kinetic = 0.5*self.norm(self.velocity)**2
+        self.heat = 0.5*self.norm(self.heat_velocity)**2
         return self.total_potential.sum()
 
     def partial_interaction(self, dist, norm, direction):
         conditional = direction(norm)
-        conditional.diagonal().zero_()
         potentials = self.potential(norm)*conditional
+        potentials.diagonal().zero_()
+        torch.nan_to_num_(potentials, 0)
         vectors = self.force(dist, norm[:,:,None])*conditional[:,:,None]
         return vectors, potentials
 
@@ -108,12 +102,12 @@ class SpringModel(torch.nn.Module):
     # split and calculate by shell, using shell and adjacent shell.
     def adjacency_interaction(self):
         attractor_dists = list(self.adjacency_pairwise())
-        attractor_norm = map(self.norm, attractor_dists)
+        attractor_norm = [self.norm(dist) for dist in attractor_dists]
         attractor_forces, attractor_potentials = \
             self.interaction(attractor_dists, attractor_norm, lambda n: n>=1)
         return (attractor_dists,
                 attractor_norm,
-                attractor_forces,
+                -attractor_forces,
                 attractor_potentials)
 
     # slice out edges and calculate only those distances
@@ -121,7 +115,7 @@ class SpringModel(torch.nn.Module):
         start = self.coords[self.edge_start]
         end = self.coords[self.edge_end]
         connected_dists = end-start
-        connected_norm = self.norm(connected_dists[:,None])
+        connected_norm = -self.norm(connected_dists[:,None])
         connected_active = direction(connected_norm)
         potentials = self.potential(connected_norm) * connected_active
         forces = self.force(connected_dists, connected_norm) * connected_active
@@ -150,6 +144,7 @@ class SpringModel(torch.nn.Module):
                         self.velocity,
                         torch.full((self.coords.shape[0], 1), rate),
                         torch.full((self.coords.shape[0], 1), iter))
+        # logger.info("\t".join([str(d.shape) for d in data_points]))
         columns = ["x", "y", "z", "afx", "afy", "au", "rfx", "rfy", "ru", "gx", "gy", "dx", "dy", "rate", "iter"]
         data = torch.concat(data_points, dim=1)
         df = pd.DataFrame(data.cpu().numpy(), index=self.sort_nodes, columns=columns)
@@ -170,6 +165,23 @@ class SpringModel(torch.nn.Module):
         assert(issymmetric(self.repellor_force_norm.cpu().numpy()))
         assert(issymmetric(self.repellor_potentials.cpu().numpy()))
 
+    def step(self, autograde, tick, damping):
+        if autograde:
+            for coords in self.parameters():
+                self.grad = coords.grad
+                heat_force = self.velocity * (1 - damping)
+                self.velocity += -coords.grad * tick - heat_force
+                self.heat_velocity += self.norm(heat_force) * tick
+                coords += self.velocity * tick
+            self.zero_grad()
+        else:
+            heat_force = -self.velocity * (1-damping)
+            forces = self.repellor_forces + self.attractor_forces + heat_force
+            self.velocity += forces * tick
+            self.coords += self.velocity * tick
+            self.heat_velocity += -heat_force * tick
+            self.grad = forces
+
 def issymmetric(a):
     return np.nan_to_num(a.T - a).sum() == 0
 
@@ -183,41 +195,62 @@ def isnegsymmetric3d(a):
     return isnegsymmetric(x) and isnegsymmetric(y) and isnegsymmetric(z)
 
 class BruteSpringModel(SpringModel):
+    def __init__(self, H, init_velocity, init_coords):
+        super().__init__(H, init_velocity, init_coords)
+        self.adjacency = torch.tensor(extract_adjacency(self.G, self.sort_nodes).to_numpy())
+        # This is used to break zero force vectors
+        self.noise_dist = (torch.rand((self.coords.shape[0], self.coords.shape[0], self.coords.shape[1]))-0.5)*0.000001
+        self.noise_dist[self.noise_dist == 0] += 0.0000001
+        self.noise_norm = torch.rand((self.coords.shape[0], self.coords.shape[0]))*0.000001
+        self.noise_norm[self.noise_norm == 0] += 0.0000001
     # Does a brute force pairwise calculation.
     # Seems to be quite performant compared with piecewise, there is definitely some overhead being saved with the simpler calculation
     # useful for calculating potentials during analysis on the dimension reduction case without shells
     def forward(self):
-        self.all_dists = pairwise_distance(self.coords, self.coords)
-        self.all_norms = self.norm(self.all_dists)
+        self.all_dists = self.noise_dist + pairwise_distance(self.coords, self.coords)
+        self.all_norms = self.noise_norm + self.norm(self.all_dists)
         # repel overlaps
         self.repellor_dists = self.all_dists
         self.repellor_norms = self.all_norms
-
-        self.repellor_forces, self.repellor_potentials = \
+        repellor_forces, repellor_potentials = \
             self.partial_interaction(self.repellor_dists, self.repellor_norms, lambda n: n <= 1)
+        self.repellor_forces = repellor_forces.sum(dim=1)
+        self.repellor_potentials = repellor_potentials.sum(dim=1)
 
         # attract connected
         self.attractor_dists = self.adjacency[:,:,None]*self.all_dists
         self.attractor_norms = self.adjacency*self.all_norms
-        self.attractor_forces, self.attractor_potentials = \
+        attractor_forces, attractor_potentials = \
             self.partial_interaction(self.attractor_dists, self.attractor_norms,
                              lambda n: n >= 1)
+        self.attractor_forces = attractor_forces.sum(dim=1)
+        self.attractor_potentials = attractor_potentials.sum(dim=1)
         self.total_potential = self.attractor_potentials + self.repellor_potentials
+        self.kinetic = 0.5*self.norm(self.velocity)**2
+        self.heat = 0.5*self.norm(self.heat_velocity)**2
         return self.total_potential.sum()
 
 class EuclideanSpringModel(SpringModel):
     def norm(self, distance):
-        return euclidean(distance)
+        return torch.linalg.norm(distance, dim=len(distance.shape)-1)
 
 class EquidistantSpringModel(SpringModel):
     def norm(self, distance):
-        return equidistant(distance)
+        return torch.linalg.norm(distance, ord=np.inf, dim=2)
 
 class HookesSpringModel(SpringModel):
     def potential(self, norm):
-        return hookes_potential(norm)
+        return 0.5*(norm-1)**2
+
     def force(self, distance, norm):
-        return hookes_force(distance, norm)
+        # n = ||x||
+        # v = x/n # unit vector
+        # f = v*(n-1) # force along unit vector
+        # f = x*(n-1)/n
+        force = -distance*(1-1/norm)
+        force.diagonal().zero_()
+        torch.nan_to_num_(force, 0)
+        return force
 
 class EuclideanHookesBruteSpringModel(EuclideanSpringModel, HookesSpringModel, BruteSpringModel):
     pass
@@ -256,157 +289,184 @@ def extract_adjacency(G, sort_nodes):
 def pairwise_distance(a,b):
     return a[:,None,:]- b[None,:,:]
 
-def equidistant(a):
-    return torch.linalg.norm(a, ord=np.inf, dim=2)
-    # return torch.amax(torch.abs(a), dim=2)
-
-def equidistant3d(a):
-    return torch.linalg.norm(a, ord=np.inf, dim=2)
-    # return torch.amax(torch.abs(a), dim=2)
-    # return torch.max(torch.max(torch.abs(a[:,:,0]), torch.abs(a[:,:,1])), torch.abs(a[:,:,2]))
-
-def euclidean(a):
-    return torch.linalg.norm(a, dim=len(a.shape)-1)
-
-    # return (a[:,:,0]**2 + a[:,:,1]**2)
-
-def euclidean3d(a):
-    return torch.linalg.norm(a, dim=2)
-    # return (a[:,:,0]**2 + a[:,:,1]**2 + a[:,:,2]**2)**0.5
-
-def hookes_potential(n):
-    return 0.5*(n-1)**2
-
-def hookes_force(x, n):
-    # n = ||x||
-    # v = x/n # unit vector
-    # f = v*(n-1) # force along unit vector
-    # f = x*(n-1)/n
-    return x*(1-1/n)
-
-def cubic_potential(n):
-    return n**4-n**2+1
-
-def cubic_force(x, n):
-    # v = x/n
-    # f = v * (4*n**3 - 2*n)
-    return -2*x*(2*n**2-1)
-
-e = 0.001
-
-def charge_potential(n):
-    return (n)**2 - 2 + 1/(n**2+e)
-
-def charge_force(x, n):
-    # v = x/n
-    # f = du/dn = v * 2*n*(1 - 1/(n**2+e)**2)
-    return 2*x*(1 - 1/(n**2 + e)**2)
-
 def neg_symmetric(a):
     return np.tri(a).T - np.tri(a)
+
+class Runner():
+    def __init__(self):
+        init_t = time.time_ns()
+        self.models = {
+            "equidistant": EquidistantHookesSpringModel,
+            "euclidean": EuclideanHookesBruteSpringModel
+        }
+        self.args = self.parse_args()
+        self.setup_logging()
+        self.setup_graph()
+        self.setup_model()
+        self.setup_intermediate_log()
+        self.setup_energy_log()
+        self.iter = 0
+        self.start_t = time.time_ns()
+        logger.info("Startup time %f", (self.start_t-init_t)/1e6)
+
+    def close(self):
+        if self.energy_log:
+            self.energy_log.close()
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--output")
+        parser.add_argument("--intermediate")
+        parser.add_argument("--cutoff", default=0, type=float)
+        parser.add_argument("--iterations", default=2e3, type=int)
+        parser.add_argument("--log", default="INFO")
+        parser.add_argument("--logfile")
+        parser.add_argument("--energy")
+        parser.add_argument("--graph")
+        parser.add_argument("--top", default="thing")
+        parser.add_argument("--distance", choices=self.models.keys(), default="euclidean")
+        parser.add_argument("--tick", type=float, default=1e-3)
+        parser.add_argument("--damping", type=float, default=0.9999)
+        parser.add_argument("--autograde", action="store_true")
+        parser.add_argument("--dynamic", action="store_true")
+        parser.add_argument("--dyn_range", type=float, default=1000)
+        parser.add_argument("--dyn_height", type=float, default=50)
+        parser.add_argument("--init_vel", type=float, default=1)
+        parser.add_argument("--init_spread", type=float, default=4)
+        parser.add_argument("--device", default="cuda")
+        return parser.parse_args()
+
+    def setup_energy_log(self):
+        if self.args.energy:
+            self.energy_log = open(self.args.energy, "w")
+        else:
+            self.energy_log = None
+
+    def setup_intermediate_log(self):
+        if self.args.intermediate and os.path.exists(self.args.intermediate):
+            os.remove(self.args.intermediate)
+
+    def setup_model(self):
+        # torch.autograd.set_detect_anomaly(True)
+        torch.set_default_device(self.args.device)
+        self.init_t = time.time_ns()
+        init_coords = self.args.init_spread*2*(torch.rand((len(self.G.nodes), 2), dtype=torch.float32)-0.5)
+        init_velocity = self.args.init_vel*2*(torch.rand(init_coords.shape) - 0.5)
+        self.model = self.models[self.args.distance](self.G, init_velocity, init_coords)
+        logger.info("CUDA allocated %f reserved %f", torch.cuda.memory_allocated(), torch.cuda.memory_reserved())
+
+    def setup_graph(self):
+        self.H = read_yosys_json(self.args.graph, self.args.top)
+        self.G = strip_graph(self.H)
+        for node, props in self.G.nodes.items():
+            props["shell"] = 0
+
+    def setup_logging(self):
+        log_format = "%(asctime)s %(message)s"
+        if self.args.logfile:
+            logging.basicConfig(filename=self.args.logfile, level=self.args.log, format=log_format)
+        elif self.args.log:
+            logging.basicConfig(level=self.args.log, format=log_format)
+
+
+    def loop(self):
+        self.event_t = [time.time_ns()]
+        with torch.no_grad():
+            # Run a simulation tick
+            total_potential = self.model.forward()
+            self.total_p = total_potential.item()
+            self.total_k = self.model.kinetic.sum().item()
+            self.total_h = self.model.heat.sum().item()
+            self.event_t.append(time.time_ns())
+
+            if self.args.autograde:
+                total_potential.backward()
+            self.event_t.append(time.time_ns())
+
+            # Stream iteration
+            self.last_tick = self.calculate_tick_rate()
+            self.model.step(self.args.autograde, tick=self.last_tick, damping=self.args.damping)
+            self.event_t.append(time.time_ns())
+
+            # Write out any tracked state
+            self.write_intermediate_state()
+            self.event_t.append(time.time_ns())
+
+            self.write_energy_stats()
+
+            # Handle completion
+            if self.is_finished():
+                self.write_results()
+                self.log_final_stats()
+                return True
+        self.iter += 1
+        return False
+
+    def is_finished(self):
+        return np.isnan(self.total_k) or np.isnan(self.total_p)\
+            or np.isinf(self.total_k) or np.isinf(self.total_p)\
+            or (self.total_k == 0 and self.iter > 10) \
+            or (self.total_k == 0 and self.total_p == 0) \
+            or self.total_p <= self.args.cutoff \
+            or (self.args.iterations > 0 and self.iter > self.args.iterations - 1)
+
+    def calculate_tick_rate(self):
+        if self.args.dynamic:
+            d = self.args.dyn_height
+            c = self.args.dyn_range
+            tick = self.args.tick * (1 + 1/((self.total_k/c)**2+1/d))
+            # tick = self.args.tick * (1 + 100*total_e/total_k)
+        else:
+            tick = self.args.tick
+        return tick
+
+
+    def write_intermediate_state(self):
+        # Append iteration to rolling log
+        if self.args.intermediate:
+            df = self.model.df_extract(self.model.grad, self.last_tick, self.iter)
+            df.to_csv(self.args.intermediate, mode='a', header=not os.path.exists(self.args.intermediate))
+
+    def write_results(self):
+        df = self.model.df_extract(self.model.grad, self.last_tick, self.iter)
+        # write out results
+        df.to_csv(self.args.output, header=True)
+
+    def log_final_stats(self):
+        elapsed = (time.time_ns()-self.start_t)/1e6
+        stats = [
+            f"startup {(self.start_t-self.init_t)/1e6:0.1f}ms",
+            f"elapsed {elapsed/1e3:0.3f}s",
+            f"iterations {self.iter}",
+            f"average iteration {elapsed/self.iter:0.3f}ms"]
+        logger.info("\t".join(stats))
+        energy = [
+            f"final potential {self.total_p:0.3f}",
+            f"final kinetic {self.total_k:0.3f}",
+            f"final heat {self.total_h:0.3f}",
+        ]
+        logger.info("\t".join(energy))
+
+    def write_energy_stats(self):
+        if self.iter == 0:
+            stats = [self.total_p, self.total_k, self.total_h, self.total_p + self.total_k + self.total_h]
+            logger.info("\t".join(f"{i:0.3f}" for i in stats))
+        if self.energy_log:
+            delta_t = [(b-a)/1e6 for a, b in zip(self.event_t, self.event_t[1:])]
+            stats = [self.total_p,
+                    self.total_k,
+                    self.total_h,
+                    self.total_p+ self.total_k + self.total_h,
+                    self.model.repellor_forces.sum().item(),
+                    self.model.attractor_forces.sum().item(),
+                    *delta_t]
+            print(self.iter, self.last_tick, "\t".join(str(i) for i in stats), sep="\t", file=self.energy_log, flush=True)
+
 
 if __name__ == "__main__":
     import argparse
     logger.info("Loading graph")
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output")
-    parser.add_argument("--intermediate")
-    parser.add_argument("--cutoff", default=0, type=float)
-    parser.add_argument("--iterations", default=10000, type=int)
-    parser.add_argument("--log", default="INFO")
-    parser.add_argument("--logfile")
-    parser.add_argument("--loss")
-    parser.add_argument("--graph")
-    parser.add_argument("--top", default="thing")
-    parser.add_argument("--distance", choices=["equidistant", "euclidean"], default="euclidean")
-    parser.add_argument("--tick", type=float, default=1e-3)
-    parser.add_argument("--damping", type=float, default=0.995)
-    parser.add_argument("--autograde", action="store_true")
-    parser.add_argument("--dynamic", action="store_true")
-    parser.add_argument("--dyn_range", type=float, default=1000)
-    parser.add_argument("--dyn_height", type=float, default=50)
-    parser.add_argument("--initvel", type=float, default=10)
-    parser.add_argument("--device", default="cuda")
-
-    args = parser.parse_args()
-    log_format = "%(asctime)s %(message)s"
-    if args.logfile:
-        logging.basicConfig(filename=args.logfile, level=args.log, format=log_format)
-    elif args.log:
-        logging.basicConfig(level=args.log, format=log_format)
-
-    if args.intermediate and os.path.exists(args.intermediate):
-        os.remove(args.intermediate)
-
-    torch.set_default_device(args.device)
-
-    G = read_yosys_json(args.graph, args.top)
-    # torch.autograd.set_detect_anomaly(True)
-    init_t = time.time_ns()
-    i = 0
-    if args.distance == "equidistant":
-        model = EquidistantHookesSpringModel(G, args.initvel)
-    elif args.distance == "euclidean":
-        model = EuclideanHookesSpringModel(G, args.initvel)
-    else:
-        raise NotImplementedError()
-    start_t = time.time_ns()
-    run_t = 0
-    logger.info("Startup time %f", (start_t-init_t)/1e6)
-    if args.loss:
-        loss_log = open(args.loss, "w")
-    while True:
-        loop_t = time.time_ns()
-        total_potential = model()
-        setup_t = time.time_ns()
-        total_potential.backward()
-        backward_t = time.time_ns()
-        with torch.no_grad():
-            total = total_potential.item()
-            if args.dynamic:
-                c=args.dyn_height
-                d=args.dyn_range
-                tick = args.tick * (1 + 1/((total/c)**2+1/d))
-            else:
-                tick = args.tick
-            damping = args.damping
-            if args.autograde:
-                for coords in model.parameters():
-                    grad = coords.grad
-                    model.velocity -= coords.grad * tick
-                    model.velocity *= damping
-                    coords += model.velocity * tick
-                model.zero_grad()
-            else:
-                forces = model.attractor_forces + model.repellor_forces
-                model.velocity -= forces * tick
-                model.velocity *= damping
-                model.coords += model.velocity * tick
-
-            stream_t = time.time_ns()
-            run_t += stream_t - loop_t
-            if args.intermediate:
-                df = model.df_extract(grad, tick, i)
-                # Append iteration to rolling log
-                df.to_csv(args.intermediate, mode='a', header=not os.path.exists(args.intermediate))
-
-            if total_potential < args.cutoff or (args.iterations > 0 and i > args.iterations - 1):
-                df = model.df_extract(grad, tick, i)
-                # write out results
-                df.to_csv(args.output, header=True)
-                elapsed = (time.time_ns()-start_t)/1e6
-                stats = [
-                    f"startup {(start_t-init_t)/1e6:0.1f}ms",
-                    f"elapsed {elapsed/1e3:0.3f}s",
-                    f"iterations {i}",
-                    f"average iteration {elapsed/i:0.3f}ms",
-                    f"final potential {total_potential:0.3f}"
-                ]
-                logger.info("\t".join(stats))
-                break
-            report_t = time.time_ns()
-            if args.loss:
-                print(i, tick, total, (setup_t-loop_t)/1e6, (backward_t-setup_t)/1e6, (stream_t-backward_t)/1e6, (report_t-stream_t)/1e6, sep=",", file=loss_log)
-            i += 1
-    if args.loss:
-        loss_log.close()
+    runner = Runner()
+    done = runner.loop()
+    while not done:
+        done = runner.loop()

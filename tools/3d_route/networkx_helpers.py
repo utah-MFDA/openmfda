@@ -433,3 +433,11 @@ def calculate_distances(coords):
     dz = coords["z"].to_numpy()[:, None] - coords["z"].to_numpy()
     return (dx**2 + dy**2 + dz**2)**0.5
 
+def strip_graph(H):
+    # Strip out skipped nodes from control lines
+    G = H.copy()
+    skipped = [node for node in G.nodes if standard_skip(G, node)]
+    if skipped:
+        logger.warning("Skipping %d nodes from graph", len(skipped))
+    G.remove_nodes_from(skipped)
+    return G
