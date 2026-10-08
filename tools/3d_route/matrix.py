@@ -82,6 +82,8 @@ class SpringModel(torch.nn.Module):
         potentials.diagonal().zero_()
         torch.nan_to_num_(potentials, 0)
         vectors = self.force(dist, norm[:,:,None])*conditional[:,:,None]
+        vectors.diagonal().zero_()
+        torch.nan_to_num_(vectors, 0)
         return vectors, potentials
 
     def interaction(self, dists, norms, direction):
@@ -107,7 +109,7 @@ class SpringModel(torch.nn.Module):
             self.interaction(attractor_dists, attractor_norm, lambda n: n>=1)
         return (attractor_dists,
                 attractor_norm,
-                -attractor_forces,
+                attractor_forces,
                 attractor_potentials)
 
     # slice out edges and calculate only those distances
@@ -115,18 +117,19 @@ class SpringModel(torch.nn.Module):
         start = self.coords[self.edge_start]
         end = self.coords[self.edge_end]
         connected_dists = end-start
-        connected_norm = -self.norm(connected_dists[:,None])
+        connected_norm = self.norm(connected_dists[:,None])
         connected_active = direction(connected_norm)
         potentials = self.potential(connected_norm) * connected_active
+        torch.nan_to_num_(potentials, 0)
         forces = self.force(connected_dists, connected_norm) * connected_active
+        torch.nan_to_num_(forces, 0)
         buffered_potentials = torch.zeros(self.coords.shape[0], 1)
-
         buffered_forces = torch.zeros((self.coords.shape[0], 2))
 
         buffered_potentials[self.edge_start] = potentials
         buffered_potentials[self.edge_end] = potentials
-        buffered_forces[self.edge_start] = forces
-        buffered_forces[self.edge_end] = -forces
+        buffered_forces[self.edge_start] = -forces
+        buffered_forces[self.edge_end] = forces
 
         return buffered_forces, buffered_potentials[:,0]
 
@@ -176,10 +179,12 @@ class SpringModel(torch.nn.Module):
             self.zero_grad()
         else:
             heat_force = -self.velocity * (1-damping)
-            forces = self.repellor_forces + self.attractor_forces + heat_force
+            forces = self.repellor_forces + self.attractor_forces #+ heat_force
+            # forces = self.attractor_forces + heat_force
             self.velocity += forces * tick
+            self.velocity *= 0.99
             self.coords += self.velocity * tick
-            self.heat_velocity += -heat_force * tick
+            self.heat_velocity += torch.abs(heat_force) * tick
             self.grad = forces
 
 def issymmetric(a):
@@ -248,8 +253,6 @@ class HookesSpringModel(SpringModel):
         # f = v*(n-1) # force along unit vector
         # f = x*(n-1)/n
         force = -distance*(1-1/norm)
-        force.diagonal().zero_()
-        torch.nan_to_num_(force, 0)
         return force
 
 class EuclideanHookesBruteSpringModel(EuclideanSpringModel, HookesSpringModel, BruteSpringModel):
@@ -297,7 +300,8 @@ class Runner():
         init_t = time.time_ns()
         self.models = {
             "equidistant": EquidistantHookesSpringModel,
-            "euclidean": EuclideanHookesBruteSpringModel
+            "euclidean": EuclideanHookesSpringModel,
+            "euclidean_brute": EuclideanHookesBruteSpringModel,
         }
         self.args = self.parse_args()
         self.setup_logging()
@@ -358,8 +362,6 @@ class Runner():
     def setup_graph(self):
         self.H = read_yosys_json(self.args.graph, self.args.top)
         self.G = strip_graph(self.H)
-        for node, props in self.G.nodes.items():
-            props["shell"] = 0
 
     def setup_logging(self):
         log_format = "%(asctime)s %(message)s"
@@ -371,9 +373,15 @@ class Runner():
 
     def loop(self):
         self.event_t = [time.time_ns()]
-        with torch.no_grad():
-            # Run a simulation tick
+        if self.args.autograde:
+            # Run a simulation tick with gradient
             total_potential = self.model.forward()
+        else:
+            with torch.no_grad():
+                # Run a simulation tick without gradient
+                total_potential = self.model.forward()
+
+        with torch.no_grad():
             self.total_p = total_potential.item()
             self.total_k = self.model.kinetic.sum().item()
             self.total_h = self.model.heat.sum().item()
@@ -405,10 +413,9 @@ class Runner():
     def is_finished(self):
         return np.isnan(self.total_k) or np.isnan(self.total_p)\
             or np.isinf(self.total_k) or np.isinf(self.total_p)\
-            or (self.total_k == 0 and self.iter > 10) \
-            or (self.total_k == 0 and self.total_p == 0) \
-            or self.total_p <= self.args.cutoff \
-            or (self.args.iterations > 0 and self.iter > self.args.iterations - 1)
+            or (self.total_k + self.total_p < self.args.cutoff) \
+            or (self.args.iterations > 0 and self.iter > self.args.iterations - 1) \
+            # or (self.total_k + self.total_p > 2*self.total_e) \
 
     def calculate_tick_rate(self):
         if self.args.dynamic:
@@ -449,18 +456,20 @@ class Runner():
 
     def write_energy_stats(self):
         if self.iter == 0:
-            stats = [self.total_p, self.total_k, self.total_h, self.total_p + self.total_k + self.total_h]
+            self.total_e = self.total_p + self.total_k
+            stats = [self.total_p, self.total_k, self.total_h, self.total_e]
             logger.info("\t".join(f"{i:0.3f}" for i in stats))
+            print("iter", "tick", "potential", "kinetic", "heat", "repel_force", "attract_force", "forward_t", "backward_t", "stream_t", "itermediate_t", sep="\t", file=self.energy_log, flush=True)
         if self.energy_log:
             delta_t = [(b-a)/1e6 for a, b in zip(self.event_t, self.event_t[1:])]
-            stats = [self.total_p,
+            stats = [self.last_tick,
+                    self.total_p,
                     self.total_k,
-                    self.total_h,
-                    self.total_p+ self.total_k + self.total_h,
-                    self.model.repellor_forces.sum().item(),
-                    self.model.attractor_forces.sum().item(),
+                    self.total_e - self.total_p - self.total_k,
+                    self.model.norm(self.model.repellor_forces).sum().item(),
+                    self.model.norm(self.model.attractor_forces).sum().item(),
                     *delta_t]
-            print(self.iter, self.last_tick, "\t".join(str(i) for i in stats), sep="\t", file=self.energy_log, flush=True)
+            print(self.iter, "\t".join(f"{i:0.5f}" for i in stats), sep="\t", file=self.energy_log, flush=True)
 
 
 if __name__ == "__main__":
