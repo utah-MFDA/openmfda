@@ -9,11 +9,11 @@ from networkx_helpers import *
 mixer = solid2.import_scad("3d_blocks/block_mixer.scad")
 ports = solid2.import_scad("3d_blocks/ports.scad")
 resistor = solid2.import_scad("3d_blocks/block_resistor.scad")
+interconnect = solid2.import_scad("openmfda/components/interconnect.scad")
 cells = {
     "$_wire"
 }
-width=1
-c = 0.2
+width=175
 config = solid2.ScadVariable("port_config", ports.create_port_config(width=width))
 
 def draw_channel(a, b, d):
@@ -27,30 +27,43 @@ def draw_channel(a, b, d):
 
 def scad_render_nodes(G,nodes):
     for node in nodes:
-        if "coordinates" not in G.nodes[node]:
+        props = G.nodes[node]
+        if "coordinates" not in props:
             continue
 
-        position = G.nodes[node]["coordinates"]
+        position = props["coordinates"]
         if len(position) == 2:
-            position = [G.nodes[node]["shell"]] + position
+            position = position + [props["shell"]]
 
         ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
                 for n in G.neighbors(node)]
-        cell = G.nodes[node]["cell"]
-        alpha = 0.5
-        csize=0.5
+        cell = props["cell"]
+        alpha = 0.2
+        csize=width
         if cell == "$_output":
-            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.cube(csize,center=True)))
+            block = solid2.background(solid2.color("pink", alpha=alpha)(solid2.cube(csize)))
         elif cell == "p_resistor_0":
-            block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.cube(csize,center=True)))
-            # block = resistor.block_resistor(*ports[0:2], port_config=config)
+            # block = solid2.background(solid2.color("blue", alpha=alpha)(solid2.cube(csize)))
+            print(props)
+            num_blocks = int(props["attributes"]["block"], 2)
+            major_h = int(props["attributes"]["major_h"], 2)
+            major_w = int(props["attributes"]["major_w"], 2)
+            minor_h = int(props["attributes"]["minor_h"], 2)
+            minor_w = int(props["attributes"]["minor_w"], 2)
+            channel_length = int(props["attributes"]["channel_length"], 2)
+            block = resistor.block_resistor(*ports[0:2],
+                                             port_config=config,
+                                             blocks=num_blocks,
+                                             major_channel=[major_w, major_h],
+                                             minor_channel=[minor_w, minor_h],
+                                             channel_length=channel_length)
         elif cell == "diffmix_25px_0":
-            block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.cube(csize,center=True)))
-            # block = mixer.block_mixer(*ports[0:3], port_config=config)
+            # block = solid2.background(solid2.color("orange", alpha=alpha)(solid2.cube(csize)))
+            block = mixer.block_mixer(*ports[0:3], port_config=config)
         elif cell == "$_wire":
-            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(csize,center=True)))
+            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(csize)))
         elif cell == "$_input":
-            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.cube(csize,center=True)))
+            block = solid2.background(solid2.color("green", alpha=alpha)(solid2.cube(csize)))
         elif cell == "$_dummy":
             continue
         else:
@@ -82,7 +95,7 @@ def render_shell(G, shell, nodes):
                 for end in G.adj[start]
                 if start < end]
     scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes)))
-    scad_edges = scad_comment(f"Edges shell {shell}")(solid2.union()(*scad_render_edges(G, edges)))
+    scad_edges = scad_comment(f"Edges shell {shell}")(solid2.translate([width/2, width/2, width/2])(solid2.background(solid2.union()(*scad_render_edges(G, edges)))))
     return scad_comment(f"Shell {shell}")(solid2.union()(scad_nodes, scad_edges))
 
 @solid2.register_access_syntax
@@ -131,7 +144,12 @@ if __name__ == "__main__":
                      usecols=["node", "x", "y", "z"],
                      index_col="node",
                      dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
-    G.remove_nodes_from(set(G.nodes) - set(df.index.tolist()))
+    missing = (set(G.nodes) - set(df.index.tolist()))
+    if len(missing) > 0:
+        logger.warning(f"Missing {len(missing)} nodes")
+    G.remove_nodes_from(missing)
+    for node, props in G.nodes.items():
+        print(props)
 
     edges = edge_lengths(G, df)
     typical = edges.mean()+edges.std()
