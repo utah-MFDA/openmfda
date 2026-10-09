@@ -13,8 +13,7 @@ def height(df):
 def width(df):
     return df[["major_w", "minor_w"]].max(axis=1)
 
-# def resist(df, eta = 10e-3, px=7.6e-6, layer=10e-6):
-def resist(df, eta = 10e-3, px=1, layer=1):
+def resist(df, eta = 10e-3, px=7.6e-6, layer=10e-6):
     major_w = df["major_w"]*px
     major_h = df["major_h"]*layer
     minor_w = df["minor_w"]*px
@@ -41,7 +40,12 @@ def prepare_df(ratios, blocks, channel, major_w, major_h=None, minor_w=None, min
     return create_df(ratios, matrix)
 
 def create_df(ratios, matrix):
-    df = pd.DataFrame(matrix, columns=["blocks", "major_w", "major_h", "minor_w", "minor_h", "channel_length"])
+    df = pd.DataFrame(matrix, columns=["blocks", "raw_major_w", "raw_major_h", "raw_minor_w", "raw_minor_h", "raw_channel_length"])
+    df["major_w"] = df["raw_major_w"].round()
+    df["major_h"] = df["raw_major_h"].round()
+    df["minor_w"] = df["raw_minor_w"].round()
+    df["minor_h"] = df["raw_minor_h"].round()
+    df["channel_length"] = df["raw_channel_length"].round()
     df["width"] = width(df)
     df["height"] = height(df)
     df["depth"] = depth(df)
@@ -53,14 +57,14 @@ def create_df(ratios, matrix):
     return df
 
 ratios = {
-    "albumin": (2150,60,516,1290),
+    "albumin": (1290,2150,516,60),
     "caffeine": (54,1,1),
     "calcium": (225,18,2),
     "cocaine": (1430,99,234),
-    "ethyl": (315,6,14),
+    "ethyl": (315,14,6),
     "ketone": (1,1),
-    "nitrite": (1,2,2),
-    "salicylic": (50,1,2,15)
+    "nitrite": (2,2,1),
+    "salicylic": (50,15,2,1)
 }
 
 ericas = {
