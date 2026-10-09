@@ -1,5 +1,6 @@
 import math
 
+from networkx.algorithms.bipartite.cluster import latapy_clustering
 import numpy as np
 import pandas as pd
 import pyscipopt as scip
@@ -77,19 +78,17 @@ def ratio_bound(M, ratios, blocks):
         values.append(value)
     return scale, error, dimms, values
 
-def ratio_simple(M, ratios, blocks, min_w=5, max_w=128):
-    scale = M.addVar()
+def ratio_simple(M, ratios, blocks, eta=10e-3, px=7.6, layer=10, min_w=5, max_w=128):
     error = []
     dimms = []
     values = []
+    scale = M.addVar()
     for ratio in ratios:
-        maj = M.addVar(lb=min_w, ub=max_w)
-        ch = M.addVar(vtype="I", lb=min_w, ub=max_w)
+        maj = M.addVar(vtype="I", lb=min_w, ub=max_w)
+        ch = M.addVar(lb=min_w, ub=max_w)
         err_m = M.addVar(lb=0, ub=1)
-        err = M.addVar(lb=0, ub=1)
-        rhs = scale*ratio*maj**4
-        M.addCons(ch - err <= rhs)
-        M.addCons(ch + err >= rhs)
+        err = M.addVar(lb=0, ub=0.1)
+        M.addCons(ch*(1+err) == scale*ratio*maj**4)
         value = (maj,ch)
         error.append(err)
         dimms.append(err_m)
@@ -156,12 +155,13 @@ def optimize_ratio(ratios, blocks):
     df["error_n"] = [M.getVal(e) for e in minim]
     df["error_m"] = [M.getVal(e) for e in dimensions]
     df["scaled"] = df["resist"]/M.getVal(scale)
+    print(df)
     return df
 
 res = {name:optimize_ratio(ratio, 1) for name, ratio in ratios.items()}
 for name, df in res.items():
     print(name)
     ef = ericas[name]
-    x = df[["normalized_ratios","normalized_result"]]
+    x = df[["normalized_ratios","normalized_result", "normalized_raw_result", "major_w", "channel_length", "raw_major_w", "raw_channel_length"]]
     x["ericas"] = ef["normalized_result"]
     print(x)

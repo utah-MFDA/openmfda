@@ -41,6 +41,7 @@ def prepare_df(ratios, blocks, channel, major_w, major_h=None, minor_w=None, min
 
 def create_df(ratios, matrix):
     df = pd.DataFrame(matrix, columns=["blocks", "raw_major_w", "raw_major_h", "raw_minor_w", "raw_minor_h", "raw_channel_length"])
+    raw = pd.DataFrame(matrix, columns=["blocks", "major_w", "major_h", "minor_w", "minor_h", "channel_length"])
     df["major_w"] = df["raw_major_w"].round()
     df["major_h"] = df["raw_major_h"].round()
     df["minor_w"] = df["raw_minor_w"].round()
@@ -50,9 +51,11 @@ def create_df(ratios, matrix):
     df["height"] = height(df)
     df["depth"] = depth(df)
     df["resist"] = resist(df)
+    df["raw_resist"] = resist(raw)
     df["ratios"] = ratios
     df["normalized_ratios"] = df["ratios"]/df["ratios"].min()
     df["normalized_result"] = df["resist"]/df["resist"].min()
+    df["normalized_raw_result"] = df["raw_resist"]/df["raw_resist"].min()
     df["scale"] = df["resist"]/df["ratios"]
     return df
 
