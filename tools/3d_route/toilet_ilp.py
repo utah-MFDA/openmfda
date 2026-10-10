@@ -82,17 +82,17 @@ def ratio_simple(M, ratios, blocks, eta=10e-3, px=7.6, layer=10, min_w=5, max_w=
     error = []
     values = []
     scale = M.addVar()
-    # max_c = max_w
     max_c = M.addVar(lb=min_w, ub=max_w)
-    # min_c = M.addVar(lb=min_w, ub=max_w)
-
-    dimms = [max_w-max_c]
-    # dimms=[]
+    max_err = M.addVar(lb=0.0, ub=0.05)
+    dimms = [max_err]
+    # dimms = [max_err/100, max_c]
     for ratio in ratios:
         maj = M.addVar(vtype="I", lb=min_w, ub=max_w)
         ch = M.addVar(vtype="I", lb=min_w, ub=max_w)
-        err = M.addVar(lb=0, ub=0.05)
-        M.addCons(ch >= max_c)
+        err = M.addVar(lb=0)
+        M.addCons(maj <= max_c)
+        M.addCons(ch <= max_c)
+        M.addCons(err <= max_err)
         M.addCons(ch*(1+err) == scale*ratio*maj**4)
         value = (maj,ch)
         error.append(err)
@@ -138,9 +138,9 @@ def ratio_n(M, ratios):
     return error, values
     # return [max_depth, max_height, max_width], values
 
-def optimize_ratio(ratios, blocks):
+def optimize_ratio(ratios, blocks, timeout=15):
     M = scip.Model()
-    # M.setParam("limits/time", 60)
+    M.setParam("limits/time", timeout)
     scale, minim, dimensions, values = ratio_simple(M, ratios, blocks)
     M.setObjective(scip.quicksum(dimensions))
     M.writeProblem("cache.cip")
@@ -157,6 +157,7 @@ def optimize_ratio(ratios, blocks):
     bl = np.ones(len(maj))*blocks
     df = prepare_df(ratios, bl, ch, maj)
     df["error"] = [M.getVal(e) for e in minim]
+    df["max_error"] = M.getVal(dimensions[0])
     df["scale"] = M.getVal(scale)
     print(df)
     return df
@@ -165,6 +166,6 @@ res = {name:optimize_ratio(ratio, 1) for name, ratio in ratios.items()}
 for name, df in res.items():
     print(name)
     ef = ericas[name]
-    x = df[["normalized_ratios","normalized_result", "normalized_raw_result", "major_w", "channel_length", "raw_major_w", "raw_channel_length"]]
+    x = df[["normalized_ratios","normalized_result", "major_w", "channel_length", "max_error"]]
     x["ericas"] = ef["normalized_result"]
     print(x)
