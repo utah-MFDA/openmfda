@@ -80,18 +80,22 @@ def ratio_bound(M, ratios, blocks):
 
 def ratio_simple(M, ratios, blocks, eta=10e-3, px=7.6, layer=10, min_w=5, max_w=128):
     error = []
-    dimms = []
     values = []
     scale = M.addVar()
+    # max_c = max_w
+    max_c = M.addVar(lb=min_w, ub=max_w)
+    # min_c = M.addVar(lb=min_w, ub=max_w)
+
+    dimms = [max_w-max_c]
+    # dimms=[]
     for ratio in ratios:
         maj = M.addVar(vtype="I", lb=min_w, ub=max_w)
-        ch = M.addVar(lb=min_w, ub=max_w)
-        err_m = M.addVar(lb=0, ub=1)
-        err = M.addVar(lb=0, ub=0.1)
+        ch = M.addVar(vtype="I", lb=min_w, ub=max_w)
+        err = M.addVar(lb=0, ub=0.05)
+        M.addCons(ch >= max_c)
         M.addCons(ch*(1+err) == scale*ratio*maj**4)
         value = (maj,ch)
         error.append(err)
-        dimms.append(err_m)
         values.append(value)
     return scale, error, dimms, values
 
@@ -138,7 +142,7 @@ def optimize_ratio(ratios, blocks):
     M = scip.Model()
     # M.setParam("limits/time", 60)
     scale, minim, dimensions, values = ratio_simple(M, ratios, blocks)
-    M.setObjective(scip.quicksum(minim + dimensions))
+    M.setObjective(scip.quicksum(dimensions))
     M.writeProblem("cache.cip")
     print(f"Presolving with {M.getNVars()} variables and {M.getNConss()} constraints", M.getNVars(), M.getNConss())
     M.presolve()
@@ -152,9 +156,8 @@ def optimize_ratio(ratios, blocks):
     ch = data[:,1]
     bl = np.ones(len(maj))*blocks
     df = prepare_df(ratios, bl, ch, maj)
-    df["error_n"] = [M.getVal(e) for e in minim]
-    df["error_m"] = [M.getVal(e) for e in dimensions]
-    df["scaled"] = df["resist"]/M.getVal(scale)
+    df["error"] = [M.getVal(e) for e in minim]
+    df["scale"] = M.getVal(scale)
     print(df)
     return df
 
