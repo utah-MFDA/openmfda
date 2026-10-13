@@ -29,7 +29,7 @@ def read_yosys_json(input_file, top):
                     # If this is an input/output/inout, it will get marked from netnames section
                     G.add_node(name, weight=0, hyperedge=True, cell="$_wire", name=name, netnames=set(), bit=bit)
                 if (cell, name) not in G.edges: # this would for a multigraph
-                    G.add_edge(cell, name, hyperedge=True, bit=bit, port=port, direction=direction)
+                    G.add_edge(cell, name, hyperedge=True, bit=bit, ports={cell:port, name:port}, direction=direction)
                 else:
                     logger.warn(f"Duplicate edge {cell} {name}")
     for net, details in m["netnames"].items():
@@ -111,10 +111,13 @@ def collapse_edges(G: nx.Graph):
 
 def _collapse_edges(G: nx.Graph):
     rm = []
-    for node in G.nodes:
-        if G.nodes[node]["hyperedge"] and G.degree(node) == 2:
+    for node, props in G.nodes.items():
+        if props["hyperedge"] and G.degree(node) == 2:
             f, s = G.adj[node]
-            G.add_edge(f, s, hyperedge=False, bit=G.nodes[node]["bit"])
+            left_port=G.edges[(f,node)]["ports"][f]
+            right_port=G.edges[(node,s)]["ports"][s]
+            ports = {f:left_port, s:right_port}
+            G.add_edge(f, s, hyperedge=False, bit=props["bit"], ports=ports, type=props["type"])
             rm.append(node)
     for node in rm:
         G.remove_node(node)

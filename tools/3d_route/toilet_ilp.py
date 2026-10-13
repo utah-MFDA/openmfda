@@ -1,171 +1,148 @@
-import math
-
-from networkx.algorithms.bipartite.cluster import latapy_clustering
 import numpy as np
 import pandas as pd
 import pyscipopt as scip
 from toilet import *
 
-def depth_opt(major_h, minor_h):
-    return max(major_h, minor_h)
+def resist_simple(M, ratio, blocks, max_size, max_err, scale, min_w, max_w, allowed_error):
+    maj = M.addVar(vtype="I", lb=min_w, ub=max_w)
+    ch = M.addVar(vtype="I", lb=min_w, ub=max_w)
+    err = M.addVar(lb=0.0, ub=allowed_error)
+    M.addCons(maj <= max_size)
+    M.addCons(ch <= max_size)
+    M.addCons(err <= max_err)
+    rhs = scale*ratio*maj**4
+    M.addCons(blocks*ch*(1-err) <= rhs)
+    M.addCons(blocks*ch*(1+err) >= rhs)
+    return err, maj, ch
 
-def height_opt(blocks, channel_length):
-    return (4*blocks+1)*channel_length
+def ratio_simple(M, ratios, blocks, max_size, max_err, min_w, max_w, allowed_error):
+    scale = M.addVar(lb=0.0)
+    resist = [resist_simple(M, ratio, blocks, max_size, max_err,
+                            scale, min_w, max_w, allowed_error)
+            for ratio in ratios]
+    return resist
 
-def width_opt(major_w, minor_w):
-    return max(major_w, minor_w)
-
-def resist_opt(major_w, major_h, minor_w, minor_h, channel, blocks):
-    def rh(w, h):
-        return (w*h)/(2*(w+h))
-    eta = 10e-3
-    rh_maj = rh(major_w, major_h)
-    rh_min = rh(minor_w, minor_h)
-    def r(rhm):
-        return 8*eta*channel/math.pi*rhm**4
-    r_maj = r(rh_maj)
-    r_min = r(rh_min)
-    r_t = 2*blocks*(r_maj+r_min)+r_maj
-    return r_t
-
-def resist_simpler(major, channel, blocks):
-    return channel/major**4
-
-def resist_simple(major, minor, channel, blocks):
-    eta = 10e-3
-    rh_maj = major/4
-    rh_min = minor/4
-    def r(rhm):
-        return 8*eta*channel/math.pi*rhm**4
-    r_maj = r(rh_maj)
-    r_min = r(rh_min)
-    r_t = 2*blocks*(r_maj+r_min)+r_maj
-    return r_t
-
-def ratio_bound(M, ratios, blocks):
-    # scale = M.addVar(vtype="I", lb=1)
-    # scale = 100
-    scale = M.addVar()
-    # scale = M.addVar(lb=1)
-    # max_depth = M.addVar(lb=1, ub=200)
-    # max_height = M.addVar(lb=1, ub=200)
-    # max_width = M.addVar(lb=1, ub=200)
-    error = []
-    dimms = []
-    # dimms = [max_depth, max_height, max_width]
-    values = []
-    for ratio in ratios:
-        maj = M.addVar(lb=5)
-        # maj = M.addVar(vtype="I", lb=5)
-        ch = M.addVar(lb=5, ub=200)
-        # ch = M.addVar(vtype="I", lb=5, ub=200)
-        # bl = M.addVar(vtype="I", lb=1, ub=10)
-        # depth = maj
-        # width = maj
-        # height = (4*blocks+1)*ch
-        # M.addCons(min <= maj)
-        # M.addCons(depth <= max_depth)
-        # M.addCons(width <= max_width)
-        # M.addCons(height <= max_height)
-        # resist = ch/maj**4/ratio/scale
-        err = M.addVar(lb=0, ub=0.5)
-        # M.addCons(ch == (1+err)*scale*ratio*maj)
-        rhs = scale*ratio*maj**4
-        M.addCons(ch <= (1+err)*rhs)
-        M.addCons(ch  >= (1-err)*rhs)
-        value = (maj,ch)
-        error.append(err)
-        values.append(value)
-    return scale, error, dimms, values
-
-def ratio_simple(M, ratios, blocks, eta=10e-3, px=7.6, layer=10, min_w=5, max_w=128):
-    error = []
-    values = []
-    scale = M.addVar()
-    max_c = M.addVar(lb=min_w, ub=max_w)
-    max_err = M.addVar(lb=0.0, ub=0.05)
-    dimms = [max_err]
-    # dimms = [max_err/100, max_c]
-    for ratio in ratios:
-        maj = M.addVar(vtype="I", lb=min_w, ub=max_w)
-        ch = M.addVar(vtype="I", lb=min_w, ub=max_w)
-        err = M.addVar(lb=0)
-        M.addCons(maj <= max_c)
-        M.addCons(ch <= max_c)
-        M.addCons(err <= max_err)
-        M.addCons(ch*(1+err) == scale*ratio*maj**4)
-        value = (maj,ch)
-        error.append(err)
-        values.append(value)
-    return scale, error, dimms, values
-
-def ratio_n(M, ratios):
-    # scale = M.addVar(vtype="I", lb=1)
-    # scale = 100
-    scale = M.addVar()
-    # scale = M.addVar(lb=1, ub=100)
-    # scale = M.addVar(lb=100, ub=200)
-    max_depth = M.addVar(vtype="I", lb=1, ub=128)
-    max_height = M.addVar(vtype="I", lb=1, ub=128)
-    max_width = M.addVar(vtype="I", lb=1, ub=128)
-    error = []
-    values = []
-    for ratio in ratios:
-        maj_w = M.addVar(vtype="I", lb=1, ub=128)
-        maj_h = M.addVar(vtype="I", lb=1, ub=128)
-        min_h = M.addVar(vtype="I", lb=1, ub=128)
-        min_w = M.addVar(vtype="I", lb=1, ub=128)
-        ch = M.addVar(vtype="I", lb=1, ub=50)
-        bl = M.addVar(vtype="I", lb=1, ub=10)
-        depth = depth_opt(maj_h, min_h)
-        width = width_opt(maj_w, min_w)
-        height = height_opt(maj_h, min_h)
-        M.addCons(min_w <= maj_w)
-        M.addCons(min_h <= maj_h)
-        M.addCons(depth <= max_depth)
-        M.addCons(width <= max_width)
-        M.addCons(height <= max_height)
-        resist = resist_opt(maj_w, maj_h, min_h, min_w, ch, bl)
-        err = M.addVar()
-        expect = resist/ratio + err
-        M.addCons(expect == scale)
-        # margin = 0.00001
-        # M.addCons(expect == scale*(1+margin))
-        # M.addCons(expect >= -scale*(1-margin))
-        value = (maj_w, maj_h, min_h, min_w, ch, bl)
-        error.append(err)
-        values.append(value)
-    return error, values
-    # return [max_depth, max_height, max_width], values
-
-def optimize_ratio(ratios, blocks, timeout=15):
-    M = scip.Model()
-    M.setParam("limits/time", timeout)
-    scale, minim, dimensions, values = ratio_simple(M, ratios, blocks)
-    M.setObjective(scip.quicksum(dimensions))
+def solve(M):
     M.writeProblem("cache.cip")
     print(f"Presolving with {M.getNVars()} variables and {M.getNConss()} constraints", M.getNVars(), M.getNConss())
     M.presolve()
     print(f"Starting optimizations with {M.getNVars()} variables and {M.getNConss()} constraints", M.getNVars(), M.getNConss())
     M.optimize()
     print(f"Finished optimizing, {M.getNSols()} solutions found", M.getNSols())
-    data = np.array([[M.getVal(v) for v in value] for value in values])
-    # maj, = zip(*data)
-    # ch = np.ones(len(maj))*128/blocks
-    maj = data[:,0]
-    ch = data[:,1]
-    bl = np.ones(len(maj))*blocks
-    df = prepare_df(ratios, bl, ch, maj)
-    df["error"] = [M.getVal(e) for e in minim]
-    df["max_error"] = M.getVal(dimensions[0])
-    df["scale"] = M.getVal(scale)
+    assert(M.getNSols() > 0)
+
+def optimize_system(ratios, blocks=2, minimize=False, timeout=10, min_w=5, max_w=128, allowed_ratio_error=0.05, allowed_match_error=0.05):
+    M = scip.Model()
+    M.setParam("limits/time", timeout)
+    worst_size = M.addVar(lb=min_w, ub=max_w)
+    ratio_error = M.addVar(lb=0.0, ub=allowed_ratio_error)
+    resists = {name: ratio_simple(M, ratio, blocks, worst_size, ratio_error,
+                                  min_w, max_w, allowed_ratio_error)
+                for name, ratio in ratios.items()}
+
+    # assuming the first resistance is the shared solution
+    match_ch = M.addVar(lb=min_w, ub=max_w)
+    match_maj = M.addVar(lb=min_w, ub=max_w)
+    match_error = allowed_match_error
+    match_error = M.addVar(lb=0.0, ub=allowed_match_error)
+    for _, maj, ch in [resist[0] for resist in resists.values()]:
+        # ideal is M.addCons(ch/maj**4 == match_ch/match_maj**4)
+        M.addCons(ch*match_maj**4 <= match_ch*(1+match_error)*maj**4)
+        M.addCons(ch*match_maj**4 >= match_ch*(1-match_error)*maj**4)
+        # # This is fast but pushes the ratios off
+        # M.addCons(ch == match_ch)
+        # M.addCons(maj == match_maj)
+    if minimize:
+        M.setObjective(ratio_error, sense="minimize")
+        # M.setObjective(match_error + ratio_error, sense="minimize")
+    solve(M)
+    dfs =  {name: extract_data(M, name, ratio, blocks, ratio_error,
+                               resists[name], min_w, max_w)
+            for (name, ratio) in ratios.items()}
+
+    match = extract_data(M, "match", [1], blocks, match_error,
+                        [[match_error, match_maj, match_ch]],
+                         min_w, max_w)
+
+    match["match_error"] = M.getVal(match_error)
+    match["match_error_resist"] = 0.0
+    match["max_match_error"] = M.getVal(match_error)
+
+    for df in dfs.values():
+        df["match_error"] = 0.0
+        df.loc[0, "match_error"] = df.loc[0, "resist"] / match.loc[0,"resist"] - 1
+        df["match_error_resist"] = 0.0
+        df.loc[0, "match_error_resist"] = match.loc[0, "resist"] - df.loc[0,"resist"]
+        df["max_match_error"] = M.getVal(match_error)
+    return dfs, match
+
+def optimize_ratio(name, ratio, blocks=2, minimize=True, timeout=10, min_w=5, max_w=128, allowed_error=0.05):
+    M = scip.Model()
+    M.setParam("limits/time", timeout)
+    worst_size = M.addVar(lb=min_w, ub=max_w)
+    ratio_error = M.addVar(lb=0.0, ub=allowed_error)
+    resist = ratio_simple(M, ratio, blocks, worst_size, ratio_error,
+                                  min_w, max_w, allowed_error)
+    if minimize:
+        M.setObjective(ratio_error, sense="minimize")
+    solve(M)
+    df = extract_data(M, name, ratio, blocks, ratio_error, resist, min_w, max_w)
     print(df)
     return df
 
-res = {name:optimize_ratio(ratio, 1) for name, ratio in ratios.items()}
-for name, df in res.items():
+def extract_data(M, name, ratio, blocks, ratio_error, vars, min_w, max_w):
+    errors, maj, ch = zip(*vars)
+    minor_w = np.array([M.getVal(var) for var in maj])
+    minor_l = np.array([M.getVal(var) for var in ch])
+    ones = np.ones(len(minor_w))
+    block = blocks*ones
+    major_w = np.minimum(4*minor_w, max_w*ones)
+    major_l = min_w*ones
+    data = [block, major_w, major_w, major_l, minor_w, minor_w, minor_l]
+    matrix = np.vstack(data).T
+    df = create_df(ratio, matrix)
+    df["test"] = name
+    df["ratio_error_bound"] = [M.getVal(e) for e in errors]
+    df["max_ratio_error"] = M.getVal(ratio_error)
+    return df
+
+# res = {name: optimize_ratio(name, ratio, 4, minimize=True)
+#         for name, ratio in ratios.items()}
+blocks = 3
+min_w = 8
+max_w = (128 - (blocks+1)*min_w)//blocks
+res, match = optimize_system(ratios, blocks=3,
+                             timeout=60, min_w=8, max_w=max_w,
+                             allowed_ratio_error=0.05, allowed_match_error=0.20,
+                             # minimize=True
+                             )
+fields = [
+    "block",
+    "minor_w",
+    "minor_l",
+    "height",
+    # "match_error_resist",
+    "resist",
+    "normalized_ratio",
+    "normalized_result",
+    # "ratio_error_bound",
+    "ratio_error",
+    "match_error",
+]
+erica_fields = [
+    "erica_resist",
+    "erica_ratio",
+    "erica_ratio_error",
+]
+for name, d in res.items():
     print(name)
-    ef = ericas[name]
-    x = df[["normalized_ratios","normalized_result", "major_w", "channel_length", "max_error"]]
-    x["ericas"] = ef["normalized_result"]
+    e = ericas[name]
+    df = d.sort_values("resist", ignore_index=True)
+    ef = e.sort_values("resist", ignore_index=True)
+    df["erica_ratio"] = ef["normalized_result"]
+    df["erica_resist"] = ef["resist"]
+    df["erica_ratio_error"] = df["normalized_ratio"]/ef["normalized_result"] - 1
+    x = df[fields+erica_fields]
     print(x)
+write_verilog("benchmarks/multiplex_toilet/multiplex_toilet.v", res)
+print(match[fields])
