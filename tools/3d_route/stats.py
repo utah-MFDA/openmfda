@@ -96,19 +96,20 @@ def read_results(filename):
             attractor_potentials)
     return [pd.DataFrame(d.cpu().numpy(), index=df.index, columns=df.index.tolist())
             for d in data]
-results = sorted(args.results)
+# results = sorted(args.results)
+results = args.results
+labels = [r.split(".")[1] for r in results]
 data = [read_results(result) for result in results]
 
 c = 3
 r = math.ceil(len(results)//c) + 1
 # fig, ax = plt.subplots(ncols=2*c, nrows=r, sharey=False, sharex=True)
-fig, (ax, ay, az)= plt.subplots(ncols=3)
+fig, axs= plt.subplots(nrows=2, ncols=3)
 plt.rcParams['font.size'] = '9'
 plt.style.use('tableau-colorblind10')
 plt.rcParams['font.family'] = 'serif'
 
-for i, (f, d) in enumerate(zip(results, data)):
-    _, title, _ = results[i].split(".")
+for i, (title, d) in enumerate(zip(labels, data)):
     r_dist, r_force, r_potentials, a_dist, a_force, a_potentials = d
     potentials = r_potentials + a_potentials
     # row x col
@@ -117,26 +118,99 @@ for i, (f, d) in enumerate(zip(results, data)):
 
     edges = np.array([r_dist.loc[e] for e in G.edges])
     edges.sort()
-    ax.plot(np.arange(edges.shape[0])/edges.shape[0], edges, label=title)
+    axs[0][0].plot(np.arange(edges.shape[0])/edges.shape[0], edges, label=title)
+
+    # eh, eb = np.histogram(edges,bins=20)
+    # axs[1][0].stairs(eh, eb, label=title)
+    # axs[1][0].hist(edges, bins = 20, range=(0,3), histtype="step")
 
     potent = (r_potentials.sum(axis=1).sort_values())
-    ay.plot(np.arange(potent.shape[0])/potent.shape[0], potent, label=title)
+    axs[0][1].plot(np.arange(potent.shape[0])/potent.shape[0], potent, label=title)
+    # ph, pb = np.histogram(potent, bins=20)
+    # axs[1][1].stairs(ph, pb, label=title)
 
     error = (r_dist/pd_expected).to_numpy().ravel()
     error.sort()
     error = error[error >= 0]
-    az.plot(np.arange(error.shape[0])/error.shape[0], error, label=title)
+    axs[0][2].plot(np.arange(error.shape[0])/error.shape[0], error, label=title)
 
-ax.set_title("edge lengths")
-ax.legend()
-ay.set_title("total cell potential")
-# ay.set_ybound((0,2))
-ay.legend()
-az.set_title("expected distance error")
-az.legend()
+from scipy.optimize import curve_fit
+def gauss(x, *p):
+    A, mu, sigma = p
+    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+def expdecay(x, *p):
+    a, b, c = p
+    return a*np.exp(-b*(x-c))
+def cubic(x, *p):
+    a, b = p
+    return a*(x-b)**3
+
+dists = [[min(r[0].loc[e],2.5) for e in G.edges] for r in data]
+# axs[1][0].hist(dists, bins=40, histtype="bar", label=labels)
+for i, (l, d) in enumerate(zip(labels, dists)):
+    if i < 1:
+
+        x, y = ([1,1], [0, len(d)])
+        axs[1][0].plot(x, y, label=l)
+        axs[1][0].scatter(x, y, s=3)
+    else:
+        p0 = [1, 0, 1]
+        dh, db = np.histogram(d, bins=20)
+        dc = (db[:-1] + db[1:])/2
+        coeff, var = curve_fit(gauss, dc, dh, p0=p0)
+        fit = gauss(dc, *coeff)
+        axs[1][0].plot(dc, fit, label=l)
+        axs[1][0].scatter(dc, dh, s=5)
+
+def err_fixup(r):
+    e = (r/pd_expected).to_numpy()
+    t = np.tri(e.shape[0])
+    t[t==0] = np.nan
+    f = abs((e*t).reshape(-1))
+    return f[~np.isnan(f)]
+error = [err_fixup(e[0]) for e in data]
+# axs[1][2].hist(error, bins=20, histtype="bar", label=labels)
+for i, (l, d) in enumerate(zip(labels, error)):
+    p0 = [1, 0, 1]
+    dh, db = np.histogram(d, bins=20)
+    dc = (db[:-1] + db[1:])/2
+    coeff, var = curve_fit(gauss, dc, dh, p0=p0)
+    fit = gauss(dc, *coeff)
+    axs[1][2].plot(dc, fit, label=l)
+    axs[1][2].scatter(dc, dh, s=5)
+
+
+pots= [r[2].sum(axis=1) for r in data]
+# axs[1][1].hist(pots, bins=20, histtype="bar", label=labels)
+for i, (l, d) in enumerate(zip(labels, pots)):
+    if i < 1:
+        pass
+    else:
+        # p0 = [1, 0]
+        # f = cubic
+        p0 = [1, 0, 1]
+        f = expdecay
+        dh, dby = np.histogram(d, bins=20)
+        dc = (db[:-1] + db[1:])/2
+        coeff, var = curve_fit(f, dc, dh, p0=p0)
+        fit = f(dc, *coeff)
+        # axs[1][1].plot(dc, fit, label=l)
+        axs[1][1].plot(dc, dh, label=l)
+        # axs[1][1].scatter(dc, dh, s=5)
+
+for i in axs:
+    for j in i:
+        j.legend()
+axs[0][0].set_title("edge lengths")
+axs[1][0].set_title("edge lengths")
+axs[0][1].set_title("total cell potential")
+axs[0][1].set_ybound((0,2))
+axs[1][1].set_title("total cell potential")
+axs[0][2].set_title("expected distance error")
+axs[1][2].set_title("expected distance error")
 
 if args.output:
-    fig.set_figheight(6)
+    fig.set_figheight(12)
     fig.set_figwidth(20)
     fig.tight_layout()
     plt.savefig(args.output)
