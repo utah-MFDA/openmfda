@@ -6,16 +6,16 @@ import solid2
 # import solid2.extensions.bosl2 as bosl2
 from networkx_helpers import *
 
+bosl = solid2.import_scad("BOSL2/std.scad")
 mixer = solid2.import_scad("3d_blocks/block_mixer.scad")
 ports = solid2.import_scad("3d_blocks/ports.scad")
 resistor = solid2.import_scad("3d_blocks/block_resistor.scad")
 io = solid2.import_scad("3d_blocks/block_io.scad")
 interconnect = solid2.import_scad("openmfda/components/interconnect.scad")
-cells = {
-    "$_wire"
-}
-width=128
-io_offset = width*3.5
+
+cell_width=128
+io_offset = cell_width*3.5
+width = solid2.ScadVariable("width", cell_width)
 config = solid2.ScadVariable("port_config", ports.create_port_config(width=width, flow_cross_section=[10,10], io_offset=0, collision_offset=[20,20]))
 
 grid_map = {
@@ -84,8 +84,8 @@ def scad_render_nodes(G,nodes):
         ports = port_directions(G, node)
         cell = props["cell"]
         alpha = 0.2
-        csize=width
-        centered = [width*(p+0.5) for p in position]
+
+        centered = [width*p for p in position]
         if cell == "p_resistor_0":
             in_fluid = ports["in_fluid"]
             out_fluid = ports["out_fluid"]
@@ -117,9 +117,9 @@ def scad_render_nodes(G,nodes):
             s = solid2.translate(centered)(block)
             yield scad_comment(f"Node {cell} {node}")(s)
         elif cell == "$_wire":
-            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(csize)))
+            block = solid2.background(solid2.color("yellow", alpha=alpha)(solid2.cube(width)))
         elif False and (cell == "$_input" or cell == "$_output" or cell == "$_inout"):
-            # grid = G.nodes[node]["attributes"].get("grid", [0,0])
+            # grid = props["attributes"].get("grid", [0,0])
             grid = grid_map.get(node, [0,0])
             ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
                         for n in G.neighbors(node)]
@@ -131,13 +131,15 @@ def scad_render_nodes(G,nodes):
         elif cell == "$_input" or cell == "$_output" or cell == "$_inout":
             ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
                         for n in G.neighbors(node)]
-            block = io.block_pinhole(connections=ports, port_config=config)
+            block = io.block_pinhole(connections=ports, diameter=64, depth=64, cone=10, port_config=config)
             s = solid2.translate(centered)(block)
             yield scad_comment(f"Node {cell} {node}")(s)
         elif cell == "$_dummy":
             continue
         else:
-            block = solid2.background(solid2.color("red", alpha=0.1)(solid2.cube(csize,center=True)))
+            shape = library[cell]
+            params = ports + props["attributes"]
+            block = shape(**params)
             s = solid2.translate(centered)(block)
             yield scad_comment(f"Node {cell} {node}")(s)
 
@@ -183,13 +185,13 @@ def render_scad(G, data, outfile):
                     data.groupby("shell")]
     else:
         final = [render_shell(G, -1, data.index.tolist())]
-    scad = solid2.translate([-0.5, -0.5, 0])(*final)
-    grid = interconnect.interconnect_grid(px=1, layer=1)
-    connect = solid2.translate([0, 0,io_offset])(grid)
+    scad = solid2.union()(*final)
+    # grid = interconnect.interconnect_grid(px=1, layer=1)
+    # connect = solid2.translate([0, 0,io_offset])(grid)
     box = solid2.translate([0,0,io_offset/2])(solid2.cube([2560, 1600, io_offset], center=True))
     block = solid2.difference()(box, scad)
-    final = solid2.union()(connect, block)
-    final.save_as_scad(outfile)
+    # final = solid2.union()(connect, block)
+    block.save_as_scad(outfile)
 
 # Normalize the distance based off mean edge length
 def edge_lengths(G, df):
