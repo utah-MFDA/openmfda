@@ -46,6 +46,8 @@ grid_map = {
     "$_23": [2,1],
     "$_9": [1,1],
 }
+width=175
+config = solid2.ScadVariable("port_config", ports.create_port_config(width=width))
 
 def draw_channel(a, b, d):
     v = [i - j for i, j in zip(a, b)]
@@ -55,7 +57,6 @@ def draw_channel(a, b, d):
         length += 0.000001
     angle = [0,180*acos(v[2]/length)/pi, 180*atan2(v[1], v[0])/pi]
     return solid2.translate(b)(solid2.rotate(angle)(solid2.cube(bounds)))
-
 def neighbor_by_ports(G, node):
     return {
         G.edges[(node, n)]["ports"][node]: n
@@ -121,8 +122,8 @@ def scad_render_nodes(G,nodes):
         elif False and (cell == "$_input" or cell == "$_output" or cell == "$_inout"):
             # grid = props["attributes"].get("grid", [0,0])
             grid = grid_map.get(node, [0,0])
-            ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
-                        for n in G.neighbors(node)]
+        ports = [[p-n for n,p in zip(position, G.nodes[n]["coordinates"])]
+                for n in G.neighbors(node)]
             block = io.block_interconnect(connections=ports, port_config=config)
             b = solid2.translate(centered)(block)
             line = io.block_interconnect_path(grid, [centered, [0,0,20], [0,1,0]], height=io_offset, port_config=config)
@@ -141,7 +142,8 @@ def scad_render_nodes(G,nodes):
             params = ports + props["attributes"]
             block = shape(**params)
             s = solid2.translate(centered)(block)
-            yield scad_comment(f"Node {cell} {node}")(s)
+
+        yield scad_comment(f"Node {cell} {node}")(s)
 
 def scad_render_edges(G, edges):
     for edge in edges:
@@ -163,12 +165,6 @@ def scad_render_edges(G, edges):
 def render_shell(G, shell, nodes):
     scad_nodes = scad_comment(f"Nodes shell {shell}")(solid2.union()(*scad_render_nodes(G, nodes)))
     return scad_nodes
-    # edges = [(start, end)
-    #             for start in nodes
-    #             for end in G.adj[start]
-    #             if start < end]
-    # scad_edges = scad_comment(f"Edges shell {shell}")(solid2.translate([width/2, width/2, width/2])(solid2.background(solid2.union()(*scad_render_edges(G, edges)))))
-    # return scad_comment(f"Shell {shell}")(solid2.union()(scad_nodes, scad_edges))
 
 @solid2.register_access_syntax
 class scad_comment(solid2.object_base.ObjectBase, solid2.object_base.AccessSyntaxMixin, solid2.object_base.OperatorMixin):
@@ -233,7 +229,6 @@ if __name__ == "__main__":
     # Render
     for node, props in df.iterrows():
         G.nodes[node]["coordinates"] = (props["x"], props["y"]+4, props["z"])
-
         if "shell" in props:
             G.nodes[node]["shell"] = int(props["shell"])
     render_scad(G, df, args.output)
