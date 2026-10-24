@@ -113,6 +113,8 @@ class SpringModel(torch.nn.Module):
                 attractor_potentials)
 
     # slice out edges and calculate only those distances
+    # Previous attempt was to create adjacency list for current shell
+    # and adjacent. this worked fine, but the connectivity is really sparse
     def edge_interaction(self, direction):
         start = self.coords[self.edge_start]
         end = self.coords[self.edge_end]
@@ -123,15 +125,16 @@ class SpringModel(torch.nn.Module):
         torch.nan_to_num_(potentials, 0)
         forces = self.force(connected_dists, connected_norm) * connected_active
         torch.nan_to_num_(forces, 0)
-        buffered_potentials = torch.zeros(self.coords.shape[0], 1)
-        buffered_forces = torch.zeros(self.coords.shape)
+        # Note that the above calculation has repeated indices
+        items, dimensions = self.coords.shape
+        attractor_potentials = torch.zeros(items, items, 1)
+        attractor_potentials[self.edge_start, self.edge_end] = potentials
 
-        buffered_potentials[self.edge_start] = potentials
-        buffered_potentials[self.edge_end] = potentials
-        buffered_forces[self.edge_start] = -forces
-        buffered_forces[self.edge_end] = forces
+        attractor_forces = torch.zeros(items, items, dimensions)
+        attractor_forces[self.edge_start, self.edge_end] = -forces
+        attractor_forces[self.edge_end, self.edge_start] = forces
 
-        return buffered_forces, buffered_potentials[:,0]
+        return attractor_forces.sum(dim=1), attractor_potentials.sum(dim=1)[:,0]
 
     def pad_dim(self, m, fill=None):
         if fill == None:
