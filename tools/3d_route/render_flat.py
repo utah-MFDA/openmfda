@@ -24,43 +24,46 @@ data = pd.read_csv(args.input_file)
 nodes = set(data["node"].tolist())
 data.set_index(["node", "iter"], inplace=True)
 steps = [d for _,d in data.groupby(level="iter")]
-
-def init3d(fig):
-    ax = fig.add_subplot(projection="3d")
-    init = steps[0][["x", "y", "z"]]
-    scatter = ax.scatter(init["x"], init["y"], init["z"], c=init["z"])
-    edges = [(ax.plot(init.loc[s], init.loc[e])[0], s, e) for s, e in G.edges if s in nodes and e in nodes]
-    return ax, scatter, edges
-
-def init2d(fig):
-    ax = fig.add_subplot()
-    init = steps[0][["x", "y", "z"]]
-    scatter = ax.scatter(init["x"], init["y"], c=init["z"])
-    edges = [(ax.plot(init.loc[s], init.loc[e])[0], s, e) for s, e in G.edges]
-    return ax, scatter, edges
+ratio=0.05
 
 fig = plt.figure()
-ax, scatter, edges = init3d(fig)
+ax = fig.add_subplot(projection="3d")
+init = steps[0]
+scatter = ax.scatter(init["x"], init["y"], init["z"],
+                     c=init["z"], s=init["ru"]+init["au"])
+attract = ax.quiver(init["x"], init["y"], init["z"],
+                    init["afx"], init["afy"], init["afz"],
+                    arrow_length_ratio=ratio)
+repel = ax.quiver(init["x"], init["y"], init["z"],
+                  init["rfx"], init["rfy"], init["rfz"],
+                  arrow_length_ratio=ratio)
+edges = [(ax.plot(init.loc[s], init.loc[e], color="green")[0], s, e) for s, e in G.edges if s in nodes and e in nodes]
 ax.set_xbound(-5, 5)
 ax.set_ybound(-5, 5)
+ax.set_zbound(-1, 3)
 
 def update3d(i):
-    step = steps[i][["x", "y", "z"]]
-    scatter._offsets3d = (step["x"], step["y"], step["z"])
+    global attract
+    global repel
+    step = steps[i]
+    scatter._offsets3d = step[["x", "y", "z"]].to_numpy().T
+    potent = step["au"] + step["ru"]
+    scatter.set_sizes(10*potent.to_numpy())
+    attract.remove()
+    attract = ax.quiver(step["x"], step["y"], step["z"],
+                        step["afx"], step["afy"], step["afz"],
+                        arrow_length_ratio=ratio,color="blue")
+    repel.remove()
+    repel = ax.quiver(step["x"], step["y"], step["z"],
+                      step["rfx"], step["rfy"], step["rfz"],
+                      arrow_length_ratio=ratio, color="orange")
+
     for line, start, end in edges:
         pts = step.loc[[start,end]][["x", "y", "z"]]
         line.set_data_3d(pts["x"], pts["y"], pts["z"])
-    # return [scatter, *[line for line, _, _ in edges]]
-
-def update2d(i):
-    step = steps[i][["x", "y"]]
-    scatter.set_offsets(step)
-    for line, start, end in edges:
-        pts = step.loc[[start,end]][["x", "y"]]
-        line.set_data(pts["x"], pts["y"])
-    # ax.set_xbound(step.min()["x"], step.max()["x"])
-    # ax.set_ybound(step.min()["y"], step.max()["y"])
-    # return [scatter, *[line for line, _, _ in edges]]
+    ax.set_xbound(-5, 5)
+    ax.set_ybound(-5, 5)
+    ax.set_zbound(-1, 3)
 
 if args.output:
     if args.output[-3:] == "mp4":
