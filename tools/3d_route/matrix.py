@@ -333,7 +333,7 @@ class Runner():
         parser.add_argument("--dynamic", action="store_true")
         parser.add_argument("--dyn_range", type=float, default=1000)
         parser.add_argument("--dyn_height", type=float, default=50)
-        parser.add_argument("--init_vel", type=float, default=1)
+        parser.add_argument("--init_vel", type=float, default=10)
         parser.add_argument("--init_spread", type=float, default=4)
         parser.add_argument("--device", default="cuda")
         return parser.parse_args()
@@ -361,8 +361,6 @@ class Runner():
     def setup_graph(self):
         self.H = read_yosys_json(self.args.graph, self.args.top)
         self.G = strip_graph(self.H)
-        for node, params in self.G.nodes.items():
-            params["shell"] = 0
 
     def setup_logging(self):
         log_format = "%(asctime)s %(message)s"
@@ -370,7 +368,6 @@ class Runner():
             logging.basicConfig(filename=self.args.logfile, level=self.args.log, format=log_format)
         elif self.args.log:
             logging.basicConfig(level=self.args.log, format=log_format)
-
 
     def loop(self):
         self.event_t = [time.time_ns()]
