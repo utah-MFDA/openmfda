@@ -124,7 +124,7 @@ class SpringModel(torch.nn.Module):
         forces = self.force(connected_dists, connected_norm) * connected_active
         torch.nan_to_num_(forces, 0)
         buffered_potentials = torch.zeros(self.coords.shape[0], 1)
-        buffered_forces = torch.zeros((self.coords.shape[0], 2))
+        buffered_forces = torch.zeros(self.coords.shape)
 
         buffered_potentials[self.edge_start] = potentials
         buffered_potentials[self.edge_end] = potentials
@@ -133,22 +133,31 @@ class SpringModel(torch.nn.Module):
 
         return buffered_forces, buffered_potentials[:,0]
 
-    def df_extract(self, grad, rate, iter):
-        if self.coords.shape[1] == 2:
-            coords = torch.concat((self.coords, self.shell_list), dim=1)
+    def pad_dim(self, m, fill=None):
+        if fill == None:
+            fill = torch.zeros((m.shape[0], 1))
+        if m.shape[1] == 2:
+            return torch.concat((m, fill), dim=1)
         else:
-            coords = self.coords
-        data_points = (coords,
-                        self.attractor_forces,
-                        self.attractor_potentials[:,None],
-                        self.repellor_forces,
-                        self.repellor_potentials[:,None],
-                        grad,
-                        self.velocity,
-                        torch.full((self.coords.shape[0], 1), rate),
-                        torch.full((self.coords.shape[0], 1), iter))
+            return m
+
+    def df_extract(self, grad, rate, iter):
+        data_points = (self.pad_dim(self.coords, self.shell_list),
+                       self.pad_dim(self.attractor_forces),
+                       self.attractor_potentials[:,None],
+                       self.pad_dim(self.repellor_forces),
+                       self.repellor_potentials[:,None],
+                       self.pad_dim(grad),
+                       self.pad_dim(self.velocity),
+                       torch.full((self.coords.shape[0], 1), rate),
+                       torch.full((self.coords.shape[0], 1), iter))
         # logger.info("\t".join([str(d.shape) for d in data_points]))
-        columns = ["x", "y", "z", "afx", "afy", "au", "rfx", "rfy", "ru", "gx", "gy", "dx", "dy", "rate", "iter"]
+        columns = ["x", "y", "z",
+                   "afx", "afy", "afz", "au",
+                   "rfx", "rfy", "rfz", "ru",
+                   "gx", "gy", "gz",
+                   "dx", "dy", "dz",
+                   "rate", "iter"]
         data = torch.concat(data_points, dim=1)
         df = pd.DataFrame(data.cpu().numpy(), index=self.sort_nodes, columns=columns)
         df.index.name = "node"
@@ -174,7 +183,7 @@ class SpringModel(torch.nn.Module):
                 self.grad = coords.grad
                 heat_force = self.velocity * (1 - damping)
                 self.velocity += -coords.grad * tick - heat_force
-                self.heat_velocity += self.norm(heat_force) * tick
+                self.heat_velocity += torch.abs(heat_force) * tick
                 coords += self.velocity * tick
             self.zero_grad()
         else:
@@ -297,9 +306,10 @@ class Runner():
     def __init__(self):
         init_t = time.time_ns()
         self.models = {
-            "equidistant": EquidistantHookesSpringModel,
-            "euclidean": EuclideanHookesSpringModel,
-            "euclidean_brute": EuclideanHookesBruteSpringModel,
+            "equidistant": (EquidistantHookesSpringModel, 2),
+            "euclidean": (EuclideanHookesSpringModel, 2),
+            "euclidean_brute": (EuclideanHookesBruteSpringModel, 3),
+            "euclidean_brute_2d": (EuclideanHookesBruteSpringModel, 2),
         }
         self.args = self.parse_args()
         self.setup_logging()
@@ -349,12 +359,14 @@ class Runner():
             os.remove(self.args.intermediate)
 
     def setup_model(self):
+        Model, dimensions = self.models[self.args.distance]
         # torch.autograd.set_detect_anomaly(True)
         torch.set_default_device(self.args.device)
         self.init_t = time.time_ns()
-        init_coords = self.args.init_spread*2*(torch.rand((len(self.G.nodes), 2), dtype=torch.float32)-0.5)
+        shape = (len(self.G.nodes), dimensions)
+        init_coords = self.args.init_spread*2*(torch.rand(shape, dtype=torch.float32)-0.5)
         init_velocity = self.args.init_vel*2*(torch.rand(init_coords.shape) - 0.5)
-        self.model = self.models[self.args.distance](self.G, init_velocity, init_coords)
+        self.model = Model(self.G, init_velocity, init_coords)
         logger.info("Running %s", self.args.distance)
         logger.info("CUDA allocated %f reserved %f", torch.cuda.memory_allocated(), torch.cuda.memory_reserved())
 
@@ -414,7 +426,7 @@ class Runner():
             or self.total_p + self.total_k < self.args.cutoff \
             or (self.args.iterations > 0 and self.iter > self.args.iterations - 1) \
             or (self.total_k + self.total_p > 2*self.total_e) \
-            or self.total_k < 0.01
+            or (self.iter > 100 and self.total_k < 0.01)
 
     def calculate_tick_rate(self):
         if self.args.dynamic:
