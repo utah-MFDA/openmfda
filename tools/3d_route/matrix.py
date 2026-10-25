@@ -150,6 +150,7 @@ class SpringModel(torch.nn.Module):
 
     def df_extract(self, grad, rate, iter):
         data_points = (self.pad_dim(self.coords, self.shell_list),
+                       self.shell_list,
                        self.pad_dim(self.attractor_forces),
                        self.attractor_potentials[:,None],
                        self.pad_dim(self.repellor_forces),
@@ -159,7 +160,7 @@ class SpringModel(torch.nn.Module):
                        torch.full((self.coords.shape[0], 1), rate),
                        torch.full((self.coords.shape[0], 1), iter))
         # logger.info("\t".join([str(d.shape) for d in data_points]))
-        columns = ["x", "y", "z",
+        columns = ["x", "y", "z", "shell",
                    "afx", "afy", "afz", "au",
                    "rfx", "rfy", "rfz", "ru",
                    "gx", "gy", "gz",
@@ -479,7 +480,7 @@ class Runner():
             self.total_e = self.total_p + self.total_k
             stats = [self.total_p, self.total_k, self.total_h, self.total_e]
             logger.info("\t".join(f"{i:0.3f}" for i in stats))
-            print("iter", "tick", "potential", "kinetic", "logged_heat", "heat", "repel_force", "attract_force", "grid_force", "forward_t", "backward_t", "stream_t", "intermediate_t", sep="\t", file=self.energy_log, flush=True)
+            print("iter", "tick", "potential", "kinetic", "logged_heat", "heat", "repel_potent", "attract_potent", "grid_potent", "forward_t", "backward_t", "stream_t", "intermediate_t", sep="\t", file=self.energy_log, flush=True)
         if self.energy_log:
             delta_t = [(b-a)/1e6 for a, b in zip(self.event_t, self.event_t[1:])]
             stats = [self.last_tick,
@@ -487,9 +488,9 @@ class Runner():
                     self.total_k,
                     self.total_h,
                     self.total_e - self.total_p - self.total_k,
-                    self.model.norm(self.model.repellor_forces).sum().item(),
-                    self.model.norm(self.model.attractor_forces).sum().item(),
-                    self.model.norm(self.model.grid_forces).sum().item(),
+                    self.model.repellor_potentials.sum().item(),
+                    self.model.attractor_potentials.sum().item(),
+                    self.model.grid_potentials.sum().item(),
                     *delta_t]
             print(self.iter, "\t".join(f"{i:0.5f}" for i in stats), sep="\t", file=self.energy_log, flush=True)
 

@@ -29,18 +29,19 @@ def read_yosys_json(input_file, top):
                     # If this is an input/output/inout, it will get marked from netnames section
                     G.add_node(name, weight=0, hyperedge=True, cell="$_wire", name=name, netnames=set(), bit=bit)
                 if (cell, name) not in G.edges: # this would for a multigraph
-                    G.add_edge(cell, name, hyperedge=True, bit=bit, ports={cell:port, name:port}, direction=direction)
+                    G.add_edge(cell, name, hyperedge=True, bit=bit, ports={cell:port, name:f"{cell}.{port}"}, direction=direction)
                 else:
-                    logger.warn(f"Duplicate edge {cell} {name}")
+                    logger.error(f"Duplicate edge {cell} {name}")
+                    raise
     for net, details in m["netnames"].items():
         # Multiple named nets will be attached to the same bit, last one wins.
         for index, bit in enumerate(details["bits"]):
             bit = f"$_{bit}"
             if bit not in G.nodes:
-                logger.warn(f"Missing node for bit {bit}")
-                continue
+                logger.error(f"Missing node for bit {bit}")
+                raise
             if not details.get("hide_name", 0):
-                G.nodes[bit]["netnames"].add((net, details.get("index", 0)))
+                G.nodes[bit]["netnames"].add((net, details.get("index", index)))
                 # there is a possible offset, ignoring
             G.nodes[bit]["attributes"] = details["attributes"]
             if "type" in details["attributes"]:
@@ -54,7 +55,18 @@ def read_yosys_json(input_file, top):
             if net in m["ports"]:
                 direction = m["ports"][net]["direction"]
                 G.nodes[bit]["cell"] = f"$_{direction}"
-    return _collapse_edges(G)
+    rm = []
+    for node, props in G.nodes.items():
+        if props["hyperedge"] and G.degree(node) == 2:
+            f, s = G.adj[node]
+            left_port=G.edges[(f,node)]["ports"][f]
+            right_port=G.edges[(node,s)]["ports"][s]
+            ports = {f:left_port, s:right_port}
+            G.add_edge(f, s, hyperedge=False, bit=props["bit"], ports=ports, type=props["type"])
+            rm.append(node)
+    for node in rm:
+        G.remove_node(node)
+    return G
 
 def standard_start(G, n):
     return (is_input_port(G, n) or is_output_port(G, n) or is_inout_port(G, n)) \
@@ -114,23 +126,6 @@ def is_pinhole(G, n):
 
 def is_control_edge(G, edge):
     return G.edges[edge].get("type", "$_unknown") == "ctrl"
-
-def collapse_edges(G: nx.Graph):
-    return G
-
-def _collapse_edges(G: nx.Graph):
-    rm = []
-    for node, props in G.nodes.items():
-        if props["hyperedge"] and G.degree(node) == 2:
-            f, s = G.adj[node]
-            left_port=G.edges[(f,node)]["ports"][f]
-            right_port=G.edges[(node,s)]["ports"][s]
-            ports = {f:left_port, s:right_port}
-            G.add_edge(f, s, hyperedge=False, bit=props["bit"], ports=ports, type=props["type"])
-            rm.append(node)
-    for node in rm:
-        G.remove_node(node)
-    return G
 
 def get_shell(G, node):
     return G.nodes[node]["shell"]

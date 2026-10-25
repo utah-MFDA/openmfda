@@ -78,7 +78,7 @@ if args.output:
              movie.grab_frame()
 else:
     ani = anime.FuncAnimation(fig, update3d,
-                               frames=range(0, len(steps), 10), interval=0)
+                               frames=range(0, len(steps), 100), interval=0)
     mng = plt.get_current_fig_manager()
     mng.full_screen_toggle()
     plt.show()
