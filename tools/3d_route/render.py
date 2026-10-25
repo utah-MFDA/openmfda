@@ -150,23 +150,6 @@ def scad_render_nodes(G, nodes, cell_dimensions, port_config, args):
             s = solid2.translate(centered)(block)
             yield scad_comment(f"Node {cell} {node}")(s)
 
-def scad_render_edges(G, edges):
-    for edge in edges:
-        start, end = edge
-        if "coordinates" not in G.nodes[end] or "coordinates" not in G.nodes[start]:
-            continue
-        start_orig = [width*p for p in G.nodes[start]["coordinates"]]
-        end_orig = [width*p for p in G.nodes[end]["coordinates"]]
-
-        channel_dim = G.edges[edge].get("dimensions", (width/10, width/10, width/10))
-        start_pin = G.edges[edge].get("start_pin", (width/2, width/2, width/2))
-        end_pin = G.edges[edge].get("end_pin", (width/2, width/2, width/2))
-#        log.debug("edge from %s %s to %s %s", start, start_orig, end, end_orig)
-        front = [i + j for i, j in zip(start_orig, start_pin)]
-        back = [i + j for i, j in zip(end_orig, end_pin)]
-        bit = G.edges[edge]["bit"]
-        yield scad_comment(f"Edge {bit} from {start} to {end}")(draw_channel(front, back, channel_dim))
-
 def render_shell(G, shell, nodes, cell_dimensions, port_config, args):
     scad_nodes = scad_comment(f"Nodes shell {shell}")(
         solid2.union()(
