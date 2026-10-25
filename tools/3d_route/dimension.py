@@ -129,6 +129,8 @@ if __name__ == "__main__":
         raise
     logger.info("Optimized")
     d.index.name=("node")
-
+    lengths = edge_lengths(G, d)
+    print(f"Normalizing by {lengths.mean()}")
+    d[["x", "y", "z"]] /= lengths.mean()
     d.to_csv(args.output)
     logger.info("finished")

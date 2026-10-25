@@ -157,7 +157,7 @@ def add_shell(G, starts):
     shell = 0
     while frontier:
         nexts = deque()
-        logger.info("Traversing %d nodes in shell %d", len(frontier), shell)
+        logger.debug("Traversing %d nodes in shell %d", len(frontier), shell)
         for leaf in frontier:
             for neighbor in G.adj[leaf]:
                 if "shell" in G.nodes[neighbor]:

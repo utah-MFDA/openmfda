@@ -20,10 +20,13 @@ class SpringModel(torch.nn.Module):
     def force(self, distance, norm):
         raise NotImplementedError()
 
-    def __init__(self, G, init_velocity, init_coords):
+    def __init__(self, G, init_velocity, init_coords, autograde):
         super().__init__()
         self.G = G
-        self.coords = torch.nn.Parameter(init_coords)
+        if autograde:
+            self.coords = torch.nn.Parameter(init_coords)
+        else:
+            self.coords = init_coords
         self.velocity = init_velocity
         self.heat_velocity = torch.zeros(self.velocity.shape)
         # Calculate shells
@@ -97,24 +100,6 @@ class SpringModel(torch.nn.Module):
         total_potentials = torch.concat([shell.sum(dim=1) for shell in potentials])
         total_force = torch.concat([shell.sum(dim=1) for shell in vectors])
         return total_force, total_potentials
-
-    def adjacency_pairwise(self):
-        for i, shell in enumerate(self.shell_coords):
-            coords = torch.concat(self.neighbors(self.shell_coords, i))
-            dist = pairwise_distance(shell, coords)
-            connected = self.adjacency[i][:,:,None] == 1
-            yield dist*connected
-
-    # split and calculate by shell, using shell and adjacent shell.
-    def adjacency_interaction(self):
-        attractor_dists = list(self.adjacency_pairwise())
-        attractor_norm = [self.norm(dist) for dist in attractor_dists]
-        attractor_forces, attractor_potentials = \
-            self.interaction(attractor_dists, attractor_norm, lambda n: n>=1)
-        return (attractor_dists,
-                attractor_norm,
-                attractor_forces,
-                attractor_potentials)
 
     # slice out edges and calculate only those distances
     # Previous attempt was to create adjacency list for current shell
@@ -216,8 +201,8 @@ def isnegsymmetric3d(a):
     return isnegsymmetric(x) and isnegsymmetric(y) and isnegsymmetric(z)
 
 class BruteSpringModel(SpringModel):
-    def __init__(self, H, init_velocity, init_coords):
-        super().__init__(H, init_velocity, init_coords)
+    def __init__(self, H, init_velocity, init_coords, autograde):
+        super().__init__(H, init_velocity, init_coords, autograde)
         self.adjacency = torch.tensor(extract_adjacency(self.G, self.sort_nodes).to_numpy())
         # This is used to break zero force vectors
         self.noise_dist = (torch.rand((self.coords.shape[0], self.coords.shape[0], self.coords.shape[1]))-0.5)*0.000001
@@ -235,6 +220,8 @@ class BruteSpringModel(SpringModel):
         self.repellor_norms = self.all_norms
         repellor_forces, repellor_potentials = \
             self.partial_interaction(self.repellor_dists, self.repellor_norms, lambda n: n <= 1)
+        self.all_repellor_forces = repellor_forces
+        self.all_repellor_potentials = repellor_potentials
         self.repellor_forces = repellor_forces.sum(dim=1)
         self.repellor_potentials = repellor_potentials.sum(dim=1)
 
@@ -244,6 +231,8 @@ class BruteSpringModel(SpringModel):
         attractor_forces, attractor_potentials = \
             self.partial_interaction(self.attractor_dists, self.attractor_norms,
                              lambda n: n >= 1)
+        self.all_attractor_forces = attractor_forces
+        self.all_attractor_potentials = attractor_potentials
         self.attractor_forces = attractor_forces.sum(dim=1)
         self.attractor_potentials = attractor_potentials.sum(dim=1)
         self.total_potential = self.attractor_potentials + self.repellor_potentials
@@ -253,11 +242,13 @@ class BruteSpringModel(SpringModel):
 
 class EuclideanSpringModel(SpringModel):
     def norm(self, distance):
-        return torch.linalg.norm(distance, dim=len(distance.shape)-1)
+        return torch.linalg.vector_norm(distance, dim=len(distance.shape)-1)
+        # return torch.linalg.norm(distance, dim=len(distance.shape)-1)
 
 class EquidistantSpringModel(SpringModel):
     def norm(self, distance):
-        return torch.linalg.norm(distance, ord=np.inf, dim=2)
+        return torch.linalg.vector_norm(distance, ord=np.inf, dim=len(distance.shape)-1)
+        # return torch.linalg.norm(distance, ord=np.inf, dim=2)
 
 class HookesSpringModel(SpringModel):
     def potential(self, norm):
@@ -272,6 +263,9 @@ class HookesSpringModel(SpringModel):
         return force
 
 class EuclideanHookesBruteSpringModel(EuclideanSpringModel, HookesSpringModel, BruteSpringModel):
+    pass
+
+class EquidistantHookesBruteSpringModel(EquidistantSpringModel, HookesSpringModel, BruteSpringModel):
     pass
 
 class EuclideanHookesSpringModel(EuclideanSpringModel, HookesSpringModel):
@@ -376,7 +370,7 @@ class Runner():
         shape = (len(self.G.nodes), dimensions)
         init_coords = self.args.init_spread*2*(torch.rand(shape, dtype=torch.float32)-0.5)
         init_velocity = self.args.init_vel*2*(torch.rand(init_coords.shape) - 0.5)
-        self.model = Model(self.G, init_velocity, init_coords)
+        self.model = Model(self.G, init_velocity, init_coords, self.args.autograde)
         logger.info("Running %s", self.args.distance)
         logger.info("CUDA allocated %f reserved %f", torch.cuda.memory_allocated(), torch.cuda.memory_reserved())
 
