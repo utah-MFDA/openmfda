@@ -71,7 +71,11 @@ class SpringModel(torch.nn.Module):
         self.attractor_forces, self.attractor_potentials = \
             self.edge_interaction(lambda n: n >= 1)
 
-        self.total_potential = self.attractor_potentials + self.repellor_potentials
+        # push toward inte
+        self.grid_forces = (torch.round(self.coords) - self.coords)*0.5
+        self.grid_potentials = 0.5*self.norm(self.grid_forces)**2
+
+        self.total_potential = self.attractor_potentials + self.repellor_potentials + self.grid_potentials
         self.kinetic = 0.5*self.norm(self.velocity)**2
         self.heat = 0.5*self.norm(self.heat_velocity)**2
         return self.total_potential.sum()
@@ -183,15 +187,16 @@ class SpringModel(torch.nn.Module):
     def step(self, autograde, tick, damping):
         if autograde:
             for coords in self.parameters():
-                self.grad = coords.grad
-                heat_force = self.velocity * (1 - damping)
-                self.velocity += -coords.grad * tick - heat_force
-                self.heat_velocity += torch.abs(heat_force) * tick
-                coords += self.velocity * tick
+                self.grad = -coords.grad
+                coords += self.grad * tick
+                # heat_force = -self.velocity * (1 - damping)
+                # coords += self.velocity * tick
+                # self.velocity += self.grad * tick
+                # self.heat_velocity += torch.abs(heat_force) * tick
             self.zero_grad()
         else:
             heat_force = -self.velocity * (1-damping)
-            forces = self.repellor_forces + self.attractor_forces + heat_force
+            forces = self.repellor_forces + self.attractor_forces + heat_force + self.grid_forces
             self.coords += self.velocity * tick
             self.velocity += forces * tick
             self.heat_velocity += torch.abs(heat_force) * tick
@@ -332,22 +337,23 @@ class Runner():
         parser = argparse.ArgumentParser()
         parser.add_argument("--output")
         parser.add_argument("--intermediate")
-        parser.add_argument("--cutoff", default=1, type=float)
-        parser.add_argument("--iterations", default=0, type=int)
+        parser.add_argument("--cutoff", default=0, type=float)
+        parser.add_argument("--iterations", default=1e5, type=int)
         parser.add_argument("--log", default="INFO")
         parser.add_argument("--logfile")
         parser.add_argument("--energy")
         parser.add_argument("--graph")
         parser.add_argument("--top", default="thing")
-        parser.add_argument("--distance", choices=self.models.keys(), default="euclidean_brute")
-        parser.add_argument("--tick", type=float, default=3e-3)
-        parser.add_argument("--damping", type=float, default=0.8)
+        parser.add_argument("--distance", choices=self.models.keys(),
+                            default="euclidean")
+        parser.add_argument("--tick", type=float, default=5e-3)
+        parser.add_argument("--damping", type=float, default=0.95)
         parser.add_argument("--autograde", action="store_true")
         parser.add_argument("--dynamic", action="store_true")
-        parser.add_argument("--dyn_range", type=float, default=1000)
-        parser.add_argument("--dyn_height", type=float, default=50)
-        parser.add_argument("--init_vel", type=float, default=10)
-        parser.add_argument("--init_spread", type=float, default=4)
+        parser.add_argument("--dyn_range", type=float, default=4)
+        parser.add_argument("--dyn_height", type=float, default=2)
+        parser.add_argument("--init_vel", type=float, default=4)
+        parser.add_argument("--init_spread", type=float, default=10)
         parser.add_argument("--device", default="cuda")
         return parser.parse_args()
 
@@ -429,7 +435,7 @@ class Runner():
             or self.total_p + self.total_k < self.args.cutoff \
             or (self.args.iterations > 0 and self.iter > self.args.iterations - 1) \
             or (self.total_k + self.total_p > 2*self.total_e) \
-            or (self.iter > 100 and self.total_k < 0.01)
+            or (self.iter > 100 and self.total_k < 0.0001)
 
     def calculate_tick_rate(self):
         if self.args.dynamic:
@@ -473,7 +479,7 @@ class Runner():
             self.total_e = self.total_p + self.total_k
             stats = [self.total_p, self.total_k, self.total_h, self.total_e]
             logger.info("\t".join(f"{i:0.3f}" for i in stats))
-            print("iter", "tick", "potential", "kinetic", "logged_heat", "heat", "repel_force", "attract_force", "forward_t", "backward_t", "stream_t", "itermediate_t", sep="\t", file=self.energy_log, flush=True)
+            print("iter", "tick", "potential", "kinetic", "logged_heat", "heat", "repel_force", "attract_force", "grid_force", "forward_t", "backward_t", "stream_t", "intermediate_t", sep="\t", file=self.energy_log, flush=True)
         if self.energy_log:
             delta_t = [(b-a)/1e6 for a, b in zip(self.event_t, self.event_t[1:])]
             stats = [self.last_tick,
@@ -483,6 +489,7 @@ class Runner():
                     self.total_e - self.total_p - self.total_k,
                     self.model.norm(self.model.repellor_forces).sum().item(),
                     self.model.norm(self.model.attractor_forces).sum().item(),
+                    self.model.norm(self.model.grid_forces).sum().item(),
                     *delta_t]
             print(self.iter, "\t".join(f"{i:0.5f}" for i in stats), sep="\t", file=self.energy_log, flush=True)
 
