@@ -24,7 +24,6 @@ ROOT_DIR=$(PLATFORM_DIR)/pdk
 include $(PLATFORM_DIR)/pdk/Componets/Makefile
 export LIBRARY_DEPS = $(SC_LEF) $(TECH_LEF) $(LIB_FILES) $(SCAD_COMPONENT_LIBRARY) $(SCAD_ROUTING_LIBRARY) $(GDS_FILES) $(XYCE_LIB)
 endif
-
 ########### Not used but needed for scad rendering definitions
 # chip min and max x values in pixels
 export XCHIP_VALS		= 325 2225
@@ -90,6 +89,30 @@ export FASTROUTE_TCL = $(PLATFORM_DIR)/fastroute.tcl
 # KLayout technology file
 export KLAYOUT_TECH_FILE = $(PLATFORM_DIR)/$(PLATFORM).lyt
 
+#------------------------------------------------------------------------------
+# PRINTER PARAMETERS
+#------------------------------------------------------------------------------s
+# mm/px value
+export PX_VAL 			= 0.0076
+# mm/layer value
+export LAYER_VAL		= 0.01
+# layer number for the bottom layer
+export BOT_LAYER_VAL	= 75
+# layers/via value
+export LPV_VAL			= 20
+# bulk x value in pixels
+export XBULK_VAL		= 2550
+# bulk y value in pixels
+export YBULK_VAL		= 1600
+# bulk z value in layers
+export ZBULK_VAL		= 230
+# chip min and max x values in pixels
+export XCHIP_VALS		= 325 2225
+# chip min and max y values in pixels
+export YCHIP_VALS		= 325 1275
+# render smoothness in scad render
+export RES_VAL			= 120
+export PITCH            = 30
 # Default SCAD script arguments
 ifeq ($(abspath $(SCAD_SCRIPT)),$(abspath ../tools/scad_render/generator_v2.py))
 SCAD_ARGS += --component_file ${SCAD_COMPONENT_LIBRARY} \
