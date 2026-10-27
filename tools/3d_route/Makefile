@@ -16,8 +16,8 @@ INPUTS = \
 	# benchmarks/ChIP/ChIP_pads_10.v \
 
 # poor results for: ica incpca mds_nm pca grp smacof_nm spectral
-DIM_ALGS=mds smacof isomap
-RUNS = exact ilp torch ${DIM_ALGS}
+DIM_ALGS=mds smacof isomap pca spectral
+RUNS = exact ilp torch torch_brute torch_eq ${DIM_ALGS}
 RESULTS = $(INPUTS:%.v=%.pdf)
 RENDERED = $(foreach RUN,${RUNS},$(INPUTS:%.v=%.${RUN}.scad))
 
@@ -86,7 +86,8 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	date --iso-8601=seconds >> $*.torch.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch.csv \
-		--autograde --dynamic --cutoff 1 --iterations 5000 \
+		--cutoff 0.1 --iterations 20000 \
+		--energy $*.torch.energy.csv \
 		--logfile $*.torch.log 2>&1 >> $*.torch.err.log \
 		--intermediate $*.torch.iter.csv
 	date --iso-8601=seconds >> $*.torch.timer
@@ -95,11 +96,23 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	date --iso-8601=seconds >> $*.torch_eq.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch_eq.csv \
-		--autograde --dynamic --cutoff 1 --iterations 5000 \
+		--cutoff 0.1 --iterations 20000 \
 		--distance equidistant \
+		--energy $*.torch.energy.csv \
 		--logfile $*.torch_eq.log 2>&1 >> $*.torch_eq.err.log \
 		--intermediate $*.torch_eq.iter.csv
 	date --iso-8601=seconds >> $*.torch_eq.timer
+
+%.torch_brute.csv %.torch_brute.timer %.torch_brute.log %.torch_brute.iter.csv: %.torch_brute.json matrix.py
+	date --iso-8601=seconds >> $*.torch_brute.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output $*.torch_brute.csv \
+		--cutoff 0.1 --iterations 20000 \
+		--distance euclidean_brute \
+		--energy $*.torch.energy.csv \
+		--logfile $*.torch_brute.log 2>&1 >> $*.torch_brute.err.log \
+		--intermediate $*.torch_brute.iter.csv
+	date --iso-8601=seconds >> $*.torch_brute.timer
 
 %.simulation.csv %.simulation.timer %.simulation.log %.simulation.iter.csv: %.simulation.json simulation.py
 	date --iso-8601=seconds >> $*.simulation.timer
@@ -113,7 +126,7 @@ $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
 	date --iso-8601=seconds >> $*.exact.timer
 	${PYTHON3} exact.py $< \
 		--output $@ \
-		--timeout 86400 \
+		--timeout 28800 \
 		--cache $*.exact.cip \
 		--logfile $*.exact.log 2>&1 >> $*.exact.err.log
 	date --iso-8601=seconds >> $*.exact.timer

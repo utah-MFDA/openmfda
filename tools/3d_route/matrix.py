@@ -341,14 +341,14 @@ class Runner():
         parser.add_argument("--top", default="thing")
         parser.add_argument("--distance", choices=self.models.keys(),
                             default="euclidean")
-        parser.add_argument("--tick", type=float, default=5e-3)
-        parser.add_argument("--damping", type=float, default=0.95)
+        parser.add_argument("--tick", type=float, default=2e-3)
+        parser.add_argument("--damping", type=float, default=0.90)
         parser.add_argument("--autograde", action="store_true")
         parser.add_argument("--dynamic", action="store_true")
         parser.add_argument("--dyn_range", type=float, default=4)
         parser.add_argument("--dyn_height", type=float, default=2)
-        parser.add_argument("--init_vel", type=float, default=4)
-        parser.add_argument("--init_spread", type=float, default=10)
+        parser.add_argument("--init_vel", type=float, default=0.5)
+        parser.add_argument("--init_spread", type=float, default=4)
         parser.add_argument("--device", default="cuda")
         return parser.parse_args()
 

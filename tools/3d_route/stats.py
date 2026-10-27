@@ -57,7 +57,7 @@ assert(issymmetric(pd_adjacency.to_numpy()))
 assert(issymmetric(pd_antiadjacency.to_numpy()))
 assert(isnegsymmetric(pd_expected.to_numpy()))
 
-def read_results(filename, rounding=False):
+def read_results(filename, rounding=True):
     logger.info("Reading file %s", filename)
     label = filename.split(".")[1]
     df = pd.read_csv(filename,

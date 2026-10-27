@@ -1,4 +1,4 @@
-module thing (
+module thing(
 	(* type="flow" *) input soln1,
 	(* type="flow" *) input soln2,
 	(* type="flow" *) input soln3,
@@ -27,89 +27,119 @@ module thing (
 	(* type="flow" *) output out8
 );
 
-(* type="flow" *) wire	connect0, connect1, connect2, connect3, connect4, connect5, connect6, connect7, connect8, connect9, connect10, connect11, connect12, connect13, connect14, connect15, connect16, connect17, connect18, connect19, connect20, connect21, connect22, connect23, connect24, connect25, connect26, connect27, connect28, connect29, connect30, connect31, connect32, connect33;
-
 // albumin
-(* block=1, major_w=20, major_h=15, minor_w=11, minor_h=8, channel_length=5 *)
+(* type="flow" *)
+wire connect3, connect5, connect2, connect4, connect1, connect0;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=11, minor_h=11, minor_l=32, angle=180 *)
 p_resistor_0	resist0	(.in_fluid(soln1), .out_fluid(connect0));
-(* block=2, major_w=20, major_h=15, minor_w=11, minor_h=8, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=19, minor_h=19, minor_l=8, angle=90 *)
 p_resistor_0	resist1	(.in_fluid(soln2), .out_fluid(connect1));
-(* block=8, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=12, minor_h=12, minor_l=11, angle=90 *)
 p_resistor_0	resist2	(.in_fluid(soln3), .out_fluid(connect2));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=12, minor_h=12, minor_l=28, angle=270 *)
 p_resistor_0	resist3	(.in_fluid(soln4), .out_fluid(connect3));
-diffmix_25px_0	mix0	(.a_fluid(connect0), .b_fluid(connect1), .out_fluid(connect4));
+(* angle=135 *)
+diffmix_25px_0	mix0	(.a_fluid(connect1), .b_fluid(connect0), .out_fluid(connect4));
+(* angle=200 *)
 diffmix_25px_0	mix1	(.a_fluid(connect2), .b_fluid(connect4), .out_fluid(connect5));
+(* angle=315 *)
 diffmix_25px_0	mix2	(.a_fluid(connect3), .b_fluid(connect5), .out_fluid(out1));
 
 // caffeine
-(* block=5, major_w=20, major_h=15, minor_w=11, minor_h=8, channel_length=5 *)
+(* type="flow" *)
+wire connect7, connect8, connect6, connect9;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=9, minor_h=9, minor_l=12, angle=90 *)
 p_resistor_0	resist6	(.in_fluid(soln1), .out_fluid(connect6));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=31, minor_h=31, minor_l=30, angle=270 *)
 p_resistor_0	resist7	(.in_fluid(soln5), .out_fluid(connect7));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=25, minor_h=25, minor_l=12, angle=270 *)
 p_resistor_0	resist8	(.in_fluid(soln6), .out_fluid(connect8));
+(* angle=180 *)
 diffmix_25px_0	mix3	(.a_fluid(connect6), .b_fluid(connect7), .out_fluid(connect9));
-diffmix_25px_0	mix4	(.a_fluid(connect8), .b_fluid(connect9), .out_fluid(out2));
+(* angle=180 *)
+diffmix_25px_0	mix4	(.a_fluid(connect9), .b_fluid(connect8), .out_fluid(out2));
 
 // calcium
-(* block=1, major_w=14, major_h=10, minor_w=6, minor_h=5, channel_length=15 *)
+(* type="flow" *)
+wire connect11, connect12, connect10, connect13;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=8, angle=0 *)
 p_resistor_0	resist10	(.in_fluid(soln1), .out_fluid(connect10));
-(* block=8, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=15, minor_h=15, minor_l=8, angle=90 *)
 p_resistor_0	resist11	(.in_fluid(soln7), .out_fluid(connect11));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=28, minor_h=28, minor_l=10, angle=0 *)
 p_resistor_0	resist12	(.in_fluid(soln8), .out_fluid(connect12));
+(* angle=90 *)
 diffmix_25px_0	mix5	(.a_fluid(connect10), .b_fluid(connect11), .out_fluid(connect13));
+(* angle=45 *)
 diffmix_25px_0	mix6	(.a_fluid(connect12), .b_fluid(connect13), .out_fluid(out3));
 
-// cocaine(*, major_w=20_ block=1_major_hminor_h=15, minor_w=11, minor_h=8, channel_length=5)
+// cocaine
+(* type="flow" *)
+wire connect17, connect16, connect14, connect15;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=8, angle=90 *)
 p_resistor_0	resist14	(.in_fluid(soln1), .out_fluid(connect14));
-(* block=2, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=18, minor_h=18, minor_l=15, angle=270 *)
 p_resistor_0	resist15	(.in_fluid(soln9), .out_fluid(connect15));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=17, minor_h=17, minor_l=29, angle=0 *)
 p_resistor_0	resist16	(.in_fluid(soln10), .out_fluid(connect16));
+(* angle=180 *)
 diffmix_25px_0	mix7	(.a_fluid(connect14), .b_fluid(connect15), .out_fluid(connect17));
+(* angle=45 *)
 diffmix_25px_0	mix8	(.a_fluid(connect16), .b_fluid(connect17), .out_fluid(out4));
 
 // ethyl
-(* block=5, major_w=20, major_h=15, minor_w=11, minor_h=8, channel_length=5 *)
+(* type="flow" *)
+wire connect21, connect19, connect18, connect20;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=10, angle=0 *)
 p_resistor_0	resist18	(.in_fluid(soln1), .out_fluid(connect18));
-(* block=2, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=16, minor_h=16, minor_l=8, angle=270 *)
 p_resistor_0	resist19	(.in_fluid(soln11), .out_fluid(connect19));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=21, minor_h=21, minor_l=10, angle=270 *)
 p_resistor_0	resist20	(.in_fluid(soln12), .out_fluid(connect20));
-diffmix_25px_0	mix9	(.a_fluid(connect18), .b_fluid(connect19), .out_fluid(connect21));
-diffmix_25px_0	mix10	(.a_fluid(connect20), .b_fluid(connect21), .out_fluid(out5));
+(* angle=0 *)
+diffmix_25px_0	mix9	(.a_fluid(connect19), .b_fluid(connect18), .out_fluid(connect21));
+(* angle=90 *)
+diffmix_25px_0	mix10	(.a_fluid(connect21), .b_fluid(connect20), .out_fluid(out5));
 
 // ketone
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* type="flow" *)
+wire connect23, connect22;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=8, angle=0 *)
 p_resistor_0	resist22	(.in_fluid(soln1), .out_fluid(connect22));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=8, angle=180 *)
 p_resistor_0	resist23	(.in_fluid(soln13), .out_fluid(connect23));
+(* angle=110 *)
 diffmix_25px_0	mix11	(.a_fluid(connect22), .b_fluid(connect23), .out_fluid(out6));
 
 // nitrite
-(* block=2, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* type="flow" *)
+wire connect27, connect24, connect25, connect26;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=8, angle=0 *)
 p_resistor_0	resist24	(.in_fluid(soln14), .out_fluid(connect24));
-(* block=2, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=15, angle=90 *)
 p_resistor_0	resist25	(.in_fluid(soln15), .out_fluid(connect25));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=15, angle=270 *)
 p_resistor_0	resist26	(.in_fluid(soln1), .out_fluid(connect26));
-diffmix_25px_0	mix12	(.a_fluid(connect24), .b_fluid(connect25), .out_fluid(connect27));
+(* angle=0 *)
+diffmix_25px_0	mix12	(.a_fluid(connect25), .b_fluid(connect24), .out_fluid(connect27));
+(* angle=315 *)
 diffmix_25px_0	mix13	(.a_fluid(connect26), .b_fluid(connect27), .out_fluid(out7));
 
 // salicylic
-(* block=5, major_w=20, major_h=15, minor_w=11, minor_h=8, channel_length=5 *)
+(* type="flow" *)
+wire connect31, connect29, connect33, connect32, connect30, connect28;
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=8, minor_h=8, minor_l=8, angle=180 *)
 p_resistor_0	resist28	(.in_fluid(soln1), .out_fluid(connect28));
-(* block=1, major_w=20, major_h=15, minor_w=11, minor_h=8, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=21, minor_h=21, minor_l=8, angle=270 *)
 p_resistor_0	resist29	(.in_fluid(soln16), .out_fluid(connect29));
-(* block=2, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=18, minor_h=18, minor_l=8, angle=180 *)
 p_resistor_0	resist30	(.in_fluid(soln17), .out_fluid(connect30));
-(* block=1, major_w=40, major_h=30, minor_w=20, minor_h=15, channel_length=5 *)
+(* block=3, major_w=32, major_h=32, major_l=8, minor_w=15, minor_h=15, minor_l=29, angle=270 *)
 p_resistor_0	resist31	(.in_fluid(soln18), .out_fluid(connect31));
-diffmix_25px_0	mix14	(.a_fluid(connect28), .b_fluid(connect29), .out_fluid(connect32));
+(* angle=45 *)
+diffmix_25px_0	mix14	(.a_fluid(connect29), .b_fluid(connect28), .out_fluid(connect32));
+(* angle=45 *)
 diffmix_25px_0	mix15	(.a_fluid(connect30), .b_fluid(connect32), .out_fluid(connect33));
+(* angle=0 *)
 diffmix_25px_0	mix16	(.a_fluid(connect31), .b_fluid(connect33), .out_fluid(out8));
-
-
 endmodule
