@@ -196,7 +196,7 @@ def write_pins(
     shape = 'cube'
     if not use_def_io_size:
         if io_interface_size is None:
-            size = [0.1, 0.1, 0.1]
+    size = [0.1, 0.1, 0.1]
         elif isinstance(io_interface_size, list) and len(io_interface_size) == 3:
             size = io_interface_size
         else:
@@ -205,8 +205,7 @@ def write_pins(
         print('use_def_io_size, not yet implemented used io_interface_size')
         size = [0.1, 0.1, 0.1]
         print(f'  default value {size}')
-
-    rot = [0, [0, 0, 1]]
+    rot  = [0, [0,0,1]]
 
     flp = tlef_properties
 
@@ -307,7 +306,6 @@ def get_comp_line(in_comp):
     mo = re.finditer(mod_re, data, re.MULTILINE)
 
     return mo
-
 
 def write_components(
         o_file,
@@ -427,14 +425,14 @@ def get_nets(in_def,
     #else:
     if tlef_property is None:
         raise ValueError("Get nets tlef error")
-    nb = NetBuilder(
-        px        =tlef_property['px'],
-        layer     =tlef_property['layer'],
-        lpv       =tlef_property['lpv'],
-        def_scale =tlef_property['def_scale'],
-        bottom_layers=tlef_property['bot_layers']
-    )
-    s = tlef_property['px']*1000/tlef_property['def_scale']
+        nb = NetBuilder(
+            px        =tlef_property['px'],
+            layer     =tlef_property['layer'],
+            lpv       =tlef_property['lpv'],
+            def_scale =tlef_property['def_scale'],
+            bottom_layers=tlef_property['bot_layers']
+        )
+        s = tlef_property['px']*1000/tlef_property['def_scale']
     nb.import_tlef(tlef)
     nb.import_met(mets)
     px_size = nb.px
@@ -442,7 +440,6 @@ def get_nets(in_def,
 
 
     os.environ["XYCE_WL_GRAPH"] = ''
-
     comp_dict = {}
     if isinstance(component_lef, str):
         comp_dict = component_parse.ComponentParser().get_comp_pins_from_lef(component_lef, scale=s)
@@ -521,7 +518,6 @@ def get_nets(in_def,
     else:
         def_scale = 1000
         px_size = 1
-
     if just_return_net:
         return nets_list
 
@@ -709,14 +705,14 @@ def write_nets(o_file, net_list, shape='cube',
     #     )
     #     s = hc_net_property['px']*1000/hc_net_property['def_scale']
     #else:
-    nb = NetBuilder(
-        px        =tlef_property['px'],
-        layer     =tlef_property['layer'],
-        lpv       =tlef_property['lpv'],
-        def_scale =tlef_property['def_scale'],
-        bottom_layers=tlef_property['bot_layers']
-    )
-    s = tlef_property['px']*1000/tlef_property['def_scale']
+        nb = NetBuilder(
+            px        =tlef_property['px'],
+            layer     =tlef_property['layer'],
+            lpv       =tlef_property['lpv'],
+            def_scale =tlef_property['def_scale'],
+            bottom_layers=tlef_property['bot_layers']
+        )
+        s = tlef_property['px']*1000/tlef_property['def_scale']
     nb.import_tlef(tlef)
     nb.import_met(mets)
 
@@ -961,6 +957,7 @@ def read_dimm(dimm_file):
             print(f"Line {ind} is defined incorrectly, expecting [net_name, dimm_wd_1, dimm_wd_2, dimm_ht]")
     return out_dict
 
+
 # these are currently unused
 #tlef_bl_re = r'(?P<key>(?:LAYER|SITE|VIA|PROPERTYDEFINITIONS|UNITS))\s*(?|.*\s*)*?END\s*\w*'
 tlef_bl_re = r'(?P<key>(?:LAYER|SITE|VIA|PROPERTYDEFINITIONS|UNITS))\s*(?:[\S\s]*?)*?END\s*\w*'
@@ -1040,6 +1037,8 @@ difference() {fb}
 
 # hard coded support files
 
+
+
 def main(
         platform,
         design,
@@ -1107,12 +1106,11 @@ def main(
 
     # read in def object
     def_obj = def_obj_load.Design().import_def(def_file)
-
     net_properties = {
-        'px': px,
-        'layer': layer,
-        'lpv': lpv,
-        'def_scale': def_scale,
+        'px':px,
+        'layer':layer,
+        'lpv':lpv,
+        'def_scale':def_scale,
         'bot_layers':bttm_layer
     }
 
@@ -1189,7 +1187,7 @@ show_lefs=false ;
             report_len_file=length_out_file,
             pins=io_list if add_comp_to_routes else None,
             components=comp_list if add_comp_to_routes else None,
-            component_lef=component_merge_lef,
+            component_lef = component_merge_lef,
             report_route_net_file=route_net_file
         )
 
@@ -1198,7 +1196,7 @@ show_lefs=false ;
         if os.path.dirname(o_file) == '':
             intersct_file = "./net_intersections.json"
         else:
-            intersct_file = os.path.dirname(o_file) + "/net_intersections.json"
+        intersct_file = os.path.dirname(o_file) + "/net_intersections.json"
         print(o_file)
         with open(intersct_file, "w+") as insct_f:
             insct_f.write(
@@ -1250,7 +1248,6 @@ if($preview) {fb}
     --------------------------------
           OpenSCAD complete
     --------------------------------
-
     output file: {o_file}
     """)
 
@@ -1289,7 +1286,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--io_size', type=int, default=None, nargs='+')
     parser.add_argument('--use_def_io_size', action='store_true', default=False)
-
     parser.add_argument('--scad_out_file', type=str, default=None)
 
     parser.add_argument('--component_file', type=str, default=None)
@@ -1309,7 +1305,7 @@ if __name__ == "__main__":
             o_file_basename = os.path.basename(args.design)
             args.scad_out_file = f"{args.results_dir}/{o_file_basename}.scad"
         else:
-            args.scad_out_file = f"{args.results_dir}/{args.design}.scad"
+        args.scad_out_file = f"{args.results_dir}/{args.design}.scad"
 
     # --tlef_file
     if args.tlef is not None and args.tlef_file is not None:
@@ -1353,7 +1349,6 @@ if __name__ == "__main__":
             pass # nothing to be done
         else:
             raise ValueError(f'Incorrect amount of arguments expecting 2 or 3, got {len(args.io_size)}')
-
     if args.comp_file is not None and args.component_file is not None:
         raise ValueError("Cannot define both --comp_file and --component_file")
     elif args.component_file is not None:

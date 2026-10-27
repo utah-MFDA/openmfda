@@ -21,7 +21,6 @@ export BUILD_PDK_LIBRARY ?=
 #export SCAD_SCRIPT ?= ../tools/scad_render/generator_v2.py
 #endif
 
-
 # Add design configure paths here
 DESIGN_CONFIG ?= ./designs/${PLATFORM}/${DESIGN}/config.mk
 
@@ -87,7 +86,6 @@ export TEST_DIR      ?= $(FLOW_HOME)/test
 
 export CUSTOM_SCRIPTS_DIR ?= $(FLOW_HOME)/scripts_custom
 export CUSTOM_TCL_DIR ?= $(FLOW_HOME)/scripts_custom
-
 #-------------------------------------------------------------------------------
 
 ifneq ($(wildcard $(PLATFORM_HOME)/$(PLATFORM)),)
@@ -100,7 +98,6 @@ endif
 
 $(info [INFO][FLOW] Using platform directory $(PLATFORM_DIR))
 include $(PLATFORM_DIR)/config.mk
-
 # additional modules 
 # 	the are includes below with evironment var defs
 
@@ -110,7 +107,6 @@ export DEF_FIX_UTIL = ../tools/route_scripts/util.mk
 
 # Include design and platform configuration
 include $(DESIGN_CONFIG)
-
 ifneq (,$(strip $(DISTRIB_V)))
 export TECH_LEF = ./platforms/$(PLATFORM)/lef/$(PLATFORM)_$(DISTRIB_V).tlef
 export SC_LEF   = ./platforms/$(PLATFORM)/lef/$(PLATFORM)_merged_$(DISTRIB_V).lef
@@ -266,7 +262,6 @@ $(WRAPPED_LIBS):
 ifdef FIX_DEF
 include $(DEF_FIX_UTIL)
 endif
-
 # ==============================================================================
 #  _     ___ ____  ____      _    ______   __
 # | |   |_ _| __ )|  _ \    / \  |  _ \ \ / /
@@ -437,7 +432,6 @@ clean_place:
 route: $(RESULTS_DIR)/3_route.def \
        $(RESULTS_DIR)/3_route.sdc
 # ==============================================================================
-
 reroute:
 	$(TIME_CMD) $(OPENROAD_CMD) $(CUSTOM_SCRIPTS_DIR)/reroute.tcl
 
@@ -591,7 +585,6 @@ clean_finish:
 SIMULATION_SCRIPT = ../tools/simulation/runMFDASim.py
 LENGTH_FILE       = $(RESULTS_DIR)/$(DESIGN)_length.csv
 XYCE_RUN_CONFIG   = $(RESULTS_DIR)/xyce_run.config
-
 .PHONY: simulate clean_simulate
 simulate: $(RESULTS_DIR)/simulation/$(DESIGN_NICKNAME)_xyceOut.csv
 clean_simulate:
@@ -627,17 +620,6 @@ $(RESULTS_DIR)/simulation/$(DESIGN_NICKNAME)_xyceOut.csv: $(RESULTS_DIR)/$(DESIG
 		--length_file $(LENGTH_FILE) \
 		--lib ../tools/simulation/stdCellLib/StandardCellLibrary.csv 2>&1 | tee $(RESULTS_DIR)/simulation.log
 
-
-# --output_dir $(RESULTS_DIR) \
-# --length_file $(RESULTS_DIR)/$(DESIGN)_lengths.csv
-endif
-# =======
-# 		--xyce_run_config $(RESULTS_DIR)/xyce_run.config \
-# 		--length_file $(RESULTS_DIR)/$(DESIGN)_length.csv \
-# 		--lib ../tools/simulation/stdCellLib/StandardCellLibrary.csv 2>&1 | tee $(RESULTS_DIR)/simulation.log
-#endif
-#>>>>>>> main
-
 # ==============================================================================
 #  ____   ____    _    ____
 # / ___| / ___|  / \  |  _ \
@@ -657,16 +639,10 @@ zip: $(RESULTS_DIR)/$(DESIGN).$(PLATFORM).zip
 # ==============================================================================
 # $(TIME_CMD) python3 ../../generator_v2/generator_v2.py $(SCAD_ARGS) \
 
-# <<<<<<< HEAD
-# #$(RESULTS_DIR)/$(DESIGN).scad: $(RESULTS_DIR)/4_final.def $(LIBRARY_DEPS)
-# $(RESULTS_DIR)/4_final.scad: $(RESULTS_DIR)/4_final.def $(LIBRARY_DEPS)
-# =======
 # additional pcell files to include
-
 ifeq ($(SCAD_LIB),)
 SCAD_LIB = $(PLATFORM_DIR)/pdk/scad_lib
 endif
-
 ifneq ($(SCAD_INCLUDE_FILES),)
 SCAD_INCLUDE_FILES += $(SCAD_LIB)/polychannel_v2.scad $(SCAD_LIB)/lef_helper.scad $(SCAD_LIB)/lef_scad_config.scad
 else

@@ -8,12 +8,11 @@ export GENERAL_MAP_FILE = $(PLATFORM_DIR)/lib/common.v
 ifeq ($(BUILD_PDK_LIBRARY),)
 # General distribution files
 # gds files are not required
-# export GDS_FILES = $(sort $(wildcard $(PLATFORM_DIR)/gds/*.gds)) \
-                      # $(ADDITIONAL_GDS)
+#	export GDS_FILES = $(sort $(wildcard $(PLATFORM_DIR)/gds/*.gds)) \
+                      #	$(ADDITIONAL_GDS)
 export TECH_LEF ?= $(PLATFORM_DIR)/lef/h.r.3.3.tlef
 export SC_LEF ?= $(PLATFORM_DIR)/lef/h.r.3.3_merged.lef
 
-# lib file is not required
 #export LIB_FILES = $(PLATFORM_DIR)/lib/h.r.3.3.lib \
                      #$(ADDITIONAL_LIBS)
 export SCAD_COMPONENT_LIBRARY = $(PLATFORM_DIR)/pdk/scad_lib/h.r.3.3_merged.scad
@@ -107,4 +106,3 @@ SCAD_ARGS += --component_file ${SCAD_COMPONENT_LIBRARY} \
             --px $(PX_VAL) --layer $(LAYER_VAL) --bottom_layer $(BOT_LAYER_VAL) --lpv $(LPV_VAL) --xbulk $(XBULK_VAL) \
             --ybulk $(YBULK_VAL) --zbulk $(ZBULK_VAL) --xchip $(XCHIP_VALS) --ychip $(YCHIP_VALS) \
             --pitch $(PITCH) --res $(RES_VAL)
-endif

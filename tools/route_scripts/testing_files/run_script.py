@@ -7,6 +7,7 @@ this_file_dir = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.append(this_file_dir+'/../')
 import routing_fix_main
+os.environ["LOG_DIR"] = "./logs"
 # fmt: on
 
 test_def_file = this_file_dir + '/6_reroute_cp.def'
@@ -30,7 +31,8 @@ def run_test_1():
         out_def='alb_fix.def',
         grid_size=[84, 52, 10],
         def_scale=1000,
-        write_polyroute=True
+        write_polyroute=True,
+        log_intersections=True
     )
 
 
@@ -42,6 +44,7 @@ def run_test_lnk():
         lef_files=lef_files,
         grid_size=[84, 52, 10],
         def_scale=1000,
+        log_intersections=True
     )
 
 
