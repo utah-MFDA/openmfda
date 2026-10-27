@@ -1,0 +1,1 @@
+../kicad/plugins/opendb_helpers.py

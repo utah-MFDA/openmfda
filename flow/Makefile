@@ -501,8 +501,9 @@ $(RESULTS_DIR)/4_1_fill.sdc: $(RESULTS_DIR)/3_route.sdc
 $(RESULTS_DIR)/4_final.sdc: $(RESULTS_DIR)/3_route.sdc
 	cp $< $@
 
+# This is segfaulting during garbage collection after verilog file is written.
 $(LOG_DIR)/4_report.log: $(RESULTS_DIR)/4_1_fill.def $(RESULTS_DIR)/4_1_fill.sdc
-	($(TIME_CMD) $(OPENROAD_CMD) $(SCRIPTS_DIR)/final_report.tcl -metrics $(LOG_DIR)/4_report.json) 2>&1 | tee $(LOG_DIR)/4_report.log
+	($(TIME_CMD) $(OPENROAD_CMD) $(SCRIPTS_DIR)/final_report.tcl -metrics $(LOG_DIR)/4_report.json || true) 2>&1 | tee $(LOG_DIR)/4_report.log
 
 $(RESULTS_DIR)/4_final.def: $(LOG_DIR)/4_report.log
 

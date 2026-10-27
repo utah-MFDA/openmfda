@@ -1,7 +1,6 @@
 import opendbpy as odb
 import pcbnew
-from .opendb_helpers import wire_iter, segment_iter
-
+from opendb_helpers import wire_iter, segment_iter
 
 class DefToPcbnew:
     def __init__(self, db, board):
@@ -35,8 +34,7 @@ class DefToPcbnew:
                     self.board.SetLayerName(31, layer.getName())
                 else:
                     # top layer is 0, so set layers in reverse order
-                    self.board.SetLayerName(
-                        num_layers - i - 1, layer.getName())
+                    self.board.SetLayerName(num_layers - i - 1, layer.getName())
         # Stackup is optional, may need to set
 
     def convert_location(self, comp, master):
@@ -85,8 +83,7 @@ class DefToPcbnew:
         elif ori == "MY90" or ori == "FE" or ori == "MYR90":
             return (x + h, y - w, -90.0, True)
         else:
-            raise ValueError(
-                f"Unexpected orientation '{ori}', should be one of R0, R180, R90, R270, MY, MX, MX90, MXR90, MY90, or MYR90. Or N,S,E,W,FN,FS,FE, or FW")
+            raise ValueError(f"Unexpected orientation '{ori}', should be one of R0, R180, R90, R270, MY, MX, MX90, MXR90, MY90, or MYR90. Or N,S,E,W,FN,FS,FE, or FW")
 
     def place(self):
         block = self.db.getChip().getBlock()

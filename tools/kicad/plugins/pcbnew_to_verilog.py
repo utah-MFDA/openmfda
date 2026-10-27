@@ -1,8 +1,7 @@
 import itertools
 import pcbnew
-
+from pathlib import Path
 pads = ["h.r.3.3:pinhole_325px_0", "h.r.3.3:interconnect_4x8"]
-
 
 class PcbnewToVerilog:
     def __init__(self, board, design, directory):
@@ -15,7 +14,6 @@ class PcbnewToVerilog:
             print(f"module {self.design} (", file=outfile)
             ios = []
             for foot in self.board.GetFootprints():
-                # if foot.GetFieldText("Footprint") == "h.r.3.3:interconnect_4x8":
                 if foot.GetFPIDAsString() == "h.r.3.3:interconnect_4x8":
                     for pad in foot.Pads():
                         direction = pad.GetPinType()
@@ -39,7 +37,6 @@ class PcbnewToVerilog:
                     # Space after the name is important here!
                     print(f"\twire \\{net} ;", file=outfile)
             for foot in self.board.GetFootprints():
-                # module = foot.GetFieldText("Footprint").replace("h.r.3.3:", "")
                 module = foot.GetFPIDAsString().replace("h.r.3.3:", "")
                 if module == "interconnect_4x8":
                     continue
@@ -102,14 +99,12 @@ export CORE_AREA   	 	= 0 0 2550 1590
     def write_macros(self):
         with open(self.directory / "macros.tcl", "w") as f:
             for footprint in self.board.GetFootprints():
-                # name = footprint.GetFieldByName("Footprint").GetText()
                 name = footprint.GetFPIDAsString()
                 if footprint.IsLocked() and name not in pads:
                     name = footprint.GetReference()
                     orientation, x, y = self.convert_location(footprint)
                     print(
                         f"place_inst -name {name} -location {{ {x} {y} }} -orientation {orientation} -status FIRM", file=f)
-
     def write_pads(self):
         pinholes = [footprint.GetReference()
                     for footprint in self.board.GetFootprints()
@@ -170,5 +165,6 @@ if __name__ == "__main__":
     import sys
     brd = pcbnew.LoadBoard(sys.argv[1])
     design = sys.argv[2]
-    ext = PcbnewToVerilog(brd, design)
-    ext.print_verilog(sys.stdout)
+    directory = Path(sys.argv[3])
+    ext = PcbnewToVerilog(brd, design, directory)
+    ext.export()

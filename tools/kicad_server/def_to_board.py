@@ -1,0 +1,1 @@
+../kicad/plugins/def_to_board.py

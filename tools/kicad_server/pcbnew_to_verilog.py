@@ -1,0 +1,1 @@
+../kicad/plugins/pcbnew_to_verilog.py
