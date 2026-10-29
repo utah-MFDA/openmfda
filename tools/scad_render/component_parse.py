@@ -64,8 +64,14 @@ def t_error(t):
     print("Illegal character '%s' while parsing" % t.value[0])
     t.lexer.skip(1)
 
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
 
-t_ignore = " \t\n"
+def find_column(input, token):
+    line_start = input.rfind('\n', 0, token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
+
 t_ignore_COMMENT = r"\#+.*"
 
 lexer = lex.lex()
@@ -222,6 +228,9 @@ def p_foreign(p):
     """foreign : FOREIGN CNAME NUMBER NUMBER END_STMT"""
     p[0] = {p[1]: list(p[2:5])}
 
+def p_foreign_short(p):
+    """foreign : FOREIGN CNAME END_STMT"""
+    p[0] = {p[1]: list(p[2:3])}
 
 def p_size(p):
     """size : SIZE NUMBER BY NUMBER END_STMT"""
@@ -470,13 +479,13 @@ class Component:
             return True
         else:
             return False
-    
-    
+
+
     def dist_from_line(self, pt1, pt2, ch_pt):
         return abs((pt2[1] - pt1[1])*ch_pt[0] - (pt2[0] - pt1[0])*ch_pt[1] + \
             pt2[0]*pt1[1] - pt2[1]*pt1[0]) / \
             (sqrt((pt2[1] - pt1[1])**2 + (pt2[0] - pt1[0])**2))
-            
+
     def inside_pts(self, pt1, pt2, ch_pt):
         return ch_pt[0] < max(pt1[0], pt2[0]) and \
             ch_pt[0] > min(pt1[0], pt2[0]) and \
@@ -526,7 +535,7 @@ class Component:
                 return False, None, None
             # if self.is_pt_in_rect(pt, pt_pin, err):
             # checks center point # TODO develop more robust line through pin
-            if self.dist_from_line(segmt[0], segmt[1], 
+            if self.dist_from_line(segmt[0], segmt[1],
                     [
                         pt_pin[0][0] + pt_pin[1][0]/2,
                         pt_pin[0][1] + pt_pin[1][1]/2

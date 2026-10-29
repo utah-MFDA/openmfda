@@ -28,7 +28,7 @@ DESIGN_CONFIG ?= ./designs/${PLATFORM}/${DESIGN}/config.mk
 export PLACE_PINS_ARGS ?=
 
 # Set for new versions of openroad, sites is no longer a valid argument in tcl file.
-# 	This just changes the reference to a script compatible to newer versions of 
+# 	This just changes the reference to a script compatible to newer versions of
 # 	OpenROAD
 export NEW_VER_FL_SITE ?=
 
@@ -43,6 +43,7 @@ SLICER_SCRIPT = ../tools/simple_slicer/slice_geom.py
 
 # Global override Floorplan
 # export CORE_UTILIZATION := 30
+#
 # export CORE_ASPECT_RATIO := 1
 # export CORE_MARGIN := 4
 
@@ -57,7 +58,7 @@ SLICER_SCRIPT = ../tools/simple_slicer/slice_geom.py
 
 #-------------------------------------------------------------------------------
 # Default target when invoking without specific target.
-.DEFAULT_GOAL := finish
+.DEFAULT_GOAL := zip
 
 #-------------------------------------------------------------------------------
 # Proper way to initiate SHELL for make
@@ -98,7 +99,7 @@ endif
 
 $(info [INFO][FLOW] Using platform directory $(PLATFORM_DIR))
 include $(PLATFORM_DIR)/config.mk
-# additional modules 
+# additional modules
 # 	the are includes below with evironment var defs
 
 # export FIX_DEF
@@ -594,10 +595,8 @@ clean_simulate:
 	rm -rf $(RESULTS_DIR)/simulation.log
 	rm -rf $(RESULTS_DIR)/xyce_run.config
 
-ifneq ($(SIMULATION_CONFIG),)
 XYCE_LIB ?= $(abspath $(PLATFORM_DIR)/xyce/MFXyce_0.0.0.so)
 
-#ifneq ($(SIMULATION_CONFIG),)
 .PHONY: xyce_run_config
 xyce_run_config: $(RESULTS_DIR)/xyce_run.config
 
@@ -631,59 +630,31 @@ $(RESULTS_DIR)/simulation/$(DESIGN_NICKNAME)_xyceOut.csv: $(RESULTS_DIR)/$(DESIG
 
 # render: $(RESULTS_DIR)/4_final.scad # old scad call
 # render: $(RESULTS_DIR)/$(DESIGN)_base.scad # the stl is the new output
-.PHONY: scad render slice zip
+.PHONY: scad render slice zip show
 scad: $(RESULTS_DIR)/$(DESIGN)_base.scad
 render: $(RESULTS_DIR)/$(DESIGN)_base.stl
-slice: $(RESULTS_DIR)/slices/1.png # we reference first png slice
-#slice: $(RESULTS_DIR)/$(DESIGN).slices
 zip: $(RESULTS_DIR)/$(DESIGN).$(PLATFORM).zip
+slice: zip
+show: $(RESULTS_DIR)/$(DESIGN)_base.scad
+	${OPENSCAD} $<
 # ==============================================================================
-# $(TIME_CMD) python3 ../../generator_v2/generator_v2.py $(SCAD_ARGS) \
-
 # additional pcell files to include
-ifeq ($(SCAD_LIB),)
-SCAD_LIB = $(PLATFORM_DIR)/pdk/scad_lib
-endif
-ifneq ($(SCAD_INCLUDE_FILES),)
-SCAD_INCLUDE_FILES += $(SCAD_LIB)/polychannel_v2.scad $(SCAD_LIB)/lef_helper.scad $(SCAD_LIB)/lef_scad_config.scad
-else
-SCAD_INCLUDE_FILES = $(SCAD_LIB)/polychannel_v2.scad $(SCAD_LIB)/lef_helper.scad $(SCAD_LIB)/lef_scad_config.scad
-endif
 
 ifneq ($(PCELL_MERGE_LEF),)
 SCAD_ARGS += --pcell $(SCAD_PCELL)
 endif
 
-#$(RESULTS_DIR)/4_final.scad: $(RESULTS_DIR)/4_final.def $(LIBRARY_DEPS)
 $(RESULTS_DIR)/4_final.scad $(RESULTS_DIR)/$(DESIGN)_base.scad: $(RESULTS_DIR)/4_final.def $(LIBRARY_DEPS)
 	mkdir -p "$(RESULTS_DIR)"
 	$(TIME_CMD) $(PYTHON3) $(SCAD_SCRIPT) $(SCAD_ARGS) \
 		--def_file $< \
         --design ${DESIGN} \
-				--scad_out_file $(RESULTS_DIR)/$(DESIGN)_base.scad \
-				--scad_include $(SCAD_INCLUDE_FILES) \
+		--scad_out_file $(RESULTS_DIR)/$(DESIGN)_base.scad \
 		--results_dir "$(RESULTS_DIR)" 2>&1 | tee $@.log
 	cp $(RESULTS_DIR)/$(DESIGN)_base.scad $(RESULTS_DIR)/4_final.scad
-# used for manual render of a system part way through OpenROAD
-
-ifneq ($(strip $(MANUAL_DEF)),)
-MANUAL_SCAD_RENDER = $(RESULTS_DIR)/manrend_$(notdir $(MANUAL_DEF)).scad
-
-$(MANUAL_SCAD_RENDER): $(MANUAL_DEF) $(LIBRARY_DEPS)
-	mkdir -p "$(RESULTS_DIR)"
-	$(TIME_CMD) $(PYTHON3) $(SCAD_SCRIPT) $(SCAD_ARGS) \
-		--def_file $< \
-        --design ${DESIGN} \
-				--scad_out_file $(MANUAL_SCAD_RENDER) \
-				--scad_include $(SCAD_INCLUDE_FILES) \
-		--results_dir "$(RESULTS_DIR)" 2>&1 | tee $@.log
-endif
-
-.PHONY: manual_scad_render
-manual_scad_render: $(MANUAL_SCAD_RENDER)
 
 $(RESULTS_DIR)/$(DESIGN)_base.stl: $(RESULTS_DIR)/$(DESIGN)_base.scad
-	openscad $< -o $@
+	${OPENSCAD} $< -o $@
 
 %.stl: %.scad
 	$(TIME_CMD) $(OPENSCAD) -m make -o $@ -d $@.deps $< 2>&1 | tee $(LOG_DIR)/5_2_stl_render.log
@@ -691,15 +662,13 @@ $(RESULTS_DIR)/$(DESIGN)_base.stl: $(RESULTS_DIR)/$(DESIGN)_base.scad
 %.slices: %.stl
 	$(TIME_CMD) $(XBUF) python3 ../tools/slicer/pyqt5/app_qt.py $< ${LAYER_VAL} $@ 2>&1 | tee $(LOG_DIR)/5_3_slicer.log
 
-$(RESULTS_DIR)/slices/1.png: $(RESULTS_DIR)/$(DESIGN)_base.stl
+${RESULTS_DIR}/${DESIGN}.${PLATFORM}.zip: $(RESULTS_DIR)/$(DESIGN)_base.stl
 	$(PYTHON3) $(SLICER_SCRIPT) \
 		--stl $< \
 		--out_dir $(RESULTS_DIR)/slices \
 		--resolution $(PRINTER_PX_RES) \
-		--layer_height $(LAYER_VAL)
-
-
-${RESULTS_DIR}/${DESIGN}.${PLATFORM}.zip: ${RESULTS_DIR}/${DESIGN}.slices
+		--layer_height $(LAYER_VAL) \
+		2>&1 | tee $(LOG_DIR)/5_3_slicer.log
 	7z a -tzip $@ ${RESULTS_DIR}
 
 clean_render:
@@ -720,10 +689,6 @@ clean_zip:
 # |_|  |_|___|____/ \____|
 #
 # ==============================================================================
-
-all: $(SDC_FILE) $(WRAPPED_LIBS) $(DONT_USE_LIBS) $(OBJECTS_DIR)/klayout.lyt $(WRAPPED_GDSOAS)
-	mkdir -p $(RESULTS_DIR) $(LOG_DIR) $(REPORTS_DIR)
-	($(TIME_CMD) $(OPENROAD_CMD) $(SCRIPTS_DIR)/run_all.tcl -metrics $(LOG_DIR)/run_all.json) 2>&1 | tee $(LOG_DIR)/run_all.log
 
 clean:
 	@echo

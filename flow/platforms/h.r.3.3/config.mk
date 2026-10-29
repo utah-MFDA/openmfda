@@ -4,26 +4,9 @@
 # Tech/Libs
 # ----------------------------------------------------
 export GENERAL_MAP_FILE = $(PLATFORM_DIR)/lib/common.v
-
-ifeq ($(BUILD_PDK_LIBRARY),)
-# General distribution files
-# gds files are not required
-# export GDS_FILES = $(sort $(wildcard $(PLATFORM_DIR)/gds/*.gds)) \
-                      # $(ADDITIONAL_GDS)
 export TECH_LEF ?= $(PLATFORM_DIR)/lef/h.r.3.3.tlef
 export SC_LEF ?= $(PLATFORM_DIR)/lef/h.r.3.3_merged.lef
-
-# lib file is not required
-#export LIB_FILES = $(PLATFORM_DIR)/lib/h.r.3.3.lib \
-                     #$(ADDITIONAL_LIBS)
-export SCAD_COMPONENT_LIBRARY = $(PLATFORM_DIR)/pdk/scad_lib/h.r.3.3_merged.scad
-export SCAD_ROUTING_LIBRARY = $(PLATFORM_DIR)/scad/routing.scad
-else
-# Locally built distribution files
-ROOT_DIR=$(PLATFORM_DIR)/pdk
-include $(PLATFORM_DIR)/pdk/Componets/Makefile
-export LIBRARY_DEPS = $(SC_LEF) $(TECH_LEF) $(LIB_FILES) $(SCAD_COMPONENT_LIBRARY) $(SCAD_ROUTING_LIBRARY) $(GDS_FILES) $(XYCE_LIB)
-endif
+export OPENSCADPATH = $(PLATFORM_DIR)/scad
 ########### Not used but needed for scad rendering definitions
 # chip min and max x values in pixels
 export XCHIP_VALS		= 325 2225
@@ -114,20 +97,10 @@ export YCHIP_VALS		= 325 1275
 export RES_VAL			= 120
 export PITCH            = 30
 # Default SCAD script arguments
-ifeq ($(abspath $(SCAD_SCRIPT)),$(abspath ../tools/scad_render/generator_v2.py))
-SCAD_ARGS += --component_file ${SCAD_COMPONENT_LIBRARY} \
-			--routing_file ${SCAD_ROUTING_LIBRARY} --scad_include $(SCAD_DESIGN_INCLUDE) \
-			--lef_file ${SC_LEF} ${ADDITIONAL_LEFS} --tlef_file ${TECH_LEF} \
+SCAD_ARGS += --lef_file ${SC_LEF} ${ADDITIONAL_LEFS} --tlef_file ${TECH_LEF} \
+            --component_file ${PLATFORM_DIR}/scad/h.r.3.3/components.scad \
+            --routing_file ${PLATFORM_DIR}/scad/openmfda/polychannel/routing.scad \
             --platform "$(PLATFORM)" \
             --px $(PX_VAL) --layer $(LAYER_VAL) --bottom_layer $(BOT_LAYER_VAL) --lpv $(LPV_VAL) --xbulk $(XBULK_VAL) \
             --ybulk $(YBULK_VAL) --zbulk $(ZBULK_VAL) --xchip $(XCHIP_VALS) --ychip $(YCHIP_VALS) \
             --pitch $(PITCH) --res $(RES_VAL)
-else
-SCAD_ARGS += --component_file ${SCAD_COMPONENT_LIBRARY} \
-			--routing_file ${SCAD_ROUTING_LIBRARY} \
-			--lef_file ${SC_LEF} ${ADDITIONAL_LEFS} --tlef_file ${TECH_LEF} \
-            --platform "$(PLATFORM)" \
-            --px $(PX_VAL) --layer $(LAYER_VAL) --bottom_layer $(BOT_LAYER_VAL) --lpv $(LPV_VAL) --xbulk $(XBULK_VAL) \
-            --ybulk $(YBULK_VAL) --zbulk $(ZBULK_VAL) --xchip $(XCHIP_VALS) --ychip $(YCHIP_VALS) \
-            --pitch $(PITCH) --res $(RES_VAL)
-endif
