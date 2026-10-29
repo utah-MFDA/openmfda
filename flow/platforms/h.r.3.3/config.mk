@@ -4,25 +4,9 @@
 # Tech/Libs
 # ----------------------------------------------------
 export GENERAL_MAP_FILE = $(PLATFORM_DIR)/lib/common.v
-
-ifeq ($(BUILD_PDK_LIBRARY),)
-# General distribution files
-#	export GDS_FILES = $(sort $(wildcard $(PLATFORM_DIR)/gds/*.gds)) \
-                      #	$(ADDITIONAL_GDS)
-export TECH_LEF = $(PLATFORM_DIR)/lef/h.r.3.3.tlef
-export SC_LEF = $(PLATFORM_DIR)/lef/h.r.3.3_merged.lef
-
-#export LIB_FILES = $(PLATFORM_DIR)/lib/h.r.3.3.lib \
-                     #$(ADDITIONAL_LIBS)
-export SCAD_COMPONENT_LIBRARY = $(PLATFORM_DIR)/scad/components.scad
-export SCAD_ROUTING_LIBRARY = $(PLATFORM_DIR)/scad/routing.scad
-else
-# Locally built distribution files
-ROOT_DIR=$(PLATFORM_DIR)/pdk/Components
-include $(PLATFORM_DIR)/pdk/Components/Makefile
-export LIBRARY_DEPS = $(SC_LEF) $(TECH_LEF) $(LIB_FILES) $(SCAD_COMPONENT_LIBRARY) $(SCAD_ROUTING_LIBRARY) $(GDS_FILES) $(XYCE_LIB)
-endif
-
+export TECH_LEF ?= $(PLATFORM_DIR)/lef/h.r.3.3.tlef
+export SC_LEF ?= $(PLATFORM_DIR)/lef/h.r.3.3_merged.lef
+export OPENSCADPATH = $(PLATFORM_DIR)/scad
 ########### Not used but needed for scad rendering definitions
 # chip min and max x values in pixels
 export XCHIP_VALS		= 325 2225
@@ -51,7 +35,7 @@ export IO_PLACER_V = met2
 
 # defaults specified here, override in local file as needed
 #export DIE_AREA    	 	= 0 0 2550 1600
-export DIE_AREA    	 	= 0 0 $(XBULK_VAL) $(YBULK_VAL)
+export DIE_AREA    	 	?= 0 0 $(XBULK_VAL) $(YBULK_VAL)
 #export CORE_AREA   	 	= 0 0 2550 1600
 # does arithmetic in make throuh shell call
 CORE_X1 = $(shell echo $$(( 0 + $(EDGE_PADDING) )))
@@ -59,7 +43,7 @@ CORE_X2 = $(shell echo $$(( $(XBULK_VAL) - $(EDGE_PADDING) )))
 CORE_Y1 = $(shell echo $$(( 0 + $(EDGE_PADDING) )))
 CORE_Y2 = $(shell echo $$(( $(YBULK_VAL) - $(EDGE_PADDING) )))
 
-export CORE_AREA   	 	= $(CORE_X1) $(CORE_Y1) $(CORE_X2) $(CORE_Y2)
+export CORE_AREA   	 	?= $(CORE_X1) $(CORE_Y1) $(CORE_X2) $(CORE_Y2)
 
 #---------------------------------------------------------
 # Place
@@ -80,7 +64,7 @@ export PLACE_DENSITY ?= 1
 # FastRoute options
 #   moved to config_3dp.mk
 export MIN_ROUTING_LAYER ?= met1
-export MAX_ROUTING_LAYER ?= met8
+export MAX_ROUTING_LAYER ?= met9
 
 # Define fastRoute tcl
 export FASTROUTE_TCL = $(PLATFORM_DIR)/fastroute.tcl
@@ -88,10 +72,34 @@ export FASTROUTE_TCL = $(PLATFORM_DIR)/fastroute.tcl
 # KLayout technology file
 export KLAYOUT_TECH_FILE = $(PLATFORM_DIR)/$(PLATFORM).lyt
 
+#------------------------------------------------------------------------------
+# PRINTER PARAMETERS
+#------------------------------------------------------------------------------s
+# mm/px value
+export PX_VAL 			= 0.0076
+# mm/layer value
+export LAYER_VAL		= 0.01
+# layer number for the bottom layer
+export BOT_LAYER_VAL	= 75
+# layers/via value
+export LPV_VAL			= 20
+# bulk x value in pixels
+export XBULK_VAL		= 2550
+# bulk y value in pixels
+export YBULK_VAL		= 1600
+# bulk z value in layers
+export ZBULK_VAL		= 230
+# chip min and max x values in pixels
+export XCHIP_VALS		= 325 2225
+# chip min and max y values in pixels
+export YCHIP_VALS		= 325 1275
+# render smoothness in scad render
+export RES_VAL			= 120
+export PITCH            = 30
 # Default SCAD script arguments
-SCAD_ARGS = --component_file ${SCAD_COMPONENT_LIBRARY} \
-			--routing_file ${SCAD_ROUTING_LIBRARY} \
-			--lef_file ${SC_LEF} --tlef_file ${TECH_LEF} \
+SCAD_ARGS += --lef_file ${SC_LEF} ${ADDITIONAL_LEFS} --tlef_file ${TECH_LEF} \
+            --component_file ${PLATFORM_DIR}/scad/h.r.3.3/components.scad \
+            --routing_file ${PLATFORM_DIR}/scad/openmfda/polychannel/routing.scad \
             --platform "$(PLATFORM)" \
             --px $(PX_VAL) --layer $(LAYER_VAL) --bottom_layer $(BOT_LAYER_VAL) --lpv $(LPV_VAL) --xbulk $(XBULK_VAL) \
             --ybulk $(YBULK_VAL) --zbulk $(ZBULK_VAL) --xchip $(XCHIP_VALS) --ychip $(YCHIP_VALS) \

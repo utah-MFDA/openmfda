@@ -7,7 +7,6 @@ this_file_dir = os.path.abspath(os.path.dirname(__file__))
 
 sys.path.append(this_file_dir+'/../')
 import routing_fix_main
-
 os.environ["LOG_DIR"] = "./logs"
 # fmt: on
 
@@ -21,7 +20,6 @@ lef_files = [
 ]
 
 plt_conf = this_file_dir + '/h.r.3.3.techlef.config.json'
-
 
 
 def run_test_1():

@@ -26,13 +26,10 @@ import def_obj_load
 sys.path.append(f'{openmfda_base_dir}/tools/scad_render')
 import route_scripts
 import component_parse
-
-
 if "LOG_DIR" in os.environ:
     log_file_base = f"{LOG_DIR}/route_fix"
 else:
     log_file_base = "./route_fix"
-
 # fmt: on
 
 
@@ -244,6 +241,7 @@ def fix_routes(
 
     # ---------------------------------------
     # convert routing pts to grid pts
+
     if 'def_scale' in def_obj:
         def_scale = def_obj['def_scale']
 
@@ -295,7 +293,6 @@ def fix_routes(
 
     # -----------------------------
     #   initiallize the device with components blocking routing grids
-
     astar_route.initialize_components_in_grid(
         solv_grid,
         design_obj.components,
@@ -404,8 +401,6 @@ def fix_routes(
         #     sol_qpr = copy.deepcopy(sol_q)
         #     with open(log_file_base+"_3_queue.txt", "w+") as log_file:
         #         log_file.write(str([ob for ob in iter(sol_qpr.get, None)]))
-
-
         # I think I can unload CompP
 
         # in astar_route
@@ -423,7 +418,6 @@ def fix_routes(
         rt_stack = []
 
         cur_net = ''
-        
         q_count = 0
         if log_queue:
             with open(log_file_base+"_3_queue.txt", "w+") as log_file:
@@ -445,7 +439,6 @@ def fix_routes(
                     if len(rt_stack) == 0:
                         break
                 cur_net = rt[0]
-
             routing_fix.solve_rt(
                 pt_pair=rt[1],
                 net_name=rt[0],
@@ -455,7 +448,6 @@ def fix_routes(
                 grid=solv_grid,
                 write_2_grid=True
             )
-
             # note which nets have been solved
             if rt[0] not in sol_rts:
                 sol_rts.append(rt[0])

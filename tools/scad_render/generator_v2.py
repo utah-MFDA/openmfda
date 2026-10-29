@@ -801,101 +801,103 @@ def write_imports(
         results_dir=None,
         mode='w'):
 
-    of = open(o_file, mode)
+    with open(o_file, mode) as of:
+        of.write("use <h.r.3.3/components.scad>\n")
+        of.write("use <openmfda/polychannel/routing.scad>\n")
+        of.write("use <openmfda/polychannel/polychannel_v2.scad>\n")
 
     #sc_base = '/'.join(
         #os.path.realpath(__file__)
         #.split('/')[:-1]+['support_libs'])
 
-    sc_base = scad_lib_dir
+    # sc_base = scad_lib_dir
 
-    if '/' in comp_file:
-        comp_dir = '.'
-    else:
-        comp_dir = scad_lib_dir
+    # if '/' in comp_file:
+    #     comp_dir = '.'
+    # else:
+    #     comp_dir = scad_lib_dir
     #of.write(f"use <{scad_lib_dir}/{platform}_merged.scad>\n")
-    if copy:
-        if not isinstance(comp_file, list):
-            raise ValueError(f"comp_file is not a list, is of type: {type(comp_file)}")
-        for cf in comp_file:
-            if results_dir is None:
-                raise ValueError("No results directory")
-            if scad_lib_dir == '.':
-                shutil.copy(
-                    cf,
-                    f"{results_dir}/{cf.split('/')[-1]}"
-                )
-            else:
-                shutil.copy(
-                    f"{comp_dir}/{cf}",
-                    f"{results_dir}/{cf.split('/')[-1]}"
-                )
-            of.write(f"use <./{cf.split('/')[-1]}>\n")
-    else:
-        print("Has results file", results_dir)
-        if isinstance(comp_file, list):
-            if results_dir is None:
-                for cf in comp_file:
-                    of.write(f"use <{comp_dir}/{cf}>\n")
-            else:
-                for cf in comp_file:
-                    if '/' in cf:
-                        of.write(f"use <./{cf.split('/')[-1]}>\n")
-                    else:
-                        of.write(f"use <./{cf}>\n")
-        else:
-            if results_dir is None:
-                of.write(f"use <{comp_dir}/{comp_file}>\n")
-            else:
-                of.write(f"use <./{os.path.basename(comp_file)}>\n")
+    # if copy:
+    #     if not isinstance(comp_file, list):
+    #         raise ValueError(f"comp_file is not a list, is of type: {type(comp_file)}")
+    #     for cf in comp_file:
+    #         if results_dir is None:
+    #             raise ValueError("No results directory")
+    #         if scad_lib_dir == '.':
+    #             shutil.copy(
+    #                 cf,
+    #                 f"{results_dir}/{cf.split('/')[-1]}"
+    #             )
+    #         else:
+    #             shutil.copy(
+    #                 f"{comp_dir}/{cf}",
+    #                 f"{results_dir}/{cf.split('/')[-1]}"
+    #             )
+    #         of.write(f"use <./{cf.split('/')[-1]}>\n")
+    # else:
+    #     print("Has results file", results_dir)
+    #     if isinstance(comp_file, list):
+    #         if results_dir is None:
+    #             for cf in comp_file:
+    #                 of.write(f"use <{comp_dir}/{cf}>\n")
+    #         else:
+    #             for cf in comp_file:
+    #                 if '/' in cf:
+    #                     of.write(f"use <./{cf.split('/')[-1]}>\n")
+    #                 else:
+    #                     of.write(f"use <./{cf}>\n")
+    #     else:
+    #         if results_dir is None:
+    #             of.write(f"use <{comp_dir}/{comp_file}>\n")
+    #         else:
+    #             of.write(f"use <./{os.path.basename(comp_file)}>\n")
 
 
-    of.write("//Routing library\n")
-    if isinstance(routing_use, list):
-        for r_use in routing_use:
-            r_name = os.path.basename(r_use) if '/' in r_use else r_use
-            if copy and results_dir is not None:
-                # shutil.copy(f"{scad_lib_dir}/{r_use}.scad",
-                if scad_lib_dir == '.':
-                    shutil.copy(
-                        r_use,
-                        f"{results_dir}/{r_name}"
-                    )
-                else:
-                    shutil.copy(
-                        f"{sc_base}/{r_name}",
-                        f"{results_dir}/{r_name}"
-                    )
-                of.write(f"use <./{r_name}>\n")
-            else:
-                of.write(f"use <{scad_lib_dir}/{r_name}>\n")
-    else:
-        raise ValueError(f"routing use of wrong type is of type {type(routing_use)}")
+    # if isinstance(routing_use, list):
+    #     for r_use in routing_use:
+    #         r_name = os.path.basename(r_use) if '/' in r_use else r_use
+    #         if copy and results_dir is not None:
+    #             # shutil.copy(f"{scad_lib_dir}/{r_use}.scad",
+    #             if scad_lib_dir == '.':
+    #                 shutil.copy(
+    #                     r_use,
+    #                     f"{results_dir}/{r_name}"
+    #                 )
+    #             else:
+    #                 shutil.copy(
+    #                     f"{sc_base}/{r_name}",
+    #                     f"{results_dir}/{r_name}"
+    #                 )
+    #             of.write(f"use <./{r_name}>\n")
+    #         else:
+    #             of.write(f"use <{scad_lib_dir}/{r_name}>\n")
+    # else:
+    #     raise ValueError(f"routing use of wrong type is of type {type(routing_use)}")
 
-    of.write("//Additional includes\n")
-    if isinstance(scad_include, list):
-        for sc_i in scad_include:
-            sc_i_name = os.path.basename(sc_i) if '/' in sc_i else sc_i
-            if copy and results_dir is not None:
-                # shutil.copy(f"{scad_lib_dir}/{r_use}.scad",
-                if scad_lib_dir == '.':
-                    shutil.copy(
-                        sc_i,
-                        f"{results_dir}/{sc_i_name}"
-                    )
-                else:
-                    shutil.copy(
-                        f"{sc_base}/{sc_i_name}",
-                        f"{results_dir}/{sc_i_name}"
-                    )
-                of.write(f"use <./{sc_i_name}>\n")
-            else:
-                of.write(f"use <{scad_lib_dir}/{sc_i_name}>\n")
-    elif scad_include is None:
-        # Nothing to do
-        pass
-    else:
-        raise ValueError(f"routing use of wrong type is of type {type(scad_include)}")
+    # of.write("//Additional includes\n")
+    # if isinstance(scad_include, list):
+    #     for sc_i in scad_include:
+    #         sc_i_name = os.path.basename(sc_i) if '/' in sc_i else sc_i
+    #         if copy and results_dir is not None:
+    #             # shutil.copy(f"{scad_lib_dir}/{r_use}.scad",
+    #             if scad_lib_dir == '.':
+    #                 shutil.copy(
+    #                     sc_i,
+    #                     f"{results_dir}/{sc_i_name}"
+    #                 )
+    #             else:
+    #                 shutil.copy(
+    #                     f"{sc_base}/{sc_i_name}",
+    #                     f"{results_dir}/{sc_i_name}"
+    #                 )
+    #             of.write(f"use <./{sc_i_name}>\n")
+    #         else:
+    #             of.write(f"use <{scad_lib_dir}/{sc_i_name}>\n")
+    # elif scad_include is None:
+    #     # Nothing to do
+    #     pass
+    # else:
+    #     raise ValueError(f"routing use of wrong type is of type {type(scad_include)}")
     # elif isinstance(routing_use, str):
     #     # of.write(f"use <{scad_lib_dir}/{routing_use}.scad\n>")
     #     if copy and results_dir is not None:
@@ -1197,9 +1199,9 @@ show_lefs=false ;
     with open(o_file, 'a') as of:
         of.write(f"""
 if($preview) {fb}
-    {tp}%interconnect_32channel({xbulk/2}, {ybulk/2}, {zbulk});
+    {tp}%interconnect_8x4({xbulk/2}, {ybulk/2}, {zbulk});
 {bb} else {fb}
-    {tp}interconnect_32channel({xbulk/2}, {ybulk/2}, {zbulk});
+    {tp}interconnect_8x4({xbulk/2}, {ybulk/2}, {zbulk});
 {bb}
 """)
 

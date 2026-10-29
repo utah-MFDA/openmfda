@@ -1,0 +1,6 @@
+# SCIP version 10.0.0
+
+# maximal time in seconds to run
+# [type: real, advanced: FALSE, range: [0,1e+20], default: 1e+20]
+limits/time = 240
+

@@ -1,7 +1,6 @@
 //multiply_string("xyz",3) ---> "xyzxyzxyz"
 function multiply_string(string, n) = (n == 0 ? "":str(string, multiply_string(string, n-1)));
 
-
 //multiply_vector([0,2,1],4) ---> [0,2,1,0,2,1,0,2,1,0,2,1]
 function multiply_vector(vector, n) = (n == 0 ? []:concat(vector, multiply_vector(vector, n-1)));
 

@@ -93,7 +93,6 @@ def extract_intersect_pt_list2(
             if pt not in pt_list[dkey]:
                 pt_list[dkey].append(pt)
     # end fnct
-
     inter_net_list = {}
 
     for net_pair in inters_dict.items():
@@ -101,7 +100,6 @@ def extract_intersect_pt_list2(
             print("Extracting from ", net_pair[0])
         net1 = net_pair[0][0]
         net2 = net_pair[0][1]
-
         if net1 not in inter_net_list:
             inter_net_list[net1] = {}
         inter_net_list[net1][net2] = []
