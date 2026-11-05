@@ -32,29 +32,28 @@ def read_yosys_json(input_file, top):
                     G.add_edge(cell, name, hyperedge=True, bit=bit, ports={cell:port, name:f"{cell}.{port}"}, direction=direction)
                 else:
                     logger.error(f"Duplicate edge {cell} {name}")
-                    raise
     for net, details in m["netnames"].items():
         # Multiple named nets will be attached to the same bit, last one wins.
         for index, bit in enumerate(details["bits"]):
-            bit = f"$_{bit}"
-            if bit not in G.nodes:
+            name = f"$_{bit}"
+            if name not in G.nodes:
                 logger.error(f"Missing node for bit {bit}")
-                raise
+                G.add_node(name, weight=0, hyperedge=True, cell="$_wire", name=name, netnames=set(), bit=bit)
             if not details.get("hide_name", 0):
-                G.nodes[bit]["netnames"].add((net, details.get("index", index)))
+                G.nodes[name]["netnames"].add((net, details.get("index", index)))
                 # there is a possible offset, ignoring
-            G.nodes[bit]["attributes"] = details["attributes"]
+            G.nodes[name]["attributes"] = details["attributes"]
             if "type" in details["attributes"]:
                 kind = details["attributes"]["type"]
-                G.nodes[bit]["type"] = kind
-                for neighbor in G.adj[bit]:
-                    G.edges[(bit, neighbor)]["type"] = kind
+                G.nodes[name]["type"] = kind
+                for neighbor in G.adj[name]:
+                    G.edges[(name, neighbor)]["type"] = kind
             else:
-                G.nodes[bit]["type"] = "$_unknown"
+                G.nodes[name]["type"] = "$_unknown"
             # If the wire type is input/output/inout, mark here
             if net in m["ports"]:
                 direction = m["ports"][net]["direction"]
-                G.nodes[bit]["cell"] = f"$_{direction}"
+                G.nodes[name]["cell"] = f"$_{direction}"
     rm = []
     for node, props in G.nodes.items():
         if props["hyperedge"] and G.degree(node) == 2:
@@ -172,9 +171,13 @@ def add_shell(G, starts):
       if "shell" not in G.nodes[node]:
             logger.error("Shell missing %s", node)
     for node in G.nodes:
-        assert("shell" in G.nodes[node])
-        G.nodes[node]["shell"] = shell - G.nodes[node]["shell"] - 1
-        # log.debug("Node %d %s", G.nodes[node]["shell"], node)
+        if "shell" in G.nodes[node]:
+            G.nodes[node]["shell"] = shell - G.nodes[node]["shell"] - 1
+    orphaned = [node for node in G.nodes if "shell" not in G.nodes[node]]
+    for node in orphaned:
+        log.error("Shell missing for node %s", node)
+    G.remove_nodes_from(orphaned)
+
     return shell
 
 def add_buffers_output(G, depth, targets):

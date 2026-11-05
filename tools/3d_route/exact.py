@@ -114,6 +114,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.basicConfig(filename=args.logfile, level=args.log)
     G = read_yosys_json(args.input_file,args.top)
+    G = strip_graph(G)
     log.info("Loaded %s", G)
     start_t = time.time_ns()
     run_everything_redux(G, args.cache,

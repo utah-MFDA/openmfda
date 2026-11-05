@@ -57,43 +57,10 @@ assert(issymmetric(pd_adjacency.to_numpy()))
 assert(issymmetric(pd_antiadjacency.to_numpy()))
 assert(isnegsymmetric(pd_expected.to_numpy()))
 
-def read_results(filename, rounding=True):
-    logger.info("Reading file %s", filename)
-    label = filename.split(".")[1]
-    df = pd.read_csv(filename,
-                     index_col="node",
-                     dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
-    H = G.copy()
-    data_missing = (set(H.nodes) - set(df.index.tolist()))
-    if len(data_missing) > 0:
-        logger.warning(f"missing {len(data_missing)} nodes from data")
-    H.remove_nodes_from(data_missing)
-
-    if rounding:
-        coords = torch.tensor(df[["x", "y", "z"]].round().astype(int).to_numpy())
-        model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
-    else:
-        coords = torch.tensor(df[["x", "y", "z"]].to_numpy())
-        if label in ["torch", "exact"]:
-            model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
-        else:
-            model = EuclideanHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
-
-    loss = model.forward().cpu().item()
-    logger.info(f"Loss calculated {label} {loss}")
-    with torch.no_grad():
-        data = (model.repellor_norms,
-                model.norm(model.all_repellor_forces),
-                model.all_repellor_potentials,
-                model.attractor_norms,
-                model.norm(model.all_attractor_forces),
-                model.all_attractor_potentials)
-        return H, [pd.DataFrame(d.detach().numpy(), index=df.index, columns=df.index.tolist())
-                for d in data]
 # results = sorted(args.results)
 results = args.results
-labels = [r.split(".")[1] for r in results]
 data = [read_results(result) for result in results]
+labels = [filename.split(".")[1] for filename in results]
 logger.info("finished loading data")
 c = 3
 r = math.ceil(len(results)//c) + 1
@@ -106,7 +73,7 @@ plt.rcParams['font.family'] = 'serif'
 axs[0][0].set_title("edge length difference from expected")
 axs[0][1].set_title("cell potential")
 axs[0][2].set_title("all cells expected distance error")
-for i, (title, (G, d)) in enumerate(zip(labels, data)):
+for i, (title, G, d) in enumerate(data):
     r_dist, r_force, r_potentials, a_dist, a_force, a_potentials = d
     potentials = r_potentials + a_potentials
 
@@ -135,7 +102,7 @@ def cubic(x, *p):
     return a*(x-b)**3
 
 axs[2][0].set_title("edge length difference from expected")
-dists = [np.unique([r[0].loc[e].round()-1 for e in sorted(G.edges)], return_counts=True) for G, r in data]
+dists = [np.unique([r[0].loc[e].round()-1 for e in sorted(G.edges)], return_counts=True) for l, G, r in data]
 vals = [v for vs, c in dists for v in vs]
 u, l = int(max(vals)), int(min(vals))
 o = u - l
@@ -146,7 +113,7 @@ for i, (dc, dh) in enumerate(dists):
 v.plot.bar(ax=axs[2][0])
 
 axs[1][0].set_title("edge length difference from expected")
-dists = [[(r[0].loc[e])-1 for e in G.edges] for G, r in data]
+dists = [[(r[0].loc[e])-1 for e in G.edges] for l, G, r in data]
 for i, (l, d) in enumerate(zip(labels, dists)):
     dh, db = np.histogram(d, bins=10)
     dc = (db[:-1] + db[1:])/2
@@ -174,7 +141,7 @@ def err_fixup(r):
     f = abs((e*t).reshape(-1))
     g = f[~np.isnan(f)]
     return g[~np.isinf(g)]
-error = [err_fixup(e[0]) for G, e in data]
+error = [err_fixup(e[0]) for l, G, e in data]
 for i, (l, d) in enumerate(zip(labels, error)):
     dh, db = np.histogram(d, bins=20)
     dc = (db[:-1] + db[1:])/2
@@ -189,7 +156,7 @@ for i, (l, d) in enumerate(zip(labels, error)):
 
 
 axs[1][1].set_title("cell potential")
-pots= [r[2].sum(axis=1) for G, r in data]
+pots= [r[2].sum(axis=1) for l, G, r in data]
 for i, (l, d) in enumerate(zip(labels, pots)):
     dh, dby = np.histogram(d, bins=20)
     dc = (db[:-1] + db[1:])/2

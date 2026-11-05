@@ -102,6 +102,7 @@ if __name__ == "__main__":
     if args.alg in ["mds", "smacof", "ica", "isomap", "pca", "incpca", "grp"]:
         dists = dict(nx.all_pairs_shortest_path_length(G))
         p = pd.DataFrame(dists, index=G.nodes, columns=G.nodes)
+        p = p.fillna(p.max().max())
     else:
         p = nx.to_pandas_adjacency(G)
     logger.info("Distances calculated")

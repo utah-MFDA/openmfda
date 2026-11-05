@@ -170,7 +170,7 @@ class SpringModel(torch.nn.Module):
         assert(issymmetric(self.repellor_force_norm.cpu().numpy()))
         assert(issymmetric(self.repellor_potentials.cpu().numpy()))
 
-    def step(self, autograde, tick, damping):
+    def step(self, autograde, tick, damping, crank):
         if autograde:
             for coords in self.parameters():
                 self.grad = -coords.grad
@@ -182,7 +182,7 @@ class SpringModel(torch.nn.Module):
             self.zero_grad()
         else:
             heat_force = -self.velocity * (1-damping)
-            forces = self.repellor_forces + self.attractor_forces + heat_force + self.grid_forces
+            forces = crank * self.repellor_forces + self.attractor_forces + heat_force + self.grid_forces
             self.coords += self.velocity * tick
             self.velocity += forces * tick
             self.heat_velocity += torch.abs(heat_force) * tick
@@ -235,7 +235,11 @@ class BruteSpringModel(SpringModel):
         self.all_attractor_potentials = attractor_potentials
         self.attractor_forces = attractor_forces.sum(dim=1)
         self.attractor_potentials = attractor_potentials.sum(dim=1)
-        self.total_potential = self.attractor_potentials + self.repellor_potentials
+        # push toward inte
+        self.grid_forces = (torch.round(self.coords) - self.coords)*0.5
+        self.grid_potentials = 0.5*self.norm(self.grid_forces)**2
+
+        self.total_potential = self.attractor_potentials + self.repellor_potentials + self.grid_potentials
         self.kinetic = 0.5*self.norm(self.velocity)**2
         self.heat = 0.5*self.norm(self.heat_velocity)**2
         return self.total_potential.sum()
@@ -332,7 +336,8 @@ class Runner():
         parser = argparse.ArgumentParser()
         parser.add_argument("--output")
         parser.add_argument("--intermediate")
-        parser.add_argument("--cutoff", default=0, type=float)
+        parser.add_argument("--cutoff_kinetic", default=0, type=float)
+        parser.add_argument("--cutoff_potential", default=0, type=float)
         parser.add_argument("--iterations", default=1e5, type=int)
         parser.add_argument("--log", default="INFO")
         parser.add_argument("--logfile")
@@ -345,6 +350,7 @@ class Runner():
         parser.add_argument("--damping", type=float, default=0.90)
         parser.add_argument("--autograde", action="store_true")
         parser.add_argument("--dynamic", action="store_true")
+        parser.add_argument("--collision_crank", action="store_true")
         parser.add_argument("--dyn_range", type=float, default=4)
         parser.add_argument("--dyn_height", type=float, default=2)
         parser.add_argument("--init_vel", type=float, default=0.5)
@@ -407,7 +413,11 @@ class Runner():
 
             # Stream iteration
             self.last_tick = self.calculate_tick_rate()
-            self.model.step(self.args.autograde, tick=self.last_tick, damping=self.args.damping)
+            if self.args.collision_crank:
+                crank = 1 + 100/self.total_k
+            else:
+                crank = 1
+            self.model.step(self.args.autograde, tick=self.last_tick, damping=self.args.damping, crank=crank)
             self.event_t.append(time.time_ns())
 
             # Write out any tracked state
@@ -425,12 +435,17 @@ class Runner():
         return False
 
     def is_finished(self):
-        return np.isnan(self.total_k) or np.isnan(self.total_p)\
+        # The first three conditions capture runaway simulation
+        runaway = np.isnan(self.total_k) or np.isnan(self.total_p)\
             or np.isinf(self.total_k) or np.isinf(self.total_p)\
-            or self.total_p + self.total_k < self.args.cutoff \
-            or (self.args.iterations > 0 and self.iter > self.args.iterations - 1) \
-            or (self.total_k + self.total_p > 2*self.total_e) \
-            or (self.iter > 100 and self.total_k < 0.0001)
+            or (self.total_k + self.total_p > 2*self.total_e)
+        # The kinetic cutoff only applies after a short number of iterations to
+        # prevent the process halting on the first iteration if intial velocity is 0.
+        cutoff = self.total_p < self.args.cutoff_potential \
+            or self.iter > 100 and self.total_k < self.args.cutoff_kinetic
+        # Iteration cutoff is disabled if the max iterations is 0.
+        max_iterations =  self.args.iterations > 0 and self.iter > self.args.iterations - 1
+        return runaway or cutoff or max_iterations
 
     def calculate_tick_rate(self):
         if self.args.dynamic:
@@ -488,6 +503,41 @@ class Runner():
                     *delta_t]
             print(self.iter, "\t".join(f"{i:0.5f}" for i in stats), sep="\t", file=self.energy_log, flush=True)
 
+
+def read_results(G, filename, rounding=True):
+    logger.info("Reading file %s", filename)
+    label = filename.split(".")[1]
+    df = pd.read_csv(filename,
+                     index_col="node",
+                     dtype={"node": str, "x": np.float32, "y": np.float32, "z": np.float32})
+    H = G.copy()
+    data_missing = (set(H.nodes) - set(df.index.tolist()))
+    if len(data_missing) > 0:
+        logger.warning(f"missing {len(data_missing)} nodes from data")
+    H.remove_nodes_from(data_missing)
+
+    if rounding:
+        coords = torch.tensor(df[["x", "y", "z"]].round().astype(int).to_numpy())
+        model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
+    else:
+        coords = torch.tensor(df[["x", "y", "z"]].to_numpy())
+        if label in ["torch_eq", "exact"]:
+            model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
+        else:
+            model = EuclideanHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
+
+    loss = model.forward().cpu().item()
+    logger.info(f"Loss calculated {label} {loss}")
+    with torch.no_grad():
+        data = (model.repellor_norms,
+                model.norm(model.all_repellor_forces),
+                model.all_repellor_potentials,
+                model.attractor_norms,
+                model.norm(model.all_attractor_forces),
+                model.all_attractor_potentials)
+        dfs = [pd.DataFrame(d.detach().numpy(), index=df.index, columns=df.index.tolist())
+                for d in data]
+        return H, dfs
 
 if __name__ == "__main__":
     import argparse
