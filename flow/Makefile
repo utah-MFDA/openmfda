@@ -1,13 +1,35 @@
 # ==============================================================================
-# Uncomment or add the design to run
+# Change the design and platform here, or run make with flags `-EDESIGN=demo -EPLATFORM=h.r.3.3`
 # ==============================================================================
 PLATFORM ?= h.r.3.3
 export DESIGN ?= demo
 
-OPENROAD_EXE ?= openroad
-KLAYOUT_CMD ?= klayout
-YOSYS_CMD ?= yosys
-OPENSCAD ?= openscad
+OPENROAD ?= openroad
+PYTHON3 ?= python3
+KLAYOUT ?= klayout
+YOSYS ?= yosys
+ifeq (, $(shell which openscad))
+	OPENSCAD ?= OpenSCAD
+else
+	OPENSCAD ?= openscad
+endif
+
+ifeq (, $(shell which ${OPENROAD))
+$(error "Could not find executable for OPENROAD, tried '${OPENROAD}'")
+endif
+ifeq (, $(shell which ${PYTHON3))
+$(error "Could not find executable for PYTHON3, tried '${PYTHON3}'")
+endif
+ifeq (, $(shell which ${KLAYOUT))
+$(error "Could not find executable for KLAYOUT, tried '${KLAYOUT}'")
+endif
+ifeq (, $(shell which ${YOSYS))
+$(error "Could not find executable for YOSYS, tried '${YOSYS}'")
+endif
+ifeq (, $(shell which ${OPENSCAD))
+$(error "Could not find executable for OPENSCAD, tried '${OPENSCAD}'")
+endif
+
 #export SCAD_SCRIPT ?= ../tools/scad_render/scad_pnr.py
 export SCAD_SCRIPT ?= ../tools/scad_render/generator_v2.py
 export BUILD_PDK_LIBRARY ?=
@@ -36,8 +58,6 @@ export NEW_VER_FL_SITE ?=
 ifndef DISPLAY
 export QT_QPA_PLATFORM ?= offscreen
 endif
-
-PYTHON3 ?= python3
 
 SLICER_SCRIPT = ../tools/simple_slicer/slice_geom.py
 
@@ -177,13 +197,13 @@ TIME_CMD=/usr/bin/time --verbose
 # Priority is given to
 #       1 user include path to the executable prior to running make
 #       2 user explicit set with variable in Makefile or command line
-OPENROAD_EXE            ?= $(shell command -v openroad)
+OPENROAD            ?= $(shell command -v openroad)
 OPENROAD_ARGS            = -no_init $(OR_ARGS)
-OPENROAD_CMD             = $(OPENROAD_EXE) -exit $(OPENROAD_ARGS)
-OPENROAD_NO_EXIT_CMD     = $(OPENROAD_EXE) $(OPENROAD_ARGS)
-OPENROAD_GUI_CMD         = $(OPENROAD_EXE) -gui $(OR_ARGS)
+OPENROAD_CMD             = $(OPENROAD) -exit $(OPENROAD_ARGS)
+OPENROAD_NO_EXIT_CMD     = $(OPENROAD) $(OPENROAD_ARGS)
+OPENROAD_GUI_CMD         = $(OPENROAD) -gui $(OR_ARGS)
 XYCE_CMD                = Xyce
-KLAYOUT_CMD             ?= $(shell command -v klayout)
+KLAYOUT             ?= $(shell command -v klayout)
 
 #-------------------------------------------------------------------------------
 WRAPPED_LEFS = $(foreach lef,$(notdir $(WRAP_LEFS)),$(OBJECTS_DIR)/lef/$(lef:.lef=_mod.lef))
@@ -223,8 +243,8 @@ $(BLOCK_LEFS):
 #-------------------------------------------------------------------------------
 .PHONY: versions.txt
 versions.txt:
-	@echo openroad `$(OPENROAD_EXE) -version` >> $@
-	@$(KLAYOUT_CMD) -zz -v >> $@
+	@echo openroad `$(OPENROAD) -version` >> $@
+	@$(KLAYOUT) -zz -v >> $@
 
 # Pre-process KLayout tech
 # ==============================================================================
@@ -301,11 +321,11 @@ clean_synth:
 SYNTH_SCRIPT ?= $(SCRIPTS_DIR)/synth_basic.tcl
 $(SYNTH_STOP_MODULE_SCRIPT):
 	mkdir -p $(RESULTS_DIR) $(LOG_DIR) $(REPORTS_DIR)
-	($(TIME_CMD) $(YOSYS_CMD) $(YOSYS_FLAGS) -c $(HIER_REPORT_SCRIPT)) 2>&1 | tee $(LOG_DIR)/1_0_yosys_hier_report.log
+	($(TIME_CMD) $(YOSYS) $(YOSYS_FLAGS) -c $(HIER_REPORT_SCRIPT)) 2>&1 | tee $(LOG_DIR)/1_0_yosys_hier_report.log
 
 $(RESULTS_DIR)/1_synth.v: $(VERILOG_FILES)
 	mkdir -p $(RESULTS_DIR) $(LOG_DIR) $(REPORTS_DIR)
-	($(TIME_CMD) $(YOSYS_CMD) $(YOSYS_FLAGS) -c $(SYNTH_SCRIPT)) 2>&1 | tee $(LOG_DIR)/1_synth.log
+	($(TIME_CMD) $(YOSYS) $(YOSYS_FLAGS) -c $(SYNTH_SCRIPT)) 2>&1 | tee $(LOG_DIR)/1_synth.log
 
 # Initialize
 #-------------------------------------------------------------------------------
@@ -461,13 +481,13 @@ clean_route:
 	rm -f  $(LOG_DIR)/3_*
 
 klayout_tr_rpt: $(RESULTS_DIR)/3_route.def $(OBJECTS_DIR)/klayout.lyt
-	$(KLAYOUT_CMD) -rd in_drc="$(REPORTS_DIR)/3_route_drc.rpt" \
+	$(KLAYOUT) -rd in_drc="$(REPORTS_DIR)/3_route_drc.rpt" \
 	        -rd in_def="$<" \
 	        -rd tech_file=$(OBJECTS_DIR)/klayout.lyt \
 	        -rm $(UTILS_DIR)/viewDrc.py
 
 klayout_guides: $(RESULTS_DIR)/3_route.def $(OBJECTS_DIR)/klayout.lyt
-	$(KLAYOUT_CMD) -rd in_guide="$(RESULTS_DIR)/route.guide" \
+	$(KLAYOUT) -rd in_guide="$(RESULTS_DIR)/route.guide" \
 	        -rd in_def="$<" \
 	        -rd net_name=$(GUIDE_NET) \
 	        -rd tech_file=$(OBJECTS_DIR)/klayout.lyt \
@@ -514,7 +534,7 @@ generate_abstract: $(RESULTS_DIR)/4_final.gds $(RESULTS_DIR)/4_final.def  $(RESU
 # Merge wrapped macros using Klayout
 #-------------------------------------------------------------------------------
 $(WRAPPED_GDSOAS): $(OBJECTS_DIR)/klayout_wrap.lyt $(WRAPPED_LEFS)
-	($(TIME_CMD) $(KLAYOUT_CMD) -zz -rd design_name=$(basename $(notdir $@)) \
+	($(TIME_CMD) $(KLAYOUT) -zz -rd design_name=$(basename $(notdir $@)) \
 	        -rd in_def=$(OBJECTS_DIR)/def/$(notdir $(@:$(STREAM_SYSTEM_EXT)=def)) \
 	        -rd in_files="$(ADDITIONAL_GDSOAS)" \
 	        -rd config_file=$(FILL_CONFIG) \
@@ -527,7 +547,7 @@ $(WRAPPED_GDSOAS): $(OBJECTS_DIR)/klayout_wrap.lyt $(WRAPPED_LEFS)
 #-------------------------------------------------------------------------------
 4_1_MERGED_FILE = $(RESULTS_DIR)/4_1_merged.$(STREAM_SYSTEM_EXT)
 $(4_1_MERGED_FILE): $(RESULTS_DIR)/4_final.def $(OBJECTS_DIR)/klayout.lyt $(GDSOAS_FILES) $(WRAPPED_GDSOAS) $(SEAL_GDSOAS)
-	($(TIME_CMD) stdbuf -o L $(KLAYOUT_CMD) -zz -rd design_name=$(DESIGN_NAME) \
+	($(TIME_CMD) stdbuf -o L $(KLAYOUT) -zz -rd design_name=$(DESIGN_NAME) \
 	        -rd in_def=$< \
 	        -rd in_files="$(GDSOAS_FILES) $(WRAPPED_GDSOAS)" \
 	        -rd config_file=$(FILL_CONFIG) \
@@ -545,7 +565,7 @@ drc: $(REPORTS_DIR)/4_drc.lyrdb
 
 $(REPORTS_DIR)/4_drc.lyrdb: $(6_FINAL_FILE) $(KLAYOUT_DRC_FILE)
 ifneq ($(KLAYOUT_DRC_FILE),)
-	($(TIME_CMD) $(KLAYOUT_CMD) -zz -rd in_gds="$<" \
+	($(TIME_CMD) $(KLAYOUT) -zz -rd in_gds="$<" \
 	        -rd report_file=$(abspath $@) \
 	        -r $(KLAYOUT_DRC_FILE)) 2>&1 | tee $(LOG_DIR)/4_drc.log
 	# Hacky way of getting DRV count (don't error on no matches)
@@ -564,7 +584,7 @@ lvs: $(RESULTS_DIR)/4_lvs.lvsdb
 
 $(RESULTS_DIR)/4_lvs.lvsdb: $(4_FINAL_FILE) $(KLAYOUT_LVS_FILE) $(OBJECTS_DIR)/4_final_concat.cdl
 ifneq ($(KLAYOUT_LVS_FILE),)
-	($(TIME_CMD) $(KLAYOUT_CMD) -b -rd in_gds="$<" \
+	($(TIME_CMD) $(KLAYOUT) -b -rd in_gds="$<" \
 	        -rd cdl_file=$(abspath $(OBJECTS_DIR)/4_final_concat.cdl) \
 	        -rd report_file=$(abspath $@) \
 	        -r $(KLAYOUT_LVS_FILE)) 2>&1 | tee $(LOG_DIR)/4_lvs.log
@@ -713,7 +733,7 @@ RESULTS_DEF = $(notdir $(sort $(wildcard $(RESULTS_DIR)/*.def)))
 RESULTS_GDS = $(notdir $(sort $(wildcard $(RESULTS_DIR)/*.gds)))
 RESULTS_OAS = $(notdir $(sort $(wildcard $(RESULTS_DIR)/*.oas)))
 $(foreach file,$(RESULTS_DEF) $(RESULTS_GDS) $(RESULTS_OAS),klayout_$(file)): klayout_%: $(OBJECTS_DIR)/klayout.lyt
-	$(KLAYOUT_CMD) -nn $(OBJECTS_DIR)/klayout.lyt $(RESULTS_DIR)/$*
+	$(KLAYOUT) -nn $(OBJECTS_DIR)/klayout.lyt $(RESULTS_DIR)/$*
 
 gui_final: gui_4_final.def
 
