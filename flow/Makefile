@@ -14,19 +14,19 @@ else
 	OPENSCAD ?= openscad
 endif
 
-ifeq (, $(shell which ${OPENROAD))
+ifeq (, $(shell which ${OPENROAD}))
 $(error "Could not find executable for OPENROAD, tried '${OPENROAD}'")
 endif
-ifeq (, $(shell which ${PYTHON3))
+ifeq (, $(shell which ${PYTHON3}))
 $(error "Could not find executable for PYTHON3, tried '${PYTHON3}'")
 endif
-ifeq (, $(shell which ${KLAYOUT))
+ifeq (, $(shell which ${KLAYOUT}))
 $(error "Could not find executable for KLAYOUT, tried '${KLAYOUT}'")
 endif
-ifeq (, $(shell which ${YOSYS))
+ifeq (, $(shell which ${YOSYS}))
 $(error "Could not find executable for YOSYS, tried '${YOSYS}'")
 endif
-ifeq (, $(shell which ${OPENSCAD))
+ifeq (, $(shell which ${OPENSCAD}))
 $(error "Could not find executable for OPENSCAD, tried '${OPENSCAD}'")
 endif
 
