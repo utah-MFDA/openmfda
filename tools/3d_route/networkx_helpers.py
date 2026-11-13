@@ -158,13 +158,22 @@ def add_shell(G, starts):
         nexts = deque()
         logger.debug("Traversing %d nodes in shell %d", len(frontier), shell)
         for leaf in frontier:
-            for neighbor in G.adj[leaf]:
+            num = len(G.adj[leaf])
+
+            for i, neighbor in enumerate(G.adj[leaf]):
                 if "shell" in G.nodes[neighbor]:
                     continue
                 else:
                     logger.debug("Found %s", neighbor)
-                    G.nodes[neighbor]["shell"] = shell + 1
-                    nexts.append(neighbor)
+                    # simple balancing, put extra neighbors
+                    # on the same level
+                    if i <= 7:
+                        G.nodes[neighbor]["shell"] = shell + 1
+                        nexts.append(neighbor)
+                    else:
+                        G.nodes[neighbor]["shell"] = shell
+                        for c in G.adj[neighbor]:
+                            nexts.append(c)
         frontier = nexts
         shell += 1
     for node in G.nodes:
@@ -196,8 +205,8 @@ def report_stats(G):
     num_input = sum(1 for i in G.nodes if is_input_port(G, i))
     num_output = sum(1 for i in G.nodes if is_output_port(G, i))
     num_inout = sum(1 for i in G.nodes if is_inout_port(G, i))
-    num_wire = sum(1 for i in G.nodes if is_net(G, i))
-    num_cells = len(G.nodes) - num_wire
+    num_wire = len(G.edges)
+    num_cells = len(G.nodes)
     logger.info("Starting with %d ports (%d input %d output %d inout) %d nets and %d cells", num_port, num_input, num_output, num_inout, num_wire, num_cells)
 
 def find_center(G, start_condition, buffer_condition=None):

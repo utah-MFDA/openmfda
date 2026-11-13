@@ -115,6 +115,22 @@ def scad_render_nodes(G, nodes, cell_dimensions, port_config, args):
                 yield scad_comment(f"Node {cell} {node}")(s)
         elif cell == "chamber":
             ports = port_directions(G, node)
+            print(ports)
+            fluid_in = ports["in"]
+            fluid_out = ports["out"]
+            block = resistor.block_resistor_failsafe(
+                             id=f"{cell} {node}",
+                             flow_in=fluid_out,
+                             flow_out=fluid_in,
+                             port_config=port_config,
+                             blocks=1,
+                             major_channel=[30,30,10],
+                             minor_channel=[30,30,10])
+            s = solid2.translate(centered)(block)
+            yield scad_comment(f"Node {cell} {node}")(s)
+        elif cell == "ring":
+            ports = port_directions(G, node)
+            print(ports)
             fluid_in = ports["in"]
             fluid_out = ports["out"]
             block = resistor.block_resistor_failsafe(
@@ -145,7 +161,7 @@ def scad_render_nodes(G, nodes, cell_dimensions, port_config, args):
             continue
         else:
             logger.warning(f"Unknown cell {cell}")
-            ports = neighbor_by_adj(G, nodes)
+            ports = neighbor_by_adj(G, node)
             block = dummy.block_dummy(inputs=ports, outputs=[], port_config=port_config, id=node)
             s = solid2.translate(centered)(block)
             yield scad_comment(f"Node {cell} {node}")(s)

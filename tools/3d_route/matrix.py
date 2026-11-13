@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 logger = logging.getLogger(__name__)
 logger.info("Starting up")
 import itertools
@@ -201,23 +202,29 @@ def isnegsymmetric3d(a):
     return isnegsymmetric(x) and isnegsymmetric(y) and isnegsymmetric(z)
 
 class BruteSpringModel(SpringModel):
-    def __init__(self, H, init_velocity, init_coords, autograde):
+    def __init__(self, H, init_velocity, init_coords, autograde, noise=True):
         super().__init__(H, init_velocity, init_coords, autograde)
         self.adjacency = torch.tensor(extract_adjacency(self.G, self.sort_nodes).to_numpy())
-        # This is used to break zero force vectors
-        self.noise_dist = (torch.rand((self.coords.shape[0], self.coords.shape[0], self.coords.shape[1]))-0.5)*0.000001
-        self.noise_dist[self.noise_dist == 0] += 0.0000001
-        self.noise_norm = torch.rand((self.coords.shape[0], self.coords.shape[0]))*0.000001
-        self.noise_norm[self.noise_norm == 0] += 0.0000001
+        if noise:
+            # This is used to break zero force vectors
+            self.noise_dist = (torch.rand((self.coords.shape[0], self.coords.shape[0], self.coords.shape[1]))-0.5)*0.000001
+            self.noise_dist[self.noise_dist == 0] += 0.0000001
+            self.noise_norm = torch.rand((self.coords.shape[0], self.coords.shape[0]))*0.000001
+            self.noise_norm[self.noise_norm == 0] += 0.0000001
+        else:
+            self.noise_dist = torch.zeros((self.coords.shape[0], self.coords.shape[0], self.coords.shape[1]))
+            self.noise_norm = torch.zeros((self.coords.shape[0], self.coords.shape[0]))
     # Does a brute force pairwise calculation.
     # Seems to be quite performant compared with piecewise, there is definitely some overhead being saved with the simpler calculation
     # useful for calculating potentials during analysis on the dimension reduction case without shells
     def forward(self):
-        self.all_dists = self.noise_dist + pairwise_distance(self.coords, self.coords)
-        self.all_norms = self.noise_norm + self.norm(self.all_dists)
+        self.all_dists = pairwise_distance(self.coords, self.coords)
+        self.all_norms = self.norm(self.all_dists)
+        self.noisy_dists = self.noise_dist + self.all_dists
+        self.noisy_norms = self.noise_norm + self.all_norms
         # repel overlaps
-        self.repellor_dists = self.all_dists
-        self.repellor_norms = self.all_norms
+        self.repellor_dists = self.noisy_dists
+        self.repellor_norms = self.noisy_norms
         repellor_forces, repellor_potentials = \
             self.partial_interaction(self.repellor_dists, self.repellor_norms, lambda n: n <= 1)
         self.all_repellor_forces = repellor_forces
@@ -226,8 +233,8 @@ class BruteSpringModel(SpringModel):
         self.repellor_potentials = repellor_potentials.sum(dim=1)
 
         # attract connected
-        self.attractor_dists = self.adjacency[:,:,None]*self.all_dists
-        self.attractor_norms = self.adjacency*self.all_norms
+        self.attractor_dists = self.adjacency[:,:,None]*self.noisy_dists
+        self.attractor_norms = self.adjacency*self.noisy_norms
         attractor_forces, attractor_potentials = \
             self.partial_interaction(self.attractor_dists, self.attractor_norms,
                              lambda n: n >= 1)
@@ -247,12 +254,10 @@ class BruteSpringModel(SpringModel):
 class EuclideanSpringModel(SpringModel):
     def norm(self, distance):
         return torch.linalg.vector_norm(distance, dim=len(distance.shape)-1)
-        # return torch.linalg.norm(distance, dim=len(distance.shape)-1)
 
 class EquidistantSpringModel(SpringModel):
     def norm(self, distance):
         return torch.linalg.vector_norm(distance, ord=np.inf, dim=len(distance.shape)-1)
-        # return torch.linalg.norm(distance, ord=np.inf, dim=2)
 
 class HookesSpringModel(SpringModel):
     def potential(self, norm):
@@ -350,12 +355,12 @@ class Runner():
         parser.add_argument("--damping", type=float, default=0.90)
         parser.add_argument("--autograde", action="store_true")
         parser.add_argument("--dynamic", action="store_true")
-        parser.add_argument("--collision_crank", action="store_true")
+        parser.add_argument("--collision_crank", type=float, default=0)
         parser.add_argument("--dyn_range", type=float, default=4)
         parser.add_argument("--dyn_height", type=float, default=2)
         parser.add_argument("--init_vel", type=float, default=0.5)
         parser.add_argument("--init_spread", type=float, default=4)
-        parser.add_argument("--device", default="cuda")
+        parser.add_argument("--device")
         return parser.parse_args()
 
     def setup_energy_log(self):
@@ -371,7 +376,13 @@ class Runner():
     def setup_model(self):
         Model, dimensions = self.models[self.args.distance]
         # torch.autograd.set_detect_anomaly(True)
-        torch.set_default_device(self.args.device)
+        if self.args.device:
+            device = self.args.device
+        else:
+            device_id = random.randint(0, torch.cuda.device_count()-1)
+            device = f"cuda:{device_id}"
+        logger.info(f"Set default Torch device to {device}")
+        torch.set_default_device(device)
         self.init_t = time.time_ns()
         shape = (len(self.G.nodes), dimensions)
         init_coords = self.args.init_spread*2*(torch.rand(shape, dtype=torch.float32)-0.5)
@@ -414,7 +425,7 @@ class Runner():
             # Stream iteration
             self.last_tick = self.calculate_tick_rate()
             if self.args.collision_crank:
-                crank = 1 + 100/self.total_k
+                crank = 1 + self.args.collision_crank/self.total_k
             else:
                 crank = 1
             self.model.step(self.args.autograde, tick=self.last_tick, damping=self.args.damping, crank=crank)
@@ -445,6 +456,8 @@ class Runner():
             or self.iter > 100 and self.total_k < self.args.cutoff_kinetic
         # Iteration cutoff is disabled if the max iterations is 0.
         max_iterations =  self.args.iterations > 0 and self.iter > self.args.iterations - 1
+        if runaway:
+            raise Exception("Runaway oscillation!")
         return runaway or cutoff or max_iterations
 
     def calculate_tick_rate(self):
@@ -517,27 +530,26 @@ def read_results(G, filename, rounding=True):
     H.remove_nodes_from(data_missing)
 
     if rounding:
-        coords = torch.tensor(df[["x", "y", "z"]].round().astype(int).to_numpy())
-        model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
+        coords = torch.tensor(df[["x", "y", "z"]].round().to_numpy())
+        model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False, noise=False)
     else:
         coords = torch.tensor(df[["x", "y", "z"]].to_numpy())
         if label in ["torch_eq", "exact"]:
-            model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
+            model = EquidistantHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False, noise=False)
         else:
-            model = EuclideanHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False)
+            model = EuclideanHookesBruteSpringModel(H, init_velocity=torch.zeros(coords.shape), init_coords=coords, autograde=False, noise=False)
 
     loss = model.forward().cpu().item()
     logger.info(f"Loss calculated {label} {loss}")
     with torch.no_grad():
-        data = (model.repellor_norms,
-                model.norm(model.all_repellor_forces),
+        data = (model.all_norms,
                 model.all_repellor_potentials,
-                model.attractor_norms,
-                model.norm(model.all_attractor_forces),
                 model.all_attractor_potentials)
-        dfs = [pd.DataFrame(d.detach().numpy(), index=df.index, columns=df.index.tolist())
+        dfs = [pd.DataFrame(d.detach().numpy(),
+                            index=df.index,
+                            columns=df.index.tolist())
                 for d in data]
-        return H, dfs
+        return H, model, df, dfs
 
 if __name__ == "__main__":
     import argparse

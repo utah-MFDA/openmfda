@@ -11,8 +11,7 @@ import os
 def edge_lengths(G, df):
     na = df.to_numpy()
     d = na[:,None,:] - na[None,:,:]
-    n = np.max(np.abs(d), axis=2)
-    # n = (d[:,:,0]**2 + d[:,:,1]**2 + d[:,:,2]**2)**0.5
+    n = (d[:,:,0]**2 + d[:,:,1]**2 + d[:,:,2]**2)**0.5
     m = pd.DataFrame(n, index=df.index, columns=df.index)
     edges = np.array([m.loc[s,e] for s,e in G.edges])
     return edges

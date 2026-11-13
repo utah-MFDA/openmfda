@@ -1,0 +1,1 @@
+../../../../benchmarks/ChIP/columbas/ChIP.txt

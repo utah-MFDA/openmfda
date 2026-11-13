@@ -1,12 +1,17 @@
 PYTHON3 = python3
 
-INPUTS = \
-	benchmarks/multiplex_toilet/multiplex_toilet.v \
+INPUTS = benchmarks/multiplex_toilet/multiplex_toilet.v \
 	benchmarks/ChIP/ChIP_pads_4.v \
 	benchmarks/ChIP/ChIP_pads_10.v \
 	benchmarks/mnacidpro/mnacidpro_pads_3.v \
 	benchmarks/mrnaiso/mRNAiso_pads_4.v \
-	benchmarks/kinase/kinase_4.v
+	benchmarks/kinase/kinase_4.v \
+	benchmarks/iscas85/c432.v \
+	benchmarks/iscas85/c499.v \
+	benchmarks/iscas85/c880.v \
+	benchmarks/iscas85/c1355.v \
+	benchmarks/iscas85/c1908.v \
+	benchmarks/picorv32/picorv32.v
 # 	benchmarks/mnacidpro/mnacidpro_pads_1.v \
 # 	benchmarks/mnacidpro/mnacidpro_pads_2.v \
 # 	benchmarks/mnacidpro/mnacidpro_pads_4.v \
@@ -28,8 +33,7 @@ VERILOG_LIBRARIES = benchmarks/kinase_activity.v \
 
 # poor results for: ica incpca mds_nm pca grp smacof_nm spectral
 DIM_ALGS=mds smacof isomap pca spectral
-ALGORITHMS = torch torch_brute torch_eq torch_autograde torch_crank ${DIM_ALGS}
-
+ALGORITHMS = torch torch_brute torch_autograde ${DIM_ALGS}
 
 REPORTS = $(INPUTS:%.v=%.pdf)
 RUNS = ${shell seq 0 7}
@@ -42,6 +46,25 @@ STATS = $(INPUTS:%.v=%.stats.csv)
 
 all: $(RESULTS) $(RENDERED) $(REPORTS)
 
+results: $(RESULTS)
+
+reports: $(REPORTS)
+
+stats: $(STATS)
+
+COLUMBA_V = $(wildcard benchmarks/columba/*.v)
+COLUMBA_STATS = $(COLUMBA_V:%.v=%.torch.stats.csv)
+COLUMBA_RENDER = $(COLUMBA_V:%.v=%.torch.scad)
+COLUMBA_ENERGY = $(COLUMBA_V:%.v=%.torch.energy.csv)
+
+benchmarks/columba/stats.csv: ${COLUMBA_STATS}
+	tail -q -n 1 $^ > $@
+
+columba: $(COLUMBA_RENDER) benchmarks/columba/stats.csv
+
+run_count :
+	@ echo ${RESULTS} | tr ' ' '\n' | wc -l
+
 benchmarks/library.v: ${VERILOG_LIBRARIES}
 	cat $^ > $@
 
@@ -53,6 +76,11 @@ benchmarks/library.v: ${VERILOG_LIBRARIES}
 	${PYTHON3} render.py $< --graph $*.json --output $@ \
 		--logfile $*.render.log 2>&1 >> $*.render.err.log
 
+benchmarks/columba/%.scad: benchmarks/columba/%.csv benchmarks/columba/%.json render.py
+	${PYTHON3} render.py $< --graph benchmarks/columba/$*.json --output $@ \
+		--implicit_pinholes \
+		--logfile benchmarks/columba/$*.render.log 2>&1 >> benchmarks/columba/$*.render.err.log
+
 %.json: %.v benchmarks/library.v
 	yosys -p "read_verilog benchmarks/library.v; read_verilog $<; hierarchy -top thing; proc; flatten; clean -purge; write_json $@" > $*.log
 
@@ -63,7 +91,7 @@ STATS_DEP = \
 %.pdf: %.json stats.py ${STATS_DEP}
 	${PYTHON3} stats.py --graph $*.json --output $@ \
 		--logfile $*.pdf.log \
- 		$(filter %.json, $^) \
+ 		$(filter %.csv, $^) \
 		2>&1 >> $*.pdf.err.log
 
 %.stats.csv: %.json analysis.py ${STATS_DEP}
@@ -83,10 +111,7 @@ $(foreach ALGORITHM,${ALGORITHMS}, \
 	$(eval $(call JSON_COPY,run_${RUN}.${ALGORITHM}))))
 
 define DIMENSION =
-%.${1}.json: %.json
-	cp $$< $$@
-
-%.${1}.csv %.${1}.timer &: %.${1}.json dimension.py
+%.${1}.csv %.${1}.timer &: %.${1}.json
 	date --iso-8601=seconds > $$*.${1}.timer
 	$${PYTHON3} dimension.py \
 		--graph $$*.${1}.json \
@@ -96,10 +121,52 @@ define DIMENSION =
 	date --iso-8601=seconds >> $$*.${1}.timer
 endef
 $(foreach ALG,${DIM_ALGS},$(eval $(call DIMENSION,${ALG})))
-TORCH_ARGS= --cutoff_kinetic 0.001 --iterations 200000 --tick 0.001 \
+
+TORCH_ARGS= --cutoff_kinetic 0.01 --iterations 50000 --tick 0.001 \
 	--dynamic --dyn_range 200 --dyn_height 10
 
-%.torch.csv %.torch.timer &: %.torch.json matrix.py
+benchmarks/columba/torch.timing.csv: ${COLUMBA_ENERGY}
+	python3 torch_timing.py $@ $^
+
+benchmarks/columba/%.torch.csv benchmarks/columba/%.torch.timer benchmarks/columba/%.torch.energy.csv &: benchmarks/columba/%.torch.json
+	date --iso-8601=seconds > benchmarks/columba/$*.torch.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output benchmarks/columba/$*.torch.csv \
+		--cutoff_potential 0.5 --cutoff_kinetic 0.01 --iterations 50000 --tick 0.001 \
+		--dynamic --dyn_range 100 --dyn_height 10 \
+		--collision_crank 0.1 --init_vel 1.0 \
+		--damping 0.92 \
+		--energy benchmarks/columba/$*.torch.energy.csv \
+		--logfile benchmarks/columba/$*.torch.log 2>&1 >> benchmarks/columba/$*.torch.err.log
+	date --iso-8601=seconds >> benchmarks/columba/$*.torch.timer
+
+benchmarks/columba/%.torch.stats.csv: benchmarks/columba/%.json analysis.py benchmarks/columba/%.torch.csv
+	${PYTHON3} analysis.py --graph $< --output $@ $(filter %.csv, $^)
+
+benchmarks/picorv32/picorv32.%.torch.csv benchmarks/picorv32/picorv32.%.torch.timer benchmarks/picorv32/picorv32.%.torch.energy.csv &: benchmarks/picorv32/picorv32.%.torch.json
+	date --iso-8601=seconds > benchmarks/picorv32/picorv32.$*.torch.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output benchmarks/picorv32/picorv32.$*.torch.csv \
+		--cutoff_kinetic 1 --iterations 0 --tick 0.0002 \
+		--dynamic --dyn_range 100 --dyn_height 10 \
+		--damping 0.85 \
+		--energy benchmarks/picorv32/picorv32.$*.torch.energy.csv \
+		--logfile benchmarks/picorv32/picorv32.$*.torch.log 2>&1 >> benchmarks/picorv32/picorv32.$*.torch.err.log
+	date --iso-8601=seconds >> benchmarks/picorv32/picorv32.$*.torch.timer
+
+benchmarks/picorv32/picorv32.%.torch_brute.csv benchmarks/picorv32/picorv32.%.torch_brute.timer benchmarks/picorv32/picorv32.%.torch_brute.energy.csv &: benchmarks/picorv32/picorv32.%.torch_brute.json
+	date --iso-8601=seconds > benchmarks/picorv32/picorv32.$*.torch_brute.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output benchmarks/picorv32/picorv32.$*.torch_brute.csv \
+		--cutoff_kinetic 1 --iterations 0 --tick 0.0002 \
+		--dynamic --dyn_range 100 --dyn_height 10 \
+		--damping 0.85 \
+		--distance euclidean_brute \
+		--energy benchmarks/picorv32/picorv32.$*.torch_brute.energy.csv \
+		--logfile benchmarks/picorv32/picorv32.$*.torch_brute.log 2>&1 >> benchmarks/picorv32/picorv32.$*.torch_brute.err.log
+	date --iso-8601=seconds >> benchmarks/picorv32/picorv32.$*.torch_brute.timer
+
+%.torch.csv %.torch.timer %.torch.energy.csv &: %.torch.json
 	date --iso-8601=seconds > $*.torch.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch.csv \
@@ -108,69 +175,74 @@ TORCH_ARGS= --cutoff_kinetic 0.001 --iterations 200000 --tick 0.001 \
 		--logfile $*.torch.log 2>&1 >> $*.torch.err.log
 	date --iso-8601=seconds >> $*.torch.timer
 
-%.torch_crank.csv %.torch_crank.timer &: %.torch_crak.json matrix.py
+
+%.torch_crank.csv %.torch_crank.timer %.torch_crank.energy.csv &: %.torch_crank.json
 	date --iso-8601=seconds > $*.torch_crank.timer
 	${PYTHON3} matrix.py --graph $< \
 		--output $*.torch_crank.csv \
 		${TORCH_ARGS} \
 		--collision_crank \
-		--energy $*.torch_crnk.energy.csv \
-		--logfile $*.torch_rank.log 2>&1 >> $*.torch_crank.err.log
+		--energy $*.torch_crank.energy.csv \
+		--logfile $*.torch_crank.log 2>&1 >> $*.torch_crank.err.log
 	date --iso-8601=seconds >> $*.torch_crank.timer
 
-%.torch_eq.csv %.torc_eq.timer &: %.torch_eq.jsn matrix.py
-	date --is-8601=seconds > $*.trch_eq.timer
-	${PYTHON3} matrix.py--graph $< \
+%.torch_eq.csv %.torch_eq.timer %.torch_eq.energy.csv &: %.torch_eq.json
+	date --iso-8601=seconds > $*.torch_eq.timer
+	${PYTHON3} matrix.py --graph $< \
 		--output $.torch_eq.csv \
 		${TORCH_ARGS} \
 		--distance equidistant \
-		--enrgy $*.torch_eq.energy.csv \
-		--logfle $*.torch_eq.log 2>1 >> $*.torh_eq.err.log
-	date --so-8601=seconds >> $*.torch_eq.timer
+		--energy $*.torch_eq.energy.csv \
+		--logfile $*.torch_eq.log 2>1 >> $*.torch_eq.err.log
+	date --iso-8601=seconds >> $*.torch_eq.timer
 
-%.torch_brute.csv %.torch_brute.timer &: %torch_brute.json matrx.py
-	dte --iso-8601=seconds > $*.torch_brute.timer
-	${PTHON3} matrix.py --graph $< \
-		--outpt $*.torch_brute.csv
-	${TORCH_ARG} \
-		--ditance euclidean_brute \
-		--energy $*.torch_brute.eergy.csv \
-		--logfil $*.torch_brute.log 2>&1 >> $*.torch_brute.er.log
+%.torch_brute.csv %.torch_brute.timer %.torch_brute.energy.csv &: %.torch_brute.json
+	date --iso-8601=seconds > $*.torch_brute.timer
+	${PYTHON3} matrix.py --graph $< \
+		--output $*.torch_brute.csv \
+		${TORCH_ARG} \
+		--distance euclidean_brute \
+		--energy $*.torch_brute.energy.csv \
+		--logfile $*.torch_brute.log 2>&1 >> $*.torch_brute.err.log
 	date --iso-8601=seconds >> $*.torch_brute.timer
 
-%.torch_autograde.cs %.torch_autograde.timer &: %.torch_autograde.json matrix.py
+%.torch_autograde.csv %.torch_autograde.timer %.torch_autograde.energy.csv &: %.torch_autograde.json
 	date --iso-8601=seconds > $*.torch_autograde.timer
-${PYTHON3} matrix.py -graph $< \
-		--output $*.torch_autograde.csv
+	${PYTHON3} matrix.py --graph $< \
+		--output $*.torch_autograde.csv \
 		${TORCH_ARGS} \
-		-autograde \
+		--autograde \
 		--energy $*.torch_autograde.energy.csv \
-		--logfile $*.torchautograde.log 2>&1 >>$*.torch_autograde.err.log
-	date --iso-8601=seconds >> $*.torch_atograde.timer
+		--logfile $*.torch_autograde.log 2>&1 >>$*.torch_autograde.err.log
+	date --iso-8601=seconds >> $*.torch_autograde.timer
 
-%.exac.csv %.exact.timer &: %.json exact.py
+%.exact.csv %.exact.timer %.exact.cip &: %.exact.json exact.py
 	date --iso-8601=seconds > $*.exact.timer
 	${PYTHON3} exact.py $< \
 		--output $@ \
- 		--timeout 3600 \
-		--cach $*.exact.cip \
-		--logfile $*.xact.log 2>&1 >> $*.exact.err.log
+ 		--timeout 1800 \
+		--cache $*.exact.cip \
+		--logfile $*.exact.log 2>&1 >> $*.exact.err.log
 	date --iso-8601=seconds >> $*.exact.timer
 
-%.ilp.csv %.ilp.timer &: %.json exact.py
+%.ilp.csv %.ilp.timer %.ilp.cip &: %.json exact.py
 	date --iso-8601=seconds > $*.ilp.timer
 	${PYTHON3} exact.py $< \
 		--output $@ \
-		--timeout 3600 \
+		--timeout 1800 \
 		--minimize \
 		--cache $*.ilp.cip \
 		--logfile $*.ilp.log 2>&1 > $*.ilp.err.log
-	date--iso-8601=secnds >> $*.ilp.timer
+	date--iso-8601=seconds >> $*.ilp.timer
 
-.pdf: %.dot
-	dot -Tpf -o $@ $<
+%.v %.dot %_combined.txt: %.txt benchmarks/columba/rule.txt
+	cat $^ > $*_combined.txt
+	${PYTHON3} columba.py $*_combined.txt $*.v
 
-lean_stats:
+%.graph.pdf: %.dot
+	dot -Tpdf -o $@ $<
+
+clean_stats:
 	rm -f benchmarks/kinase/*.pdf
 	rm -f benchmarks/mrnaiso/*.pdf
 	rm -f benchmarks/multiplex_toilet/*.pdf
@@ -180,29 +252,32 @@ lean_stats:
 clean_render:
 	rm -f benchmarks/kinase/*.scad
 	rm -f benchmarks/mrnaiso/*.scad
-	rm -f benchmarks/multplex_toilet/*.scad
-	rm -f benchmarks/mnaidpro/*.cad
-	rm -f benchmarksChIP/*.scad
+	rm -f benchmarks/multiplex_toilet/*.scad
+	rm -f benchmarks/mnaidpro/*.scad
+	rm -f benchmarks/ChIP/*.scad
 
 clean_data:
-	rm -f bnchmarks/kinase/*.csv	rm -f benchmarks/mrnaiso/*.csv
+	rm -f benchmarks/kinase/*.csv
+	rm -f benchmarks/mrnaiso/*.csv
 	rm -f benchmarks/multiplex_toilet/*.csv
 	rm -f benchmarks/mnacidpro/*.csv
 	rm -f benchmarks/ChIP/*.csv
 
 clean_logs:
 	rm -f benchmarks/kinase/*.log
-	rm -f benchmarks/mrnaso/*.log
-	rm -f bencharks/multiplex_toilet*.log
-	rm -f bnchmarks/mnaidpro/*.log
-	rm -f bechmarks/ChIP/*.log
+	rm -f benchmarks/mrnaiso/*.log
+	rm -f benchmarks/multiplex_toilet/*.log
+	rm -f benchmarks/mnacidpro/*.log
+	rm -f benchmarks/ChIP/*.log
 	rm -f benchmarks/kinase/*.timer
 	rm -f benchmarks/mrnaiso/*.timer
 	rm -f benchmarks/multiplex_toilet/*.timer
-	rm -f benchmarks/mnacdpro/*.timer
+	rm -f benchmarks/mnacidpro/*.timer
 	rm -f benchmarks/ChIP/*.timer
 
 clean: clean_stats clean_render clean_data clean_logs
 
+.PHONY: clean clean_stats clean_logs clean_data clean_render all render run_count results reports stats columba
+
 # with no prerequisites, set all intermediate argets as SECONDARY
-.ECONDARY:
+.SECONDARY:

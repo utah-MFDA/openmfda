@@ -59,7 +59,8 @@ assert(isnegsymmetric(pd_expected.to_numpy()))
 
 # results = sorted(args.results)
 results = args.results
-data = [read_results(result) for result in results]
+data = [read_results(G, result) for result in results]
+data = [G, d for G, c, m, d in data]
 labels = [filename.split(".")[1] for filename in results]
 logger.info("finished loading data")
 c = 3
@@ -73,7 +74,7 @@ plt.rcParams['font.family'] = 'serif'
 axs[0][0].set_title("edge length difference from expected")
 axs[0][1].set_title("cell potential")
 axs[0][2].set_title("all cells expected distance error")
-for i, (title, G, d) in enumerate(data):
+for i, (title, (G, d)) in enumerate(zip(labels, data)):
     r_dist, r_force, r_potentials, a_dist, a_force, a_potentials = d
     potentials = r_potentials + a_potentials
 
@@ -102,7 +103,7 @@ def cubic(x, *p):
     return a*(x-b)**3
 
 axs[2][0].set_title("edge length difference from expected")
-dists = [np.unique([r[0].loc[e].round()-1 for e in sorted(G.edges)], return_counts=True) for l, G, r in data]
+dists = [np.unique([r[0].loc[e].round()-1 for e in sorted(G.edges)], return_counts=True) for G, r in data]
 vals = [v for vs, c in dists for v in vs]
 u, l = int(max(vals)), int(min(vals))
 o = u - l
@@ -113,7 +114,7 @@ for i, (dc, dh) in enumerate(dists):
 v.plot.bar(ax=axs[2][0])
 
 axs[1][0].set_title("edge length difference from expected")
-dists = [[(r[0].loc[e])-1 for e in G.edges] for l, G, r in data]
+dists = [[(r[0].loc[e])-1 for e in G.edges] for G, r in data]
 for i, (l, d) in enumerate(zip(labels, dists)):
     dh, db = np.histogram(d, bins=10)
     dc = (db[:-1] + db[1:])/2
@@ -141,7 +142,7 @@ def err_fixup(r):
     f = abs((e*t).reshape(-1))
     g = f[~np.isnan(f)]
     return g[~np.isinf(g)]
-error = [err_fixup(e[0]) for l, G, e in data]
+error = [err_fixup(e[0]) for G, e in data]
 for i, (l, d) in enumerate(zip(labels, error)):
     dh, db = np.histogram(d, bins=20)
     dc = (db[:-1] + db[1:])/2
@@ -156,7 +157,7 @@ for i, (l, d) in enumerate(zip(labels, error)):
 
 
 axs[1][1].set_title("cell potential")
-pots= [r[2].sum(axis=1) for l, G, r in data]
+pots= [r[2].sum(axis=1) for G, r in data]
 for i, (l, d) in enumerate(zip(labels, pots)):
     dh, dby = np.histogram(d, bins=20)
     dc = (db[:-1] + db[1:])/2
