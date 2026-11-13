@@ -31,10 +31,11 @@ def optimize(channel, spacing, max_dimensions, min_dimensions, max_error, target
     turns = M.addVar(vtype="I", lb=1)
     folds = M.addVar(vtype="I", lb=1)
 
-    line = width - spacing.width - channel.width
-    forward = spacing.width + channel.width
-    up = spacing.height + channel.height
-    fold = depth - spacing.height
+    line = M.addVar(vtype="I", lb=channel.width)
+    M.addCons(line <= width - spacing.width - channel.width)
+    forward = M.addVar(vtype="I", lb=(channel.width + spacing.width))
+    up = M.addVar(vtype="I", lb=(channel.height + spacing.height))
+
     fold_length = turns * (line + forward) + line
     length = folds * (fold_length + up) + fold_length
 
